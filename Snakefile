@@ -1,5 +1,6 @@
 ## Snakefile for calculating mtDNA copy number
 
+configfile: "config.yaml"
 BAM_FILES = config['BamFile']
 
 rule all:
