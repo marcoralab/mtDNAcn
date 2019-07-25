@@ -12,4 +12,4 @@ rule fastMitoCalc:
         bai = 'raw/{BAM_FILES}.final.bai'
     output: "data/{BAM_FILES}Data.txt"
     shell:
-    'perl src/fastMitoCalc/fastMitoCalc.pl -f {input.bam} -w data -p src/fastMitoCalc/BaseCoverage'
+        'perl src/fastMitoCalc/fastMitoCalc.pl -f {input.bam} -w data -p src/fastMitoCalc/BaseCoverage'
