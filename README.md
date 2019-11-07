@@ -34,7 +34,7 @@ src/fastMitoCalc/fastMitoCalc.pl -f raw/MAP15387421.final.bam -w data -p src/fas
 
 ### Whole Exome Sequencing
 
-If sequence reads from the mtDNA are not targeted, need to use off target reads only. 
+If sequence reads from the mtDNA are not targeted, need to use off target reads only. The requires .bed file of the targeted captures regions for the scpefic exome kit. For example the [IDT xGen Exome Research Panel from the UKB](http://biobank.ctsu.ox.ac.uk/showcase/refer.cgi?id=3801). 
 
 Extract all off target reads
 ```
