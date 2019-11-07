@@ -2,8 +2,8 @@ __default__:
   project: acc_LOAD
   partition: bode
   queue: premium
-  cores: 2
-  mem: 16000
+  cores: 1
+  mem: 8000
   time: '60'
   name: $(basename $(pwd)):{rule}:{wildcards}
   output: logs/{rule}:{wildcards}.stdout
