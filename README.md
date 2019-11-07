@@ -15,6 +15,85 @@ Location of AMPAD bim files.
 /sc/orga/projects/AMPADWGS/RawDataMayo
 ```
 
+```
+/sc/orga/projects/LOAD/shea/Projects/mDNACN
+```
+
+## ROS/MAP
+
+cogdx
+
+| Value | Coding | n |
+| ----- | ------ | - |
+| 1     | NCI: No cognitive impairment (No impaired domains) | 374 |
+| 2     | MCI: Mild cognitive impairment (One impaired domain) and NO other cause of CI | 273 |
+| 3     | MCI: Mild cognitive impairment (One impaired domain) AND another cause of CI | 20 |
+| 4     | 	AD: Alzheimer’s dementia and NO other cause of CI (NINCDS PROB AD) | 433 |
+| 5     | 	AD: Alzheimer’s dementia AND another cause of CI (NINCDS POSS AD) | 57 |
+| 6     | 	Other dementia: Other primary cause of dementia | 21 |
+
+msex
+
+| Value | n |
+| ----- | - |
+| F | 779 |
+| M | 399 |
+
+race
+
+| Value | Coding | n |
+| ----- | ------ | - |
+| 1 | White | 1177 |
+| 2 | Black | 1 |
+
+apoe_genotype
+
+| Value | n |
+| ----- | - |
+| 22 | 7 |
+| 23 | 146 |
+| 24 | 22 |
+| 33 | 709 |
+| 34 | 263 |
+| 44 | 18 |
+| NA | 13 |
+
+## MSBB
+
+SEX
+| Value | n |
+| ----- | - |
+| F | 216 |
+| M | 117 |
+
+apoe
+
+| Value | n |
+| ----- | - |
+| 22 | 2 |
+| 23 | 19 |
+| 24 | 1 |
+| 33 | 96 |
+| 34 | 53 |
+| 44 | 3 |
+| NA | 159 |
+
+RACE
+
+| Value | Coding | n |
+| ----- | ------ | - |
+| A | Asian | 1 |
+| B | Black | 31 |
+| H | Hispanic | 23 |
+| U | Uknown | 1 |
+| W | White | 277 |
+
+| Value | n |
+| ----- | - |
+| AD | 156 |
+| CONTROL | 55 | 
+| OTHER | 122 |
+
 ## fastMitoCalc
 https://lgsun.irp.nia.nih.gov/hsgu/software/mitoAnalyzer/index.html
 
@@ -34,7 +113,7 @@ src/fastMitoCalc/fastMitoCalc.pl -f raw/MAP15387421.final.bam -w data -p src/fas
 
 ### Whole Exome Sequencing
 
-If sequence reads from the mtDNA are not targeted, need to use off target reads only. The requires .bed file of the targeted captures regions for the scpefic exome kit. For example the [IDT xGen Exome Research Panel from the UKB](http://biobank.ctsu.ox.ac.uk/showcase/refer.cgi?id=3801). 
+If sequence reads from the mtDNA are not targeted, need to use off target reads only. The requires .bed file of the targeted captures regions for the scpefic exome kit. For example the [IDT xGen Exome Research Panel from the UKB](http://biobank.ctsu.ox.ac.uk/showcase/refer.cgi?id=3801).
 
 Extract all off target reads
 ```
