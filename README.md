@@ -61,6 +61,7 @@ apoe_genotype
 ## MSBB
 
 SEX
+
 | Value | n |
 | ----- | - |
 | F | 216 |
@@ -88,11 +89,50 @@ RACE
 | U | Uknown | 1 |
 | W | White | 277 |
 
+dx
+
 | Value | n |
 | ----- | - |
 | AD | 156 |
-| CONTROL | 55 | 
+| CONTROL | 55 |
 | OTHER | 122 |
+
+## Mayo
+
+diagnosis
+
+| Value | n |
+| ----- | - |
+| AD | 92 |
+| Control | 100 |
+| Pathologic Aging | 74 |
+| PSP | 83 |
+
+Sex
+
+| Value | n |
+| ----- | - |
+| F | 182 |
+| M | 167 |
+
+ApoE
+
+| Value | n |
+| ----- | - |
+| 22 | 1 |
+| 23 | 36 |
+| 24 | 2 |
+| 33 | 176 |
+| 34 | 69 |
+| 44 | 9 |
+| NA | 56 |
+
+WGS_Source_Tissue_Type
+
+| Value | n |
+| ----- | - |
+| Cerebellar Cortex | 8 |
+| Temporal Cortex | 341 |
 
 ## fastMitoCalc
 https://lgsun.irp.nia.nih.gov/hsgu/software/mitoAnalyzer/index.html
