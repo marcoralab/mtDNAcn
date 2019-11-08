@@ -29,6 +29,7 @@ rosmap <- rosmap.raw %>%
   mutate(aod = str_replace(age_death, '\\+', ''),
         aod = round(as.numeric(aod), 0),
         dx = recode(cogdx, '1' = 'CTRL', '4' = 'AD', '5' = 'AD'),
+        dx = fct_relevel(dx, 'CTRL', 'AD'),
         apoe4 = recode(apoe_genotype, '22' = 'e4-', '23' = 'e4-', '33' = 'e4-', '24' = 'e4+', '34' = 'e4+', '44' = 'e4+'),
         aod_cat = cut(aod, c(50, 60, 70, 80, 90, Inf), c('50-69', '60-69', '70-79', '80-89', '90+'), right = FALSE),
         msex = as.factor(msex), dx = as.factor(dx), mtcn_avg = as.numeric(mtcn_avg), cogdx = as.factor(cogdx), apoe_genotype = as.factor(apoe_genotype), apoe4 = as.factor(apoe4)) %>%
@@ -49,6 +50,7 @@ msbb <- msbb.raw %>%
   mutate(id = paste0('MSBB', WGS),
         study = 'MSBB',
         dx = recode(dx.raw, 'AD' = 'AD', 'CONTROL' = 'CTRL', 'OTHER' = NA_character_),
+        dx = fct_relevel(dx, 'CTRL', 'AD'),
         apoe = recode(apoe, 'NANA' = NA_character_),
         apoe4 = recode(apoe, '22' = 'e4-', '23' = 'e4-', '33' = 'e4-', '24' = 'e4+', '34' = 'e4+', '44' = 'e4+'),
         aod = str_replace(AOD, '\\+', ''),
@@ -67,6 +69,7 @@ mayo <- mayo.raw %>%
         study = 'MAYO',
         apoe4 = recode(ApoE, '22' = 'e4-', '23' = 'e4-', '33' = 'e4-', '24' = 'e4+', '34' = 'e4+', '44' = 'e4+'),
         dx = recode(Diagnosis, 'AD' = 'AD', 'Control' = 'CTRL', 'Pathologic Aging' = NA_character_, 'PSP' = NA_character_),
+        dx = fct_relevel(dx, 'CTRL', 'AD'),
         aod = str_replace(AgeAtDeath, '90_or_above', '90'),
         aod = as.numeric(aod),
         aod_cat = cut(aod, c(50, 60, 70, 80, 90, Inf), c('50-69', '60-69', '70-79', '80-89', '90+'), right = FALSE),
