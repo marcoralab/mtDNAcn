@@ -1,9 +1,9 @@
 library(readxl)
 library(forcats)
 library(tidyverse)
+library(broom)
 
-
-setwd('/Users/sheaandrews/LOAD_minerva/dummy/shea/Projects/mDNACN')
+#setwd('/Users/sheaandrews/LOAD_minerva/dummy/shea/Projects/mDNACN')
 
 mtdna <- list.files(path = "data/mitocalc", pattern = ".txt", full.names = TRUE) %>%
   map(., function(x){
@@ -21,8 +21,10 @@ mtdna <- list.files(path = "data/mitocalc", pattern = ".txt", full.names = TRUE)
   bind_rows()
 
 ## ROS/MAP
+rosmpa_rna <- read_tsv('data/AMPAD/rosmap/RNAseq_WGS_Metadata.txt')
 rosmap.raw <- read_tsv('data/AMPAD/rosmap/WGS_Metadata.txt') %>%
-  left_join(mtdna, by = c('wgs_id' = 'sample'))
+  left_join(mtdna, by = c('wgs_id' = 'sample')) %>%
+  left_join(select(rosmpa_rna, wgs_id, rnaseq_id), by = 'wgs_id')
 
 rosmap <- rosmap.raw %>%
   filter(race == 1) %>%
@@ -32,12 +34,14 @@ rosmap <- rosmap.raw %>%
         dx = fct_relevel(dx, 'CTRL', 'AD'),
         apoe4 = recode(apoe_genotype, '22' = 'e4-', '23' = 'e4-', '33' = 'e4-', '24' = 'e4+', '34' = 'e4+', '44' = 'e4+'),
         aod_cat = cut(aod, c(50, 60, 70, 80, 90, Inf), c('50-69', '60-69', '70-79', '80-89', '90+'), right = FALSE),
-        msex = as.factor(msex), dx = as.factor(dx), mtcn_avg = as.numeric(mtcn_avg), cogdx = as.factor(cogdx), apoe_genotype = as.factor(apoe_genotype), apoe4 = as.factor(apoe4)) %>%
-  select(id = wgs_id, study, sex = msex, apoe = apoe_genotype, apoe4, aod, aod_cat, mtcn_avg, dx.raw = cogdx, dx)
+        msex = as.factor(msex), dx = as.factor(dx), mtcn_avg = as.numeric(mtcn_avg),
+        cogdx = as.factor(cogdx), apoe_genotype = as.factor(apoe_genotype), apoe4 = as.factor(apoe4),
+        z_mtdnacn = scale(mtcn_avg, center = TRUE, scale = TRUE)[,1]) %>%
+  select(id = wgs_id, rnaseq_id, study, sex = msex, apoe = apoe_genotype, apoe4, aod, aod_cat, mtcn_avg, z_mtdnacn, dx.raw = cogdx, dx)
 
 ## Mount Sinai Brain Bank
 msbb.raw <- read_tsv('data/AMPAD/msbb/WGS_Metadata.txt') %>%
-  unite(apoe, c('Apo1', 'Apo2'), sep = "") %>%
+#  unite(apoe, c('Apo1', 'Apo2'), sep = "") %>%
   mutate(WGS = as.character(WGS)) %>%
   left_join(mtdna, by = c('WGS' = 'sample'))
 
@@ -45,19 +49,43 @@ msbb.raw$dx.raw = 'OTHER'
 msbb.raw$dx.raw[msbb.raw$CDR <= 0.5 & msbb.raw$bbscore <= 3 & msbb.raw$NP.1 <= 1] = 'CONTROL'
 msbb.raw$dx.raw[msbb.raw$CDR >= 1 & msbb.raw$bbscore >= 4 & msbb.raw$NP.1 >= 2] = 'AD'
 
+apoe <- read_table2('apoe_only.recode.vcf', comment = '##') %>%
+  rename(CHROM = `#CHROM`) %>%
+  filter(POS %in% c(45412079, 45411941)) %>%
+  mutate(ID = paste(CHROM, POS, REF, ALT, sep = ":")) %>%
+  select(-CHROM, -POS, -REF, -ALT, -QUAL, -FILTER, -INFO, -FORMAT) %>%
+  gather('sample', 'genotype', 2:ncol(.)) %>%
+  separate(genotype, c('A1', 'A2')) %>%
+  mutate(A1 = as.numeric(A1),
+         A2 = as.numeric(A2),
+         rsid = ifelse(ID == '19:45411941:T:C', 'rs429358', 'rs7412')) %>%
+  rowwise() %>%
+  mutate(alleles = sum(A1, A2),
+         sample = paste0('MSBB', sample)) %>%
+  select(-A1, -A2, -ID) %>%
+  ## 19:45411941:T:C, 19:45412079:C:T
+  spread(rsid, alleles) %>%
+  mutate(A1 = recode(rs429358, '0' = '3', '1' = '4', '2' = '4'),
+         A2 = recode(rs7412, '0' = '3', '1' = '2', '2' = '2')) %>%
+  unite(apoe, c('A2', 'A1'), sep = "")
+
 msbb <- msbb.raw %>%
   filter(RACE == 'W') %>%
-  mutate(id = paste0('MSBB', WGS),
-        study = 'MSBB',
+  mutate(id = paste0('MSBB', WGS)) %>%
+  left_join(apoe, by = c('id' = 'sample')) %>%
+  mutate(study = 'MSBB',
         dx = recode(dx.raw, 'AD' = 'AD', 'CONTROL' = 'CTRL', 'OTHER' = NA_character_),
         dx = fct_relevel(dx, 'CTRL', 'AD'),
-        apoe = recode(apoe, 'NANA' = NA_character_),
+        cdr.dx = recode(CDR, '0' = '0', '0.5' = '0', '1' = '1', '2' = '1', '3' = '1', '4' = '1', '5' = '1'),
         apoe4 = recode(apoe, '22' = 'e4-', '23' = 'e4-', '33' = 'e4-', '24' = 'e4+', '34' = 'e4+', '44' = 'e4+'),
         aod = str_replace(AOD, '\\+', ''),
         aod = as.numeric(aod),
         aod_cat = cut(aod, c(50, 60, 70, 80, 90, Inf), c('50-69', '60-69', '70-79', '80-89', '90+'), right = FALSE),
-        SEX = as.factor(SEX), dx = as.factor(dx), mtcn_avg = as.numeric(mtcn_avg), dx.raw = as.factor(dx.raw), apoe = as.factor(apoe), apoe4 = as.factor(apoe4)) %>%
-  select(id, study, sex = SEX, apoe, apoe4, aod, aod_cat, mtcn_avg, dx.raw, dx)
+        SEX = as.factor(SEX), dx = as.factor(dx), mtcn_avg = as.numeric(mtcn_avg),
+        dx.raw = as.factor(dx.raw), cdr.dx = as.factor(cdr.dx),
+        apoe = as.factor(apoe), apoe4 = as.factor(apoe4),
+        z_mtdnacn = scale(mtcn_avg, center = TRUE, scale = TRUE)[,1]) %>%
+  select(id, study, sex = SEX, apoe, apoe4, aod, aod_cat, mtcn_avg, z_mtdnacn, dx.raw, cdr.dx, dx)
 
 ## Mayo Clinic
 mayo.raw <- read_tsv('data/AMPAD/mayo/WGS_Metadata.txt') %>%
@@ -73,45 +101,24 @@ mayo <- mayo.raw %>%
         aod = str_replace(AgeAtDeath, '90_or_above', '90'),
         aod = as.numeric(aod),
         aod_cat = cut(aod, c(50, 60, 70, 80, 90, Inf), c('50-69', '60-69', '70-79', '80-89', '90+'), right = FALSE),
-        Sex = as.factor(Sex), dx = as.factor(dx), mtcn_avg = as.numeric(mtcn_avg), Diagnosis = as.factor(Diagnosis), ApoE = as.factor(ApoE), apoe4 = as.factor(apoe4)) %>%
-  select(id, study, sex = Sex, apoe = ApoE, apoe4, aod, aod_cat, mtcn_avg, dx.raw = Diagnosis, dx)
+        Sex = as.factor(Sex), dx = as.factor(dx), mtcn_avg = as.numeric(mtcn_avg),
+        Diagnosis = as.factor(Diagnosis), ApoE = as.factor(ApoE), apoe4 = as.factor(apoe4),
+        z_mtdnacn = scale(mtcn_avg, center = TRUE, scale = TRUE)) %>%
+  select(id, study, sex = Sex, apoe = ApoE, apoe4, aod, aod_cat, mtcn_avg, z_mtdnacn, dx.raw = Diagnosis, dx)
 
 
-rosmpaid <- read_csv('data/AMPAD/rosmap/fromSynapse/ROSMAP_IDkey.csv')
-dat <- read_xls("~/Dropbox/Research/PhD/Analysis/10 CAPA/RUSH Cross Sectional 04-2015.xls")
-rosmap_dx <- read_xls("~/Dropbox/Research/PhD/Analysis/10 CAPA/RUSH Longitudinal 04-2015.xls") %>%
-  mutate(projid = str_remove(projid, "^0+")) %>%
-  mutate(projid = as.numeric(projid)) %>%
-  group_by(projid) %>%
-  arrange(fu_year) %>%
-  slice(which.max(fu_year)) %>%
-  ungroup()
+glm(dx ~ mtcn_avg + aod + sex + apoe4, data = rosmap, family = 'binomial') %>%
+ tidy()
 
-test <- rosmap %>%
-  select(wgs_id, projid, msex, race, spanish, apoe_genotype, age_at_visit_max, cogdx) %>%
-  arrange(projid) %>%
-  left_join(rosmap_dx, by = 'projid') %>%
-  left_join(select(mtdna, sample, mtcn_avg), by = c('wgs_id' = 'sample')) %>%
-  mutate(mtcn_avg = as.numeric(mtcn_avg)) %>%
-  mutate(study = ifelse(is.na(study), 'ROS', study)) %>%
-  mutate(study = as.factor(study))
+glm(dx ~ mtcn_avg + aod + sex + apoe4, data = mayo, family = 'binomial') %>%
+  summary()
 
-lm(age_at_visit ~ mtcn_avg + msex, data = test) %>%
-  summary(.)
+glm(dx ~ mtcn_avg + aod + sex + apoe4, data = msbb, family = 'binomial') %>%
+  tidy()
+res <- glm(cdr.dx ~ z_mtdnacn + aod + sex + apoe4, data = msbb, family = 'binomial')
+res %>% tidy()
+res %>% tidy()
 
-  rosmap %>%
-    mutate(dx = recode(dx, '1' = 'CTRL', '4' = 'AD', '5' = 'AD'))
-
-  recode(rosmap$dx, '1' = 'CTRL', '2' = NA)
-
-  glm(dx ~ mtcn_avg + aod + sex + apoe4, data = rosmap, family = 'binomial') %>%
-    tidy()
-
-  glm(dx ~ mtcn_avg + aod + sex + apoe4, data = mayo, family = 'binomial') %>%
-    summary()
-
-  glm(dx ~ mtcn_avg + aod + sex + apoe4, data = msbb, family = 'binomial') %>%
-    tidy()
 
   ampad <- rosmap %>%
     bind_rows(mayo) %>%
@@ -130,3 +137,37 @@ lm(age_at_visit ~ mtcn_avg + msex, data = test) %>%
   (ctable <- coef(summary(m)))
   p <- pnorm(abs(ctable[, "t value"]), lower.tail = FALSE) * 2
   (ctable <- cbind(ctable, "p value" = p))
+
+write_tsv(output/)
+## gplot
+ggplot(data = msbb, aes(x = cdr.dx, y = mtcn_avg, colour = cdr.dx, fill = cdr.dx)) +
+  geom_quasirandom(width = 0.3, alpha = 0.5, size = 0.5) + #facet_wrap(. ~ is.na(apoe4)) +
+  geom_boxplot(width = 0.25, colour = 'black', alpha = 0.5, size = 0.5) +
+  theme_bw() +
+  theme(legend.position = "none",
+        text = element_text(size=8),
+        axis.title.x=element_blank(),
+        panel.grid.major.x = element_blank(),
+        panel.grid.minor.y = element_blank(),
+        panel.grid.major.y = element_blank()) +
+  labs(y = 'mtDNA-CN') +
+  scale_x_discrete(labels = c('Control', 'Case')) +
+  scale_colour_manual(values = c('#0571b0', '#ca0020')) +
+  scale_fill_manual(values = c('#0571b0', '#ca0020'))
+ggsave('~/Dropbox/Research/Grants/AARF - 2019/Q4/Drafts/Figure1.tiff', units = 'cm', width = 5, height = 5)
+
+
+ggplot(data = msbb, aes(x = as.factor(CDR), y = mtcn_avg, colour = cdr.dx)) +
+  geom_quasirandom(width = 0.3, alpha = 0.5, size = 0.5) + #facet_wrap(. ~ is.na(apoe4)) +
+  geom_boxplot(width = 0.25, colour = 'black', alpha = 0.5, size = 0.25, outlier.shape = NA) +
+  theme_bw() +
+  theme(legend.position = "bottom",
+        legend.title=element_blank(),
+        text = element_text(size=8),
+        panel.grid.major.x = element_blank(),
+        panel.grid.minor.y = element_blank()) +
+  labs(y = 'mtDNA-CN', x = 'CDR Score') +
+  scale_colour_manual(values = c('#0571b0', '#ca0020'),
+                      labels = c('Control', 'Case')) +
+  scale_fill_manual(values = c('#0571b0', '#ca0020'))
+ggsave('~/Dropbox/Research/Grants/AARF - 2019/Q4/Drafts/Figure1_v1.jpg', units = 'cm', width = 7.5, height = 5)
