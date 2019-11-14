@@ -60,6 +60,27 @@ apoe_genotype
 
 ## MSBB
 
+NP.1 Neuropathology Category as measured by CERAD
+
+| Value | Coding | n |
+| ----- | ------ | - |
+| 1     | Normal | 91 |
+| 2     | Definite AD | 161 |
+| 3     | probable AD | 41 |
+| 4     | possible AD | 40 |
+
+CDR Clinical Dementia Rating
+
+| Value | Coding | n |
+| ----- | ------ | - |
+| 0     | no dementia | 39 |
+| 0.5     | Questionable dementia | 43 |
+| 1     | Mild dementia | 36 |
+| 2     | Moderate Dementia | 41 |
+| 3     | Severe dementia | 74 |
+| 4     | Profound dementia | 45 |
+| 5     | Terminal Dementia | 55 |
+
 SEX
 
 | Value | n |
@@ -78,6 +99,14 @@ apoe
 | 34 | 53 |
 | 44 | 3 |
 | NA | 159 |
+
+| rs429358	| rs7412	| Name |
+| -------- | ------ | ------ |
+| 19:45411941:T:C | 19:45412079:C:T | NA |
+| C	| T	| ε1 |
+| T	| T	| ε2 |
+| T	| C	| ε3 |
+| C	| C	| ε4 |
 
 RACE
 
