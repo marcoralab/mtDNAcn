@@ -31,7 +31,7 @@ rosmap <- rosmap.raw %>%
         dx = recode(cogdx, '1' = 'CTRL', '4' = 'AD', '5' = 'AD'),
         dx = fct_relevel(dx, 'CTRL', 'AD'),
         apoe4 = recode(apoe_genotype, '22' = 'e4-', '23' = 'e4-', '33' = 'e4-', '24' = 'e4+', '34' = 'e4+', '44' = 'e4+'),
-        aod_cat = cut(aod, c(50, 60, 70, 80, 90, Inf), c('50-69', '60-69', '70-79', '80-89', '90+'), right = FALSE),
+        aod_cat = cut(aod, c(50, 60, 70, 80, 90, Inf), c('50-59', '60-69', '70-79', '80-89', '90+'), right = FALSE),
         msex = as.factor(msex), dx = as.factor(dx), mtcn_avg = as.numeric(mtcn_avg), cogdx = as.factor(cogdx), apoe_genotype = as.factor(apoe_genotype), apoe4 = as.factor(apoe4)) %>%
   select(id = wgs_id, study, sex = msex, apoe = apoe_genotype, apoe4, aod, aod_cat, mtcn_avg, dx.raw = cogdx, dx)
 
@@ -55,7 +55,7 @@ msbb <- msbb.raw %>%
         apoe4 = recode(apoe, '22' = 'e4-', '23' = 'e4-', '33' = 'e4-', '24' = 'e4+', '34' = 'e4+', '44' = 'e4+'),
         aod = str_replace(AOD, '\\+', ''),
         aod = as.numeric(aod),
-        aod_cat = cut(aod, c(50, 60, 70, 80, 90, Inf), c('50-69', '60-69', '70-79', '80-89', '90+'), right = FALSE),
+        aod_cat = cut(aod, c(50, 60, 70, 80, 90, Inf), c('50-59', '60-69', '70-79', '80-89', '90+'), right = FALSE),
         SEX = as.factor(SEX), dx = as.factor(dx), mtcn_avg = as.numeric(mtcn_avg), dx.raw = as.factor(dx.raw), apoe = as.factor(apoe), apoe4 = as.factor(apoe4)) %>%
   select(id, study, sex = SEX, apoe, apoe4, aod, aod_cat, mtcn_avg, dx.raw, dx)
 
@@ -72,7 +72,7 @@ mayo <- mayo.raw %>%
         dx = fct_relevel(dx, 'CTRL', 'AD'),
         aod = str_replace(AgeAtDeath, '90_or_above', '90'),
         aod = as.numeric(aod),
-        aod_cat = cut(aod, c(50, 60, 70, 80, 90, Inf), c('50-69', '60-69', '70-79', '80-89', '90+'), right = FALSE),
+        aod_cat = cut(aod, c(50, 60, 70, 80, 90, Inf), c('50-59', '60-69', '70-79', '80-89', '90+'), right = FALSE),
         Sex = as.factor(Sex), dx = as.factor(dx), mtcn_avg = as.numeric(mtcn_avg), Diagnosis = as.factor(Diagnosis), ApoE = as.factor(ApoE), apoe4 = as.factor(apoe4)) %>%
   select(id, study, sex = Sex, apoe = ApoE, apoe4, aod, aod_cat, mtcn_avg, dx.raw = Diagnosis, dx)
 
@@ -117,7 +117,7 @@ lm(age_at_visit ~ mtcn_avg + msex, data = test) %>%
     bind_rows(mayo) %>%
     bind_rows(msbb) %>%
     mutate(study = as_factor(study))
-
+write_tsv(ampad, 'ampad_mtdnacn.tsv')
   glm(dx ~ mtcn_avg + aod + sex  + study, data = ampad, family = 'binomial') %>%
     tidy()
     glm(dx ~ mtcn_avg + aod + study, data = ampad, family = 'binomial') %>%
