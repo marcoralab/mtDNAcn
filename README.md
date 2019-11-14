@@ -97,18 +97,20 @@ bbscore - Braak Score
 NIA-Reagan
 
 | CERAD / Braak | 1 | 2 | 3 | 4 | 5 | 6 |
-| ----- | ----- | - | - | - | - | - | - |
-| Normal        | No AD | No AD | - | - | - | - |
-| Possible      | Low | Low | - | - | - | - |
-| Probable      | - | - | Intermediate | Intermediate | - | - |
-| Definite      | - | - | - | - | High | High |
+| ----- ----- | - | - | - | - | - | - |
+| Normal | No AD | No AD | - | - | - | - |
+| Possible | Low | Low | - | - | - | - |
+| Probable | - | - | Intermediate | Intermediate | - | - |
+| Definite | - | - | - | - | High | High |
 
-| CERAD / Braak | 0  | 1  | 2  | 3  | 4  | 5  | 6  | NA |
-| ----- | ----- | -- | -- | -- | -- | -- | -- | -- | -- |
-| Normal        | 12 | 21 | 30 | 20 | 2 | NA | NA | 6 |
-| Possible      | 1  | 6  | 4 | 16 | 10 | 2 | 1 | NA |
-| Probable      | NA | NA | 4 | 12 | 6  | 8  | 8  | 3  |
-| Definite      | NA | NA | 5 | 11 | 14 | 27 | 91 | 13 |
+
+| CERAD / Braak | 0 | 1 | 2 | 3 | 4 | 5 | 6 | NA |
+| ----- ----- | -- | -- | -- | -- | -- | -- | -- | -- |
+| Normal | 12 | 21 | 30 | 20 | 2 | NA | NA | 6 |
+| Possible | 1  | 6  | 4 | 16 | 10 | 2 | 1 | NA |
+| Probable | NA | NA | 4 | 12 | 6  | 8  | 8  | 3  |
+| Definite | NA | NA | 5 | 11 | 14 | 27 | 91 | 13 |
+
 
 | Value | Coding | CERD | Braak | n |
 | ----- | ------ | ---- | ----- | - |
