@@ -81,6 +81,19 @@ CDR Clinical Dementia Rating
 | 4     | Profound dementia | 45 |
 | 5     | Terminal Dementia | 55 |
 
+bbscore - Braak Score
+
+| Value | Coding | n |
+| ----- | ------ | - |
+| 0     |  | 13 |
+| 1     | I - transentorhinal | 27 |
+| 2     | II - transentorhinal | 43 |
+| 3     | III - limbic | 49 |
+| 4     | IV - limbic | 32 |
+| 5     | V - neocortical | 37 |
+| 6     | VI  - neocortical | 100 |
+| NA     |  | 22 |
+
 SEX
 
 | Value | n |
