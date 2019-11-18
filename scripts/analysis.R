@@ -20,6 +20,8 @@ mtdna <- list.files(path = "data/mitocalc", pattern = ".txt", full.names = TRUE)
   }) %>%
   bind_rows()
 
+
+
 ## ROS/MAP
 rosmpa_rna <- read_tsv('data/AMPAD/rosmap/RNAseq_WGS_Metadata.txt')
 rosmap.raw <- read_tsv('data/AMPAD/rosmap/WGS_Metadata.txt') %>%
@@ -77,6 +79,7 @@ msbb <- msbb.raw %>%
         dx = recode(dx.raw, 'AD' = 'AD', 'CONTROL' = 'CTRL', 'OTHER' = NA_character_),
         dx = fct_relevel(dx, 'CTRL', 'AD'),
         cdr.dx = recode(CDR, '0' = '0', '0.5' = '0', '1' = '1', '2' = '1', '3' = '1', '4' = '1', '5' = '1'),
+        braak = recode(bbscore, '0' = '1', '1' = '1', '2' = '1', '3' = '2', '4' = '2', '5' = '3', '6' = '3'),
         apoe4 = recode(apoe, '22' = 'e4-', '23' = 'e4-', '33' = 'e4-', '24' = 'e4+', '34' = 'e4+', '44' = 'e4+'),
         aod = str_replace(AOD, '\\+', ''),
         aod = as.numeric(aod),
@@ -85,7 +88,7 @@ msbb <- msbb.raw %>%
         dx.raw = as.factor(dx.raw), cdr.dx = as.factor(cdr.dx),
         apoe = as.factor(apoe), apoe4 = as.factor(apoe4),
         z_mtdnacn = scale(mtcn_avg, center = TRUE, scale = TRUE)[,1]) %>%
-  select(id, study, sex = SEX, apoe, apoe4, aod, aod_cat, mtcn_avg, z_mtdnacn, dx.raw, cdr.dx, dx)
+  select(id, study, sex = SEX, apoe, apoe4, aod, aod_cat, mtcn_avg, z_mtdnacn, dx.raw, cdr.dx, dx, PlaqueMean, bbscore, braak)
 
 ## Mayo Clinic
 mayo.raw <- read_tsv('data/AMPAD/mayo/WGS_Metadata.txt') %>%
@@ -115,9 +118,9 @@ glm(dx ~ mtcn_avg + aod + sex + apoe4, data = mayo, family = 'binomial') %>%
 
 glm(dx ~ mtcn_avg + aod + sex + apoe4, data = msbb, family = 'binomial') %>%
   tidy()
-res <- glm(cdr.dx ~ z_mtdnacn + aod + sex + apoe4, data = msbb, family = 'binomial')
-res %>% tidy()
-res %>% tidy()
+glm(cdr.dx ~ z_mtdnacn + aod + sex + apoe4, data = msbb, family = 'binomial') %>% tidy()
+lm(PlaqueMean ~ z_mtdnacn + aod + sex + apoe4 + cdr.dx, data = msbb) %>% tidy()
+lm(braak ~ z_mtdnacn + aod + sex + apoe4, data = msbb) %>% tidy()
 
 
   ampad <- rosmap %>%
