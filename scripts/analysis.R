@@ -88,7 +88,7 @@ msbb <- msbb.raw %>%
         dx.raw = as.factor(dx.raw), cdr.dx = as.factor(cdr.dx),
         apoe = as.factor(apoe), apoe4 = as.factor(apoe4),
         z_mtdnacn = scale(mtcn_avg, center = TRUE, scale = TRUE)[,1]) %>%
-  select(id, study, sex = SEX, apoe, apoe4, aod, aod_cat, mtcn_avg, z_mtdnacn, dx.raw, cdr.dx, dx, PlaqueMean, bbscore, braak)
+  select(id, study, sex = SEX, apoe, apoe4, aod, aod_cat, mtcn_avg, z_mtdnacn, dx.raw, cdr.dx, dx, CDR, PlaqueMean, bbscore, braak)
 
 ## Mayo Clinic
 mayo.raw <- read_tsv('data/AMPAD/mayo/WGS_Metadata.txt') %>%
@@ -119,6 +119,7 @@ glm(dx ~ mtcn_avg + aod + sex + apoe4, data = mayo, family = 'binomial') %>%
 glm(dx ~ mtcn_avg + aod + sex + apoe4, data = msbb, family = 'binomial') %>%
   tidy()
 glm(cdr.dx ~ z_mtdnacn + aod + sex + apoe4, data = msbb, family = 'binomial') %>% tidy()
+msbb %>% filter(CDR != 0.5) %>% glm(cdr.dx ~ z_mtdnacn + aod + sex + apoe4, data = ., family = 'binomial') %>% tidy()
 lm(PlaqueMean ~ z_mtdnacn + aod + sex + apoe4 + cdr.dx, data = msbb) %>% tidy()
 lm(braak ~ z_mtdnacn + aod + sex + apoe4, data = msbb) %>% tidy()
 
