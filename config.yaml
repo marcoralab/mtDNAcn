@@ -1,2 +1,5 @@
-
+# snakejob -j 100
+# snakejob -j 5000 --notemp --keep-going
+# snakejob -j 5000 --until freebayes --notemp
+# snakejob -j 5000 --until haplogrep --notemp
 BamFile: [MAP15387421, MAP22868024]

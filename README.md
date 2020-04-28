@@ -94,6 +94,15 @@ bbscore - Braak Score
 | 6     | VI  - neocortical | 100 |
 | NA     |  | 22 |
 
+NIA-Reagan (Kurt)
+
+| CERAD / Braak | 0 | 1 | 2 | 3 | 4 | 5 | 6 |
+| ---------- | - | - | - | - | - | - | - |
+| Normal | Normal | Other | Other | Other | Other | Other | Other |
+| Possible | Low | Low | Low | Low | Low | Low | Low |
+| Probable | Low | Low | Low | Intermediate | Intermediate | Intermediate | Intermediate |
+| Definite | Low | Low | Low | Intermediate | Intermediate | High | High |
+
 NIA-Reagan
 
 | CERAD / Braak | 1 | 2 | 3 | 4 | 5 | 6 |
@@ -102,7 +111,6 @@ NIA-Reagan
 | Possible | Low | Low | - | - | - | - |
 | Probable | - | - | Intermediate | Intermediate | - | - |
 | Definite | - | - | - | - | High | High |
-
 
 | CERAD / Braak | 0 | 1 | 2 | 3 | 4 | 5 | 6 | NA |
 | ---------- | -- | -- | -- | -- | -- | -- | -- | -- |
@@ -119,8 +127,20 @@ NIA-Reagan
 | 2     | Intermediate | Probable AD | III/IV | 43 |
 | 3     | High | Definite AD | V/V1 | 49 |
 
+NIA-AA
 
+| Thal | CERAD               | Braak: | None or I/II | III/IV | V/VI | 
+| -    | ----------          | ------ | - | - | - |
+| 0    | None                |        | Other<sup>§</sup> | Other<sup>§</sup>  | Other<sup>§</sup>  |
+| 1/2  | None - Sparse       |        | Low | Low | Low<sup>¶</sup>  |
+|      | Modearte - Frequent |        | Low<sup>†</sup>  | Intermediate | Intermediate<sup>¶</sup>  |
+| 3    | Any                 |        | Low<sup>†</sup>  | Intermediate | Intermediate<sup>¶</sup>  |
+| 4/5  | None - Sparse       |        | Low<sup>†</sup>  | Intermediate | Intermediate<sup>¶</sup>  |
+|      | Modearte - Frequent |        | Low<sup>†</sup>  | Intermediate | High |
 
+<sup>†</sup>
+§
+¶
 SEX
 
 | Value | n |

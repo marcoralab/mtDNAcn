@@ -1,0 +1,16 @@
+base
+readxl
+forcats
+tidyverse
+ggplot2
+tibble
+tidyr
+readr
+purrr
+dplyr
+stringr
+skimr
+ggmosaic
+ggbeeswarm
+magrittr
+ggpubr
