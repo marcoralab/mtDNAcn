@@ -1,0 +1,1007 @@
+---
+title: "AMP-AD Dataset Construction"
+author: "Shea Andrews"
+date: "2/5/2020"
+output: 
+  html_document:
+    code_folding: "hide"
+    toc: true
+    toc_float: true
+    toc_depth: 2
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r setup, include=FALSE}
+knitr::opts_knit$set(root.dir = '/Users/shea/minerva/sc/arion/projects/LOAD/shea/Projects/mDNACN')
+library(readxl)
+library(forcats)
+library(tidyverse)
+library(skimr)
+library(ggmosaic)
+library(ggbeeswarm)
+library(ggpubr)
+# library(knitr)
+# library(kableExtra)
+# setwd('/Users/shea/minerva/sc/arion/projects/LOAD/shea/Projects/mDNACN')
+```
+
+# Neuropathological Confirmed AD 
+There is consensus to disentangle the clinicopathologic term “Alzheimer’s disease” from AD neuropathologic change. The former refers to clinical signs and symptoms of cognitive and behavioral changes that are typical for patients who have substantial AD neuropathologic change,and is the focus of recent NIA–AA-sponsored consensus re-ports on three defined stages in a clinical continuum that includes preclinical, mild cognitive impairment, anddementia. The latter refers to the presence and extentof neuropathologic changes of AD observed at autopsy, re-gardless of the clinical setting.
+
+## CERAD Criteria - 1991
+Protocol provides neuropathologic definitions of such terms as “definite Alzheimer’s disease’’ (AD), “probable AD,” “possible AD,” and “normal brain” to indicate levels of diagnostic certainty. see [Mira et al 1991](https://n.neurology.org/content/41/4/479). The CERAD Neuritic Plaque score forms the basis of later neuropathological difinitions. 
+
+Sections are tacken from: 
+
+- [middle frontal gyrus](https://en.wikipedia.org/wiki/Middle_frontal_gyrus)
+- [superior](https://en.wikipedia.org/wiki/Superior_temporal_gyrus) and [middle](https://en.wikipedia.org/wiki/Middle_temporal_gyrus) temporal gyri
+- [inferior parietal lobule](https://en.wikipedia.org/wiki/Inferior_parietal_lobule)
+- [hippocampus](https://en.wikipedia.org/wiki/Hippocampus) and [entorhinal cortex](https://en.wikipedia.org/wiki/Entorhinal_cortex)
+- [midbrain](https://en.wikipedia.org/wiki/Midbrain)
+
+And scored as a semiquantitative measurment: 
+
+- Absent
+- Sparese
+- Moderate 
+- Frequent 
+
+An age-related plaque score is then determined by combining the age of the patient at death and the semiquantitative measure of plaques in the *most severely affected region of the neocortex*. This score is then intergrated with with clinical information the presence or absence of dementia. 
+
+## NIA-Reagan Criteria - 1997
+
+The modified NIA-Reagan diagnosis of Alzheimer’s disease is based on consensus recommendations for postmortem diagnosis of Alzheimer’s disease. The criteria rely on both neurofibrillary tangles (Braak) and neuritic plaques (CERAD). See [NIA Working group consensus 1997](https://doi.org/10.1016/S0197-4580(97)00057-2) and corresponding editorial by [Hyman et al 1997](https://doi.org/10.1097/00005072-199710000-00002). Traditionaly, the criteria require a history of dementia, insofar as they were designed to help address the question of whether AD was the underlying cause of a patient’s dementia.
+
+- CERAD score is a semiquantitative measure of neuritic plaques
+  + No neuritic plaques (C0)
+  + Sparse/infrequent neuritic plaques (C1)
+  + Moderate neuritic plaques (C2)
+  + Frequent neuritic plaques (C3)
+- Braak Stage is a semiquantitative measure of severity of neurofibrillary tangle (NFT) pathology.
+  + no NFTs (B0)
+  + stages I/II, with NFTs predominantly in en-torhinal cortex and closely related areas (B1)
+  + stages III/IV, withNFTs more abundant in hippocampus and amygdala whileextending slightly into association cortex (B2)
+  + stages V/VI,with NFTs widely distributed throughout the neocortex (B3)
+
+| CERAD / Braak | 0 | I/II | III/IV | V/VI |
+| ------------- | - | - | - | - |
+| None | **Normal** | - | - | - |
+| Sparse | - | **Low** | - | - |
+| Moderate | - | - |**Intermediate** | - |
+| Frequent | - | - | - | **High** |
+
+## NIA-AA Criteria - 2012
+
+The NIA-AA criteria updated and revised the 1997 NIA-Reagan criteria to recognize the pre-clinical stage of AD, enhance the assessment of AD to include amyloid accumulation as well as neurofibrillary change and neuritic plaques. Hyman et al 2012. The criteria relies on an 'ABC' score for AD neuropathologic change that incorporates histopathologic assessments of amyloid β deposits (A - Thal phase), staging of neurofibrillary tangles (B - CERAD), and scoring of neuritic plaques (C - Braak Stage). See [Hyman et al 2012](https://doi.org/10.1016/j.jalz.2011.10.007) for guidlines and [Montine et al 2012](https://doi.org/10.1007/s00401-011-0910-3) for a practial guide.
+
+- Thal Phase is a semiquantitiative measure of the distribution of AB
+  + phase 0 or no amyloid
+  + phase 1 or isocortical
+  + phase 2 or limbic
+  + phase 3 or basal ganglia
+  + phase 4 or basal forebrain and midbrain
+  + phase 5 or pons/medulla oblongata and cerebellum
+
+| Thal | CERAD               | Braak: | None or I/II (B0 or B1) | III/IV (B2) | V/VI (B3) | 
+| -    | ----------          | ------ | - | - | - | 
+| 0 (A0)   | None (C0)       |        | Other<sup>§</sup> | Other<sup>§</sup>  | Other<sup>§</sup>  |  
+| 1/2 (A1)  | None - Sparse (C0 or C1)|        | Low | Low | Low<sup>¶</sup>  | 
+|      | Modearte - Frequent C2 or C3) |        | Low<sup>†</sup>  | Intermediate | Intermediate<sup>¶</sup>  | 
+| 3 (A2)   | Any C           |        | Low<sup>†</sup>  | Intermediate | Intermediate<sup>¶</sup>  | 
+| 4/5 (A3)  | None - Sparse (C0 or C1) |        | Low<sup>†</sup>  | Intermediate | Intermediate<sup>¶</sup>  | 
+|      | Modearte - Frequent C2 or C3) |        | Low<sup>†</sup>  | Intermediate | High | 
+
+<sup>§</sup>Medial temporal lobe NFTs in the absence of significant Ab or neuritic plaques occur in older people and may be seen in individuals without cognitiveimpairment, with mild impairment, or with cognitive impairment from causes other than AD. Consider other diseases when clinically or pathologically indicated.
+
+<sup>¶</sup>Widespread NFTs with some Ab/amyloid plaques or limited neuritic plaques are relatively infrequent, and when they occur, other diseases, particularlytauopathies, should be considered. Such cases may not fit easily into a specific Braak stage, which is intended for categorization of AD-type NFTs.
+
+<sup>†</sup>Higher levels of Ab or neuritic plaques with low Braak stage should prompt consideration of contribution by comorbidities such as vascular brain injury,LBD, or HS. Also, consider additional sections as well as repeat or additional protocols to demonstrate other non-AD lesions
+
+For individuals **without cognitive impairmentat** the time tissue was obtained, it is possible that AD neuropathologic change may predate onset ofsymptoms by years. For individuals **with cognitive impairmentat** the time tissue was obtained, “Intermediate” or “High” level (Table 2) of AD neuropathologic change should be considered adequate explanation of cognitive impairment or dementia. When “Low” level of AD neuropathologic change is observed in the setting of cognitive impairment, it is likely that other diseases are present. In all cases with cognitive impairment, regardless of the extent of AD neuropathologicchange, it is essential to determine the presence or absence, as well as extent, of other disease(s) that might have contributed to the clinical deficits. 
+
+Possibility that Thal amyloid stages do not substantially contribute to predicting antemortem cognition compared to CERAD neuritic plaque scores and Braak NFT stages [Serrano-Pozo et al 2016](https://doi.org/10.1093/jnen/nlw026). 
+
+# Accelerating Medicine Partnership in Alzheimer's Disease
+
+Whole genome sequencing data was obtained from three cohorts ROSMAP, Mayo and MSBB using AMP-AD knowledge portal. 
+
+```{r, datasets, echo = FALSE, message=FALSE, warning=FALSE}
+## ROSMAP
+rosmap.wgsqc <- read_csv('data/AMPAD_extra/rosmap/WGS_sample_QC_info.csv', guess_max = 10000)
+rosmap.raw <- read_csv('data/AMPAD_extra/rosmap/ROSMAP_Clinical_2019-05_v3.csv') %>%
+  left_join(rosmap.wgsqc, by = 'projid') %>% 
+  filter(!is.na(WGS_id)) %>% 
+  rename(study = Study)
+
+## MSBB
+msbb.raw1 <- read_tsv('data/AMPAD/msbb/WGS_Metadata.txt') 
+msbb.raw2 <- read_tsv('data/AMPAD_extra/msbb.wgs.meta.tsv')
+msbb.path <- readxl::read_xlsx('data/AMPAD_extra/msbb/TempAmp_AD-Shea-2-2020.xlsx', sheet = 2) %>% 
+  mutate(id = as.character(id))
+msbb.raw <- msbb.raw1 %>% 
+  select(WGS, individualIdentifier, PMI, RACE, CDR, SEX, NP.1, PlaqueMean, bbscore) %>%
+  left_join(select(msbb.raw2, Libid, AOD, APOE_inferred), by = c('WGS' = 'Libid')) %>% 
+  mutate(SubNum = str_extract(gsub("(?<![0-9])0+", "", individualIdentifier, perl = TRUE), '[:digit:].*')) %>% 
+  left_join(msbb.path, by = c('SubNum' = 'id')) %>%
+  mutate(study = 'MSBB', 
+         WGS = as.character(WGS))
+  
+
+## Mayo
+mayo.raw <- read_tsv('data/AMPAD/mayo/WGS_Metadata.txt') %>%
+  mutate(WGS_Participant_ID = as.character(WGS_Participant_ID), study = 'MAYO') 
+
+cbe <- read_csv('data/AMPAD_extra/mayo/MayoRNAseq_RNAseq_CER_covariates.csv') %>% 
+  mutate(SampleID = str_replace(SampleID, '_CER', "")) %>% 
+  select(SampleID, Braak, Thal)
+tcx  <- read_csv('data/AMPAD_extra/mayo/MayoRNAseq_RNAseq_TCX_covariates.csv')  %>% 
+  mutate(SampleID = str_replace(SampleID, '_TCX', "")) %>% 
+  rename(Sex = Gender, Flowcell = FLOWCELL) %>% 
+  select(SampleID, Braak, Thal) %>% 
+  anti_join(cbe, by = 'SampleID') 
+mayo_path <- bind_rows(cbe, tcx)
+
+## DIAN 
+dian.mut <- read_csv('/Users/shea/minerva/sc/arion/projects/LOAD/Alan/Analysis/DIAN/DIANGENEMutation_DATA_2019-07-22_1930.csv') %>% mutate(dian_id = as.character(dian_id))
+dian.raw <- read_tsv('data/DIAN/completeMANIFEST') %>% 
+  filter(str_detect(file.name, 'cram$')) %>% 
+  mutate(wgs_id = str_remove(file.name, '.final.cram'), 
+         study = 'DIAN') %>% 
+  select(subject.name, wgs_id, file.name, study) %>% 
+  separate(subject.name, c('X1', 'X2', 'X3', 'X4', 'X5'), sep = '-',  remove = FALSE) %>% 
+  mutate(site_id = X2, 
+         fam_id = paste0(X2, '-', X3), 
+         dian_id = str_replace_all(X4, "(?<![0-9])0+", "")) %>%
+  select(-X1, -X2, -X3, -X4, -X5) %>% 
+  left_join(dian.mut)
+
+# slice(dian.raw, c(105, 174, 188, 226, 260, 264, 278, 359, 385, 412, 448, 455, 465, 530))
+
+## All Samples 
+samples <- bind_rows(select(mayo.raw, SampleID = WGS_Participant_ID, study), 
+          select(rosmap.raw, SampleID = WGS_id, study), 
+          select(msbb.raw, SampleID = WGS, study), 
+          select(dian.raw, SampleID = subject.name, study))
+
+  
+```
+
+## Mitochondrial DNA
+
+### ADNI
+Ridge, P., et al. (2018). Assembly of 809 whole mitochondrial genomes with clinical, imaging, and fluid biomarker phenotyping [Alzheimer's & Dementia  14(4), 514-519](https://dx.doi.org/10.1016/j.jalz.2017.11.013)
+
+Called mitochondrial SNVs in ADNI using freebayes and assigned haplogroups using Phy-Mer
+
+- ADNI was mapped to Hg19 which uses of the mitochondrial genome, represented as chrM, corresponding to NC_001807
+- Since chrM and NC_012920 only differ by a few bases, we were able to extract only those reads that mapped to chrM (with SAMtools [46]), rather than all reads corresponding to the whole nuclear and mitochondrial genomes.
+- Extracted reads were remapped to NC_012920 using BurrowsWheeler Aligner.
+- performed local realignments around indels and base recalibration with Genome Analysis Toolkit to refine the new mappings.
+- Used FreeBayes to joint-call variants
+  - ploidy 1
+  - min-alternate-fraction 0.6
+  - removed variants with quality less than 20
+- converted the resulting variant call format (VCF) file to fasta with vcf2fasta 
+- annotated mitochondrial haplotypes with PhyMer from fasta
+
+### AMP-AD
+For futher details on alignement see: [ROSMAP](https://www.synapse.org/#!Synapse:syn10901595), [Mayo](https://www.synapse.org/#!Synapse:syn10901601) and [MSBB](https://www.synapse.org/#!Synapse:syn10901600) WGS germline analysis
+
+- Whole Genome data are processed on NYGC automated pipeline.
+- Paired-end 150bp reads were aligned to the GRCh37 human reference using the Burrows-Wheeler Aligner (BWA-MEM v0.7.08)
+- processed using the GATK best-practices workflow that includes marking of duplicate reads by the use of Picard tools v1.83, local realignment around indels, and base quality score recalibration (BQSR) via Genome Analysis Toolkit (GATK v3.4.0).
+
+### DIAN
+
+Unknown... 
+
+### Calling Mitochondrial Variants in AMP-AD & DIAN
+
+Mitochondrial Variants were called per sample using [Freebayes](https://arxiv.org/abs/1207.3907)
+
+- Freebayes 1.3.2 and removed variants with a quality score less then 20
+  - rCRS used as reference genome (either hg19 or hg38)
+  - min-mapping-quality 30  
+  - min-base-quality 24
+  - min-alternate-fraction 0.6
+  - min-alternate-count 4  
+  - ploidy 1  
+
+Alternative approaches
+
+- [gatk Mutect2](https://github.com/broadinstitute/gatk-docs/blob/master/blog-2012-to-2019/2019-03-05-New!_Mitochondrial_Analysis_with_Mutect2.md?id=23598): mitochondrial calling pipline based on Mutect2 from gatk. Very little documentation
+- [mity](https://www.biorxiv.org/content/10.1101/852210v1): Pipeline for calling mitochhondrial SNVs and INDELs, based on freebayes.
+- [bcbio variation recall](https://github.com/bcbio/bcbio.variation.recall): Squaring off multiple samples, called independently, by recalling at all identified genomic positions. Can combine this with the above freebayes approach 
+- Joint calling with freebayes: Run into memory issues trying to call all samples jointly. Possibly call in batchs (chort). Need to work out genome references between chorts (i.e. MT (hg19) vs chrM (hg38))
+
+## Haplogroup Assignment
+
+### Haplogrep
+Weissensteiner, H. et al. (2016). HaploGrep 2: mitochondrial haplogroup classification in the era of high-throughput sequencing. [Nucleic acids research  44(W1), W58-63](https://dx.doi.org/10.1093/nar/gkw233)
+
+- assigns haplogroups based on phylotree and uses a generic rule-based system for immediate quality control
+- vcf input
+
+```{r, hg, message=FALSE, cache=T}
+## Haplogroups 
+haplogrep.files <- list.files(path = 'data/haplogrep', full.names = T, pattern = '.haplogrep.txt', recursive = T)
+haplogrep <- haplogrep.files %>% 
+  map(., function(x){
+    message('\n', x, '\n')
+    read_tsv(x, col_types = list(SampleID = col_character(), Rank = col_character(), Quality = col_character())) 
+  }) %>% 
+  bind_rows() %>% 
+  mutate(macro = ifelse(str_detect(Haplogroup, "^L"),
+                               substr(Haplogroup, start = 1, stop = 2),
+                               substr(Haplogroup, start = 1, stop = 1)), 
+         macro = as.factor(macro), 
+         Quality = as.numeric(Quality)) %>% 
+  left_join(samples) 
+
+```
+
+```{r, ggmosaic, fig.height = 5, fig.width = 12, echo=FALSE}
+## Mosaic plot of haplogroup distribution across studies
+ ggplot(data = haplogrep) +
+   geom_mosaic(aes(x = product(macro), fill=study), na.rm=TRUE) +
+   labs(x="Mitochondrial Haplogroup", title = 'Proportion of Mitochondrial haplogroups per study') + theme_bw() + 
+  theme(axis.title.y = element_blank(), 
+        axis.text.y = element_blank(), 
+        axis.ticks.y = element_blank(), 
+        legend.position="bottom")
+
+```
+
+```{r, quality, echo=FALSE}
+## Haplogroups quality scores
+ ggplot(data = haplogrep, aes(y = Quality, x = study, fill = study)) +
+   geom_violin() +
+  geom_boxplot(width = 0.15, fill = 'white') + 
+   labs(title = 'Haplogroup Quality Score') + theme_bw() + 
+  theme(legend.position="bottom")
+
+```
+
+
+### Phy-Mer
+Navarro-Gomez, D et al (2014). Phy-Mer: a novel alignment-free and reference-independent mitochondrial haplogroup classifier. [Bioinformatics (Oxford, England)  31(8), 1310-2](https://dx.doi.org/10.1093/bioinformatics/btu825)
+
+- novel mitochondrial genome haplogroup-defining algorithm using a k-mer approach by decomposes a mitochondrial sequence into a set of all possible k-mers, which are then compared against each of the k-mer sets of all haplogroups
+- input a NGS data (.bam, .cram)
+
+```{r, phymer, message=FALSE, cache=T}
+phymer.files <- list.files(pattern = '.phymer.txt', recursive = T)
+phymer <- phymer.files %>% 
+  map(., function(x){
+    message('\n', x, '\n')
+    out <- read_csv(x, skip = 12, col_names = F) %>% 
+      mutate(SampleID = str_extract(x, "(?<=phymer/).*(?=\\.phymer)"), 
+             X1 = str_remove_all(X1, '[:punct:]'), 
+             X4 = as.numeric(str_remove_all(X4, ']')))
+    select(out, SampleID, Haplogroup = X1, X2, X3, Quality = X4)
+  }) %>% 
+  bind_rows() %>% 
+  left_join(samples) %>% 
+  mutate(study = ifelse(is.na(study), 'DIAN', study), 
+         macro = ifelse(str_detect(Haplogroup, "^L"),
+                               substr(Haplogroup, start = 1, stop = 2),
+                               substr(Haplogroup, start = 1, stop = 1)), 
+         macro = as.factor(macro))
+
+```
+
+```{r, phymer_ggmosaic, fig.height = 5, fig.width = 12, echo=FALSE}
+## Mosaic plot of haplogroup distribution across studies
+phymer %>% 
+  group_by(SampleID) %>% 
+  arrange(Quality) %>% 
+  slice(1) %>% 
+  ungroup() %>%
+ ggplot(data = .) +
+   geom_mosaic(aes(x = product(macro), fill=study), na.rm=TRUE) +
+   labs(x="Mitochondrial Haplogroup", title = 'Proportion of Mitochondrial haplogroups per study') + theme_bw() + 
+  theme(axis.title.y = element_blank(), 
+        axis.text.y = element_blank(), 
+        axis.ticks.y = element_blank(), 
+        legend.position="bottom")
+
+```
+
+```{r, Phymer_quality, echo=FALSE}
+## Haplogroups quality scores
+phymer %>% 
+  group_by(SampleID) %>% 
+  arrange(Quality) %>% 
+  slice(1) %>% 
+  ungroup() %>%
+ ggplot(data = ., aes(y = Quality, x = study, fill = study)) +
+   geom_violin() +
+  geom_boxplot(width = 0.04, fill = 'white') + 
+   labs(title = 'Haplogroup Quality Score') + theme_bw() + 
+  theme(legend.position="bottom")
+
+```
+
+## Mitochondrial DNA Copy Number 
+
+Mitochondrial DNA Copy Number estimation
+
+- mtDNA-CN can be estimated as the ratio of the average mitochodnrial DNA coverage by the average autosomal DNA coverage
+  + mtDNA-CN = (mtDNA average coverage / autosomal DNA average coverage) * 2
+
+### fastMitoCalc  
+Qian, Y., et al. (2017). **fastMitoCalc: an ultra-fast program to estimate mitochondrial DNA copy number from whole-genome sequences.** [Bioinformatics 33(9), 1399-1401.](https://dx.doi.org/10.1093/bioinformatics/btw835)
+
+- uses a randomly selected small subset (0.1%) of the nuclear genome to estimate autosomal DNA coverage accurately for estimation of the mtDNA-CN. 
+
+```{r, mtdnacn, message=FALSE, cache=T}
+
+mtdna <- list.files(path = "data/mitocalc", pattern = ".txt", full.names = TRUE) %>%
+  map(., function(x){
+    message('\n', x, '\n')
+    file <- x
+    d <- read_delim(file, delim = ':  ', col_names = F) %>%
+      mutate(X2 = str_trim(X2, side = "both"))
+    tibble(sample = str_remove(str_remove(file, 'data/mitocalc/'), 'MTData.txt'),
+           mtcn_avg = filter(d, X1 == 'mt_copy_number_avg') %>% pull(X2),
+           mt_coverage = filter(d, X1 == 'mt_coverage') %>% pull(X2),
+           autosomal_coverage = filter(d, X1 == 'autosomal_coverage') %>% pull(X2),
+           actual_basepairs_covered_by_reads = filter(d, X1 == 'actual basepairs covered by reads') %>% pull(X2),
+           hrom_used_for_autosomal_coverage = filter(d, X1 == 'chrom_used_for_autosomal_coverage') %>% pull(X2))
+
+  }) %>%
+  bind_rows() %>% 
+  left_join(samples, by = c('sample' = 'SampleID')) %>%
+  mutate(mtcn_avg = as.numeric( mtcn_avg), 
+         autosomal_coverage = as.numeric(autosomal_coverage), 
+         mt_coverage = as.numeric(mt_coverage)) %>% 
+  mutate(study = ifelse(is.na(study), 'DIAN', study))
+
+```
+
+```{r, mtdnacn_plot, echo=FALSE}
+## mtDNA-CN distribution
+mtdna %>% 
+ ggplot(., aes(y = mtcn_avg, x = study, fill = study)) +
+   geom_violin() +
+  geom_boxplot(width = 0.1, fill = 'white') + 
+   labs(title = 'Average mtDNA Copy Number - fastMitoCalc') + theme_bw() + 
+  theme(legend.position="bottom")
+
+```
+
+```{r, coverage_plot, echo=FALSE}
+## mtDNA-CN distribution
+mtdna %>% 
+  select(sample, study, mt_coverage, autosomal_coverage) %>% 
+  pivot_longer(., c('mt_coverage', 'autosomal_coverage'), names_to = 'genome', values_to = 'coverage') %>%
+  mutate(coverage = as.numeric(coverage)) %>%
+ ggplot(., aes(y = coverage, x = study, colour = study)) + facet_grid(rows = vars(genome), scales = "free") + 
+   geom_quasirandom(size = 0.5) +
+ # geom_boxplot(width = 0.1, fill = 'white') + 
+   labs(title = 'WGS Coverage - fastMitoCalc') + theme_bw() + 
+  theme(legend.position="bottom")
+
+```
+
+### Mosedepth 
+Pedersen, B., Quinlan, A. (2017). **Mosdepth: quick coverage calculation for genomes and exomes** [Bioinformatics  34(5), 867-868.](https://dx.doi.org/10.1093/bioinformatics/btx699)
+
+- Mosdepth uses a simple algorithm that is computationally efficient enableing it to quickly calculating genome-wide sequencing coverage. Not specifically designed for estimating mtDNA-CN, but provides coverage estimates of the autosome and mitochondrial genome. 
+
+```{r, mosdepth, message=FALSE, cache=T}
+mosdepth <- list.files(path = "data/mosdepth", pattern = ".mosdepth.summary.txt", full.names = TRUE) %>%
+  map(., function(x){
+    message('\n', x, '\n')
+    df <- read_tsv(x) %>% 
+      mutate(SampleID = str_extract(x, "(?<=data/mosdepth/).*(?=.mosdepth.summary.txt)"), 
+             chrom = str_replace(chrom, 'chrM', 'MT'), 
+             chrom = str_replace(chrom, 'chr', '')) 
+    
+    out <- df %>% filter(chrom %in% 1:22) %>% 
+      summarise(SampleID = first(SampleID), 
+                autosomal_coverage = mean(mean)) %>% 
+      mutate(mt_coverage = filter(df, chrom == 'MT') %>% pull(mean),
+             mtcn_avg = (mt_coverage / autosomal_coverage)*2)
+  }) %>%
+  bind_rows() %>% 
+  left_join(samples, by = 'SampleID') %>% 
+  mutate(study = ifelse(is.na(study), 'DIAN', study))
+```
+
+```{r, mtdnacn_plot_mosdepth, echo=FALSE}
+## mtDNA-CN distribution
+mosdepth %>% 
+ ggplot(., aes(y = mtcn_avg, x = study, fill = study)) +
+   geom_violin() +
+  geom_boxplot(width = 0.05, fill = 'white') + 
+   labs(title = 'Average mtDNA Copy Number - mosdepth') + theme_bw() + 
+  theme(legend.position="bottom")
+
+```
+
+```{r, coverage_plot_mosdepth, echo=FALSE}
+## mtDNA-CN distribution
+mosdepth %>% 
+  select(SampleID, study, mt_coverage, autosomal_coverage) %>% 
+  pivot_longer(., c('mt_coverage', 'autosomal_coverage'), names_to = 'genome', values_to = 'coverage') %>%
+  mutate(coverage = as.numeric(coverage)) %>%
+ ggplot(., aes(y = coverage, x = study, colour = study)) + facet_grid(rows = vars(genome), scales = "free") + 
+#   geom_jitter() +
+  geom_quasirandom(size = 0.5) +
+ # geom_boxplot(width = 0.1, fill = 'white') + 
+   labs(title = 'WGS Coverage - mosdepth') + theme_bw() + 
+  theme(legend.position="bottom")
+
+```
+
+### fastMitoCalc vs Mosdepth
+
+```{r, mitocalc_vs_mosdepth, echo=FALSE}
+moscalc <- mosdepth %>% 
+  select(-study) %>%
+  left_join(mtdna, by = c('SampleID' = 'sample'), suffix = c('.mosdepth', '.mitocalc')) %>%
+  select(-actual_basepairs_covered_by_reads, -hrom_used_for_autosomal_coverage) 
+  
+  
+mtcn_avg.p <- ggplot(moscalc, aes(x = mtcn_avg.mosdepth, 
+                                  y = mtcn_avg.mitocalc, 
+                                  colour = study)) + 
+  geom_point(size = 0.75) + theme_bw() + 
+    labs(title = 'mtDNA-CN', 
+       x = 'mosdepth', 
+       y = 'fastMitoCalc') + 
+  theme(aspect.ratio=1, legend.position = 'bottom')
+
+mt_cov.p <-   ggplot(moscalc, aes(x = mt_coverage.mosdepth, 
+                                  y = mt_coverage.mitocalc, 
+                                  colour = study)) + 
+  geom_point(size = 0.75) + theme_bw() + 
+  labs(title = 'mtDNA coverage', 
+       x = 'mosdepth', 
+       y = 'fastMitoCalc') + 
+  theme(aspect.ratio=1, legend.position = 'bottom') 
+
+autosome_cov.p <-   ggplot(moscalc, aes(x = autosomal_coverage.mosdepth, 
+                                        y = autosomal_coverage.mitocalc, 
+                                        colour = study)) + 
+  geom_point(size = 0.75) + theme_bw() + 
+  labs(title = 'Autosome coverage', 
+       x = 'mosdepth', 
+       y = 'fastMitoCalc') + 
+  theme(aspect.ratio=1, legend.position = 'bottom')
+```
+
+```{r, mitocalc_vs_mosdepth_p, echo=FALSE}
+ggarrange(autosome_cov.p, mt_cov.p, mtcn_avg.p, ncol = 3, nrow = 1, common.legend = TRUE, legend = 'bottom')
+```
+
+## Religous Orders Study / Memeory and Aging Project (ROSMAP)
+De jager et al. *A multi-omic atlas of the human frontal cortex for aging and Alzheimer’s disease research.* [Scientific Data 2018](https://www.nature.com/articles/sdata2018142)
+
+The samples that we have profiled come from two prospective studies of aging-The Religious order Study (ROS) and the Memory and Aging Project (MAP)-that recruit older individuals without known dementia and include (1) detailed cognitive, neuroimaging and other ante-mortem phenotyping and (2) an autopsy at the time of death that includes a structured neuropathologic examination. A subset of the ROSMAP samples (n=1200 for 1179 unique deceased participants) underwent whole genome sequencing, with DNA coming from brain tissue (n=806), whole blood (n=389) or lymphocytes transformed with EBV virus (n=5).
+
+Clinical Code Book: [Synapese](https://www.synapse.org/#!Synapse:syn3191087)
+
+[cogdx](https://www.radc.rush.edu/docs/var/detail.htm?category=Clinical+Diagnosis&subcategory=Final+consensus+diagnosis&variable=cogdx): Physician’s overall cognitive diagnostic category
+
+* 1 =	NCI: No cognitive impairment (No impaired domains)
+* 2 =	MCI: Mild cognitive impairment (One impaired domain) and NO other cause of CI
+* 3 =	MCI: Mild cognitive impairment (One impaired domain) AND another cause of CI
+* 4 =	AD: Alzheimer’s dementia and NO other cause of CI (NINCDS PROB AD)
+* 5 =	AD: Alzheimer’s dementia AND another cause of CI (NINCDS POSS AD)
+* 6 =	Other dementia: Other primary cause of dementia
+
+[braaksc](https://www.radc.rush.edu/docs/var/detail.htm?category=Pathology&subcategory=Alzheimer%27s+disease&variable=braaksc): Braak Stage is a semiquantitative measure of severity of neurofibrillary tangle (NFT) pathology.
+
+* 0 = 0
+* 1 = I (entorhinal)
+* 2 = II (entorhinal)
+* 3 = III (limbic)
+* 4 = IV (limbic)
+* 5 = V (neocortical)
+* 6 = VI (neocortical)
+
+[ceradsc](https://www.radc.rush.edu/docs/var/detail.htm?category=Pathology&subcategory=Alzheimer%27s+disease&variable=ceradsc): CERAD score is a semiquantitative measure of neuritic plaques. A CERAD neuropathologic diagnosis of AD required moderate (probable AD) or frequent neuritic plaques (definite AD) in one or more neocortical regions.
+
+* 1 = Definite -> frequent (C3)
+* 2 = Probable -> moderate (C2)
+* 3 = Possible -> Sparse (C1)
+* 4 = No AD -> None (C0) 
+
+[mmse](https://www.radc.rush.edu/docs/var/detail.htm?category=Cognition&subcategory=Test+scores&variable=cts_mmse30): Mini Mental State Examination is a widely used, 30 item, standardized screening measure of dementia severity. The MMSE can be used as a surrogate measure for the CDR for the staging of dementia in AD [Perneczky et al 2006](https://doi.org/10.1097/01.JGP.0000192478.82189.a8). 
+
+| MMSE | CDR | 
+| ---- | --- |
+| 30 | 0 (No) | 
+| 26-29 | 0.5 (Questionable) | 
+| 21-25 | 1 (Mild) | 
+| 11-20 | 2 (Moderate) | 
+| 0-10 | 3 (Severe) |
+
+```{r, ROSMAP, echo = FALSE, message=FALSE, warning=FALSE}
+
+rosmap <- rosmap.raw %>%
+  left_join(haplogrep, by = c('WGS_id' = 'SampleID')) %>%
+#  left_join(mtdna, by = c('WGS_id' = 'sample')) %>%
+  left_join(mosdepth, by = c('WGS_id' = 'SampleID')) %>%
+    mutate(aod = str_replace(age_death, '\\+', ''),
+        aod = round(as.numeric(aod), 0),
+        race = as_factor(race),
+        race = fct_recode(race,'W' = '1', 'B' = '2'),
+        z_mtdnacn = scale(mtcn_avg, center = TRUE, scale = TRUE)[,1],
+        organ = recode(Source.Tissue.Type, 'Blood' = 'blood', 'Blood-PBMC' = 'blood', 'Whole Blood' = 'blood', 
+                       'Blood-Cerebellum' = 'brain',  'Brain-Anterior Caudate' = 'brain',
+                       'Brain-Cerebellum' = 'brain', 'Brain-DLPFC' = 'brain', 
+                       'Brain-Frontal Cortex (BA unknown)' = 'brain', 
+                       'Brain-Frontal Pole (BA10-12,32)' = 'brain', 
+                       'Brain-Occipital Association Cortex (BA18,19)' = 'brain', 
+                       'Brain-PCC' = 'brain', 'Brain-Posterior Cingulate Cortex' = 'brain', 
+                       'Brain-region unknown' = 'brain', 
+                       'lymphocytes _transformed _with EBV virus'= 'lymphocytes'),
+        dx = recode(cogdx, '1' = 'CTRL', '4' = 'AD', '5' = 'AD'),
+        dx = fct_relevel(dx, 'CTRL', 'AD'),
+        apoe4 = recode(apoe_genotype, '22' = 'e4-', '23' = 'e4-', '33' = 'e4-', '24' = 'e4+', '34' = 'e4+', '44' = 'e4+'),
+        aod_cat = cut(aod, c(50, 60, 70, 80, 90, Inf), c('50-59', '60-69', '70-79', '80-89', '90+'), right = FALSE),
+        aod_cat = ordered(aod_cat, levels = c('50-59', '60-69', '70-79', '80-89', '90+')), 
+        msex = as.factor(msex), 
+        msex = fct_recode(msex, 'M' = '1', 'F' = '0'),
+        dx = as.factor(dx),
+        cogdx = factor(cogdx), 
+        apoe_genotype = as.factor(apoe_genotype), 
+        apoe4 = as.factor(apoe4), 
+        study = as.factor(study), 
+        braaksc = ordered(braaksc, levels = c('0', '1', '2', '3', '4', '5', '6')), 
+        ceradsc = ordered(ceradsc, levels = c('4', '3', '2', '1')), 
+        braaksc_B = fct_recode(braaksc, B0 = "0", B1 = "1", B1 = "2", B2 = "3", B2 = "4", B3 = "5", B3 = "6"), 
+        ceradsc_C = fct_recode(ceradsc, C0 = "4", C1 = "3", C2 = "2", C3 = "1"), 
+        abc = paste0(braaksc_B, ceradsc_C), 
+        npadnc = recode(abc, 'NANA' = NA_character_,
+                        "B0C0" = 'other', "B1C0"  = 'other', "B2C0" = 'other', "B3C0" = 'other',
+                       "B0C1" = 'low', "B1C1" = 'low', "B2C1" = 'low', "B3C1" = 'low', 
+                       "B0C2" = 'low', "B1C2" = 'low', "B2C2" = 'intermediate', "B3C2" = 'intermediate', 
+                       "B0C3" = 'low', "B1C3" = 'low', "B2C3"  = 'intermediate', "B3C3" = 'high')) %>%
+  select(id = WGS_id, study, race, educ, sex = msex, apoe = apoe_genotype, apoe4, cts_mmse30_lv, aod, aod_cat, dx.raw = cogdx, dx, braaksc, ceradsc, abc, npadnc, organ, SourceTissue = Source.Tissue.Type, mtcn_avg, z_mtdnacn, Haplogroup, Quality, macro)
+
+```
+
+### Descriptive statistics 
+
+```{r, rosmap_desc, echo=FALSE, results='asis'}
+skim(rosmap)
+```
+
+**Alzheimer's disease neuropathologic change in ROSMAP**
+```{r, rosmap_path, warning=FALSE, results='asis', echo=FALSE}
+rosmap %>% 
+  select(braaksc, ceradsc) %>% 
+  mutate(braaksc = fct_recode(braaksc, B0 = "0", B1 = "1", B1 = "2", B2 = "3", B2 = "4", B3 = "5", B3 = "6"), 
+         ceradsc = fct_recode(ceradsc, C0 = "4", C1 = "3", C2 = "2", C3 = "1"), 
+         abc = paste0(braaksc, ceradsc)) %>% 
+  count(braaksc, ceradsc) %>% 
+  pivot_wider(names_from = braaksc, values_from = n) %>% 
+  rename('cerad/braak' = ceradsc) %>%
+  knitr::kable(.) 
+
+```
+
+**Clinical vs Neuropathological diagnosis in ROSMAP**
+```{r, rosmap_npadnc, warning=FALSE, results='asis', echo=FALSE}
+rosmap %>% 
+  select(dx.raw, npadnc) %>%
+  mutate(Clinical.dx = fct_recode(dx.raw, NCI = "1", PROB_MCI = "2", POSS_MCI = "3", 
+                                  PROB_AD = "4", PROSS_AD = "5", Other = "6")) %>% 
+  count(Clinical.dx, npadnc) %>% 
+  pivot_wider(names_from = npadnc, values_from = n) %>% 
+  rename('Clinical/NPADNC' = Clinical.dx) %>%
+  select('Clinical/NPADNC', low, intermediate, high, 'NA') %>% 
+  knitr::kable(.) 
+```
+
+
+## Mount Sinai Brain Bank (MSBB)
+Wang et al 2018. *The Mount Sinai cohort of large-scale genomic, transcriptomic and proteomic data in Alzheimer's disease* [Scientific Data 2018](https://www.nature.com/articles/sdata2018185)
+
+Samples come from 364 postmortem control, mild cognitive impaired (MCI) and AD brains with rich clinical and pathophysiological data from the Mount Sinai/JJ Peters VA Medical Center Brain Bank (MSBB–Mount Sinai NIH Neurobiobank) cohort. The majority (301) of the samples were of European ancestry, while 36 were African American, 25 were Latino, one was Asian, and one was unknown for race. Neuropathological assessments were performed using CERAD scores and Braak Staging. The CDR scale was conducted for assessment of dementia and cognitive status. 
+
+Clinical Code Book: [Synapse](https://www.synapse.org/#!Synapse:syn6101474)
+
+NP.1: Neuropathology Category as recomended by CERAD (Mira 1991). Age-adjusted plaques scores accounting for clinical history. 
+
+* 1 = Normal 
+* 2 = Definite AD 
+* 3 = probable AD 
+* 4 = possible AD
+
+CDR: Clinical Dementia Rating, extended to include profound and terminal. [Dooneief et al](https://doi.org/10.1212/WNL.46.6.1746)
+
+* 0 = no dementia
+* 0.5 = Questionable dementia (MCI)
+* 1 = Mild dementia
+* 2 = Moderate Dementia
+* 3 = Severe dementia
+* 4 = Profound dementia
+* 5 = Terminal Dementia
+
+PlaqueMean: Mean neocortical plaque density across 5 regions (# of plaques/mm2). Regions consisted of the middle frontal gyrus, orbital frontal cortex, superior temporal gyrus, inferior parietal cortex and calcarine cortex. 
+
+Regional density of neuritic plaques with and without amyloid cores were rated on a 4-point scale  acording to criteria established by CERAD. 
+
+* absent = 0 
+* sparse = 1 
+* moderate = 3
+* severe = 4
+
+* HippoPlaquesWCoresValue: Hippocampus
+* EntorPlaquesWCoresValue: Entorhinal cortex
+* MidPlaquesWCoresValue: Middile Frontal Gyrus
+* SupPlaquesWCoresValue: Superior temporal gyrus
+* InfPlaquesWCoresValue: Inferior parietal lobule
+* OcciPlaquesWCoresValue: Occipital cortex
+
+
+
+```{r, MSBB, echo = FALSE, message=FALSE}
+
+## Recode NP.1 -> ceradsc to be consistent with ROSMAP
+msbb <- msbb.raw %>%
+  left_join(haplogrep, by = c('WGS' = 'SampleID')) %>%
+#  left_join(mtdna, by = c('WGS' = 'sample')) %>%
+  left_join(mosdepth, by = c('WGS' = 'SampleID')) %>%
+  mutate(id = paste0('MSBB', WGS)) %>%
+  mutate(APOE_inferred = recode(APOE_inferred, 'e2/e2' = '22', 'e2/e3' = '23', 'e3/e3' = '33', 'e2/e4' = '24', 'e3/e4' = '34', 'e4/e4' = '44'),
+        apoe4 = recode(APOE_inferred, '22' = 'e4-', '23' = 'e4-', '33' = 'e4-', '24' = 'e4+', '34' = 'e4+', '44' = 'e4+'),
+        aod_cat = cut(AOD, c(50, 60, 70, 80, 90, Inf), c('50-59', '60-69', '70-79', '80-89', '90+'), right = FALSE),
+        SEX = as.factor(SEX), 
+        SourceTissue = 'prefrontal cortex',
+        APOE_inferred = as.factor(APOE_inferred), 
+        apoe4 = as.factor(apoe4), 
+        RACE = as.factor(RACE), 
+        z_mtdnacn = scale(mtcn_avg, center = TRUE, scale = TRUE)[,1],
+        aod_cat = ordered(aod_cat, levels = c('50-59', '60-69', '70-79', '80-89', '90+')), 
+        cerad = recode(NP.1, '1' = 'Normal', '2' = 'Definite', '3' = 'Probable', '4' = 'Possible'),
+        cerad = ordered(cerad, levels = c('Normal', 'Possible', 'Probable', 'Definite')),
+        ceradsc = pmax(HippoPlaquesWCoresValue, EntorPlaquesWCoresValue, MidPlaquesWCoresValue, 
+                       SupPlaquesWCoresValue, InfPlaquesWCoresValue, OcciPlaquesWCoresValue),
+        ceradsc = ordered(ceradsc),
+        ceradsc = fct_recode(ceradsc, '1' = '0', '2' = '1', '3' = '3', '4' = '5'),
+        bbscore = ordered(bbscore, levels = c('0', '1', '2', '3', '4', '5', '6')),
+        braaksc_B = fct_recode(bbscore, B0 = "0", B1 = "1", B1 = "2", B2 = "3", B2 = "4", B3 = "5", B3 = "6"), 
+        ceradsc_C = fct_recode(ceradsc, C0 = "1", C1 = "2", C2 = "3", C3 = "4"), 
+        abc = paste0(braaksc_B, ceradsc_C), 
+        npadnc = recode(abc, 'NANA' = NA_character_, 'B2NA' = NA_character_, 
+                        'NAC0' = NA_character_, 'NAC1' = NA_character_, 'NAC2' = NA_character_, 'NAC3' = NA_character_,
+                        "B0C0" = 'other', "B1C0"  = 'other', "B2C0" = 'other', "B3C0" = 'other',
+                       "B0C1" = 'low', "B1C1" = 'low', "B2C1" = 'low', "B3C1" = 'low', 
+                       "B0C2" = 'low', "B1C2" = 'low', "B2C2" = 'intermediate', "B3C2" = 'intermediate', 
+                       "B0C3" = 'low', "B1C3" = 'low', "B2C3"  = 'intermediate', "B3C3" = 'high'),
+        npadnc = ordered(npadnc, levels = c('other', 'low', 'intermediate', 'high'))) %>%
+  select(id, study, sex = SEX, race = RACE, SourceTissue, NP.1, cerad, ceradsc, HippoPlaquesWCoresValue, EntorPlaquesWCoresValue, MidPlaquesWCoresValue, SupPlaquesWCoresValue, InfPlaquesWCoresValue, OcciPlaquesWCoresValue, braaksc = bbscore, braaksc_B, ceradsc_C, abc, npadnc, apoe = APOE_inferred, apoe4, aod = AOD, aod_cat, cdr = CDR, PlaqueMean, mtcn_avg, z_mtdnacn, Haplogroup, Quality, macro)
+
+```
+
+### Descriptive Statistics
+```{r, msbb_desc, echo=FALSE}
+skim(msbb)
+```
+
+**Neuropathological Change in MSBB**
+```{r, msbb_path, warning=FALSE, results='asis', echo=FALSE}
+msbb %>%
+  select(braaksc_B, ceradsc_C) %>%
+  count(braaksc_B, ceradsc_C) %>%
+  filter(!is.na(braaksc_B)) %>% filter(!is.na(ceradsc_C)) %>%
+  pivot_wider(names_from = braaksc_B, values_from = n) %>%
+  rename('cerad/braak' = ceradsc_C) %>%
+  knitr::kable(.)
+
+msbb %>%
+  select(npadnc, cdr) %>%
+  count(npadnc, cdr) %>%
+  pivot_wider(names_from = cdr, values_from = n) %>%
+  select(npadnc, `0`, `0.5`, `1`, `2`, `3`, `4`, `5`) %>%
+  filter(!is.na(npadnc)) %>% 
+  rename('npadnc/cdr' = npadnc) %>%
+  slice(4, 3, 2, 1) %>%
+  knitr::kable(.)
+
+ggplot(data = msbb) + 
+ geom_mosaic(aes(x = product(cdr), fill=npadnc), na.rm=TRUE)
+
+
+msbb %>%
+  select(npadnc, cerad) %>%
+  count(npadnc, cerad) %>%
+  pivot_wider(names_from = cerad, values_from = n) %>%
+  select(npadnc, Normal, Possible, Probable, Definite) %>%
+  filter(!is.na(npadnc)) %>%
+  rename('npadnc/cerad' = npadnc) %>%
+  slice(4, 3, 2, 1) %>%
+  knitr::kable(.)
+
+ggplot(data = msbb) + 
+ geom_mosaic(aes(x = product(cdr), fill=cerad), na.rm=TRUE)
+
+ggplot(msbb, aes(x = as.factor(cdr), fill = npadnc)) + geom_bar()
+ggplot(msbb, aes(x = as.factor(cdr), fill = npadnc)) + geom_bar()
+
+
+```
+
+## Mayo Clinic (Mayo)
+Allen et al *Human whole genome genotype and transcriptome data for Alzheimer’s and other neurodegenerative diseases* [Scientific Data 2016](https://www.nature.com/articles/sdata201689)
+
+Mayo Clinic Alzheimer’s Disease Genetics Studies (MCADGS). Data is provided for the Mayo RNAseq Study, with whole transcriptome data for 275 Cerebellum (CBE) and 276 Temporal cortex (TCX) samples from 312 North American Caucasian subjects with neuropathological diagnosis of AD, progressive supranuclear palsy (PSP), pathologic aging (PA) or elderly controls (CON) without neurodegenerative diseases. Whole genome sequencing was conducted on 349 participants using DNA isolated from either the Temporal cortex (n = 341) or the Cerebellar Cortex (n = 8).
+
+* All ADs had definite diagnosis according to the NINCDS-ADRDA criteria and had Braak NFT stage of IV or greater. 
+* Control subjects had Braak NFT stage of III or less, CERAD neuritic and cortical plaque densities of 0 (none) or 1 (sparse) and lacked any of the following pathologic diagnoses: AD, Parkinson’s disease (PD), DLB, VaD, PSP, motor neuron disease (MND), CBD, Pick’s disease (PiD), Huntington’s disease (HD), FTLD, hippocampal sclerosis (HipScl) or dementia lacking distinctive histology (DLDH). 
+* Subjects with PA also lacked the above diagnoses and had Braak NFT stage of III or less, but had CERAD neuritic and cortical plaque densities of 2 or more. None of the PA subjects had a clinical diagnosis of dementia or mild cognitive impairment. 
+
+Clinical Code Book: [Synapse](https://www.synapse.org/#!Synapse:syn5223705)
+
+```{r, mayio, echo = FALSE, message=FALSE}
+
+mayo <- mayo.raw %>%
+  left_join(mayo_path, by = c('WGS_Participant_ID' = 'SampleID')) %>%
+  left_join(haplogrep, by = c('WGS_Participant_ID' = 'SampleID')) %>%
+#  left_join(mtdna, by = c('WGS_Participant_ID' = 'sample')) %>%
+  left_join(mosdepth, by = c('WGS_Participant_ID' = 'SampleID')) %>%
+  mutate(id = paste0('MAYO', WGS_Participant_ID),
+        apoe4 = recode(ApoE, '22' = 'e4-', '23' = 'e4-', '33' = 'e4-', '24' = 'e4+', '34' = 'e4+', '44' = 'e4+'),
+        aod = str_replace(AgeAtDeath, '90_or_above', '90'),
+        aod = as.numeric(aod),
+        aod_cat = cut(aod, c(50, 60, 70, 80, 90, Inf), c('50-59', '60-69', '70-79', '80-89', '90+'), right = FALSE),
+        aod_cat = ordered(aod_cat, levels = c('50-59', '60-69', '70-79', '80-89', '90+')),
+        Sex = as.factor(Sex), 
+        race = 'W',
+        Diagnosis = as.factor(Diagnosis), 
+        ApoE = as.factor(ApoE), 
+        apoe4 = as.factor(apoe4), 
+        Thal = ordered(Thal, levels = c('0', '1', '2', '3', '4', '5')),
+        braaksc = ordered(floor(Braak), levels = c('0', '1', '2', '3', '4', '5', '6')), 
+        thal_A = fct_recode(Thal, A0 = "0", A1 = "1", A1 = "2", A2 = "3", A3 = "4", A3 = "5"),
+        braaksc_B = fct_recode(braaksc, B0 = "0", B1 = "1", B1 = "2", B2 = "3", B2 = "4", B3 = "5", B3 = "6"), 
+        abc = paste0(thal_A, braaksc_B), 
+        z_mtdnacn = scale(mtcn_avg, center = TRUE, scale = TRUE)[,1]
+        ) %>%
+  select(id, study, sex = Sex, apoe = ApoE, apoe4, race, aod, aod_cat, thal = Thal, braaksc, abc, SourceTissue = WGS_Source_Tissue_Type, dx.raw = Diagnosis, mtcn_avg, z_mtdnacn, Haplogroup, Quality, macro)
+
+```
+
+```{r, mayio_desc, echo=FALSE}
+skim(mayo)
+```
+
+**Neuropathological Change in Mayo**
+```{r, mayo_path, warning=FALSE, results='asis', echo=FALSE}
+mayo %>% 
+  select(thal, braaksc) %>% 
+  mutate(thal = fct_recode(thal, A0 = "0", A1 = "1", A1 = "2", A2 = "3", A3 = "4", A3 = "5"),
+        braaksc = fct_recode(braaksc, B0 = "0", B1 = "1", B1 = "2", B2 = "3", B2 = "4", B3 = "5", B3 = "6"), 
+         abc = paste0(thal, braaksc)) %>% 
+  count(thal, braaksc) %>% 
+  pivot_wider(names_from = braaksc, values_from = n) %>% 
+  rename('thal/braak' = thal) %>%
+  knitr::kable(.) 
+
+```
+
+# The Dominantly Inherited Alzheimer Network  
+The Dominantly Inherited Alzheimer Network (DIAN) is a multinational, longitudinal study of Autosomal Dominant Alzheimer's Disease families who have a known causative mutation of AD in the amyloid precursor protein (APP), presenilin 1 (PSEN1), or presenilin 2 (PSEN2). 
+
+```{r, dian, echo = FALSE, message=FALSE}
+## Recode NP.1 -> ceradsc to be consistent with ROSMAP
+dian <- dian.raw %>%
+  left_join(haplogrep, by = c('subject.name' = 'SampleID')) %>%
+#  left_join(mtdna, by = c('WGS' = 'sample')) %>%
+  left_join(mosdepth, by = c('wgs_id' = 'SampleID')) %>%
+  mutate(apoe4 = recode(apoe, '22' = 'e4-', '23' = 'e4-', '33' = 'e4-', '24' = 'e4+', '34' = 'e4+', '44' = 'e4+'),
+        gender = as.factor(gender), 
+        apoe = as.factor(apoe), 
+        apoe4 = as.factor(apoe4), 
+        z_mtdnacn = scale(mtcn_avg, center = TRUE, scale = TRUE)[,1], 
+        appmutation = as.factor(appmutation),
+        ps1mutation = as.factor(ps1mutation),
+        ps2mutation = as.factor(ps2mutation),
+        fam_mutation = as.factor(fam_mutation), 
+        macro = fct_drop(macro)) %>%
+  select(dian_id, fam_id, site_id, study, sex = gender, dob_yr, fam_mutation, apoe, apoe4, appmutation, ps1mutation, ps2mutation, dna_conc, mtcn_avg, z_mtdnacn, Haplogroup, Quality, macro) %>% 
+  mutate(FAD = ifelse(appmutation == 0 | ps1mutation == 0 | ps2mutation == 0, 0, fam_mutation), 
+         FAD = ifelse(is.na(FAD), fam_mutation, FAD), 
+         FAD = as.factor(FAD), 
+         country = recode(site_id, '003' = 'USA', '010' = 'USA', '011' = 'USA', '024' = 'USA', '035' = 'USA', '036' = 'USA', '037' = 'USA', '094' = 'USA', '700' = 'JAP', '710' = 'JAP', '730' = 'JAP', '941' = 'USA', '950' = 'AUS', '951' = 'AUS', '952' = 'AUS', '953' = 'UK', '954' = 'GER', '955' = 'GER', '956' = 'ARG'),
+         country = as.factor(country)) 
+
+```
+
+```{r, dian_desc, echo=FALSE}
+skim(dian)
+
+# dian %>% mutate(FAD = fct_recode(FAD, 'WT' = '0', 'PS1' = '1', 'PS2' = '2', 'APP' = '3')) %>%
+#   ggplot(., aes(x = FAD, y = mtcn_avg, colour = country)) + geom_quasirandom() + theme_bw()
+```
+
+```{r}
+ampad <- bind_rows(select(mayo, id, study, sex, race, apoe, apoe4, aod_cat, thal, braaksc, SourceTissue, dx.raw), 
+          select(rosmap, id, study, sex, race, apoe, apoe4, aod_cat, ceradsc, braaksc, SourceTissue, dx.raw ), 
+          select(msbb, id, study, sex, race, apoe, apoe4, aod_cat, ceradsc, braaksc, SourceTissue, dx.raw = cerad)) %>% 
+  group_by(study)
+
+## Sex
+ampad_sex <- count(ampad, sex) %>% 
+  mutate(prop = round((n / sum(n))*100, 2), 
+         out = paste0(n , ' (', prop, ')')) %>% 
+  select(study, sex, out) %>%
+  pivot_wider(names_from = study, values_from = out)
+
+## Age
+ampad_age <- count(ampad, aod_cat) %>% 
+  mutate(prop = round((n / sum(n))*100, 2), 
+         out = paste0(n , ' (', prop, ')')) %>% 
+  select(study, aod_cat, out) %>%
+  pivot_wider(names_from = study, values_from = out)
+
+## APOE
+ampad_apoe <- count(ampad, apoe4) %>% 
+  mutate(prop = round((n / sum(n))*100, 2), 
+         out = paste0(n , ' (', prop, ')')) %>% 
+  select(study, apoe4, out) %>%
+  pivot_wider(names_from = study, values_from = out)
+
+## race
+ampad_race <- count(ampad, race) %>% 
+  mutate(prop = round((n / sum(n))*100, 2), 
+         out = paste0(n , ' (', prop, ')')) %>% 
+  select(study, race, out) %>%
+  pivot_wider(names_from = study, values_from = out)
+
+## race
+ampad_race <- count(ampad, race) %>% 
+  mutate(prop = round((n / sum(n))*100, 2), 
+         out = paste0(n , ' (', prop, ')')) %>% 
+  select(study, race, out) %>%
+  pivot_wider(names_from = study, values_from = out)
+
+## Source Tissue
+ampad_SourceTissue <- ampad %>% 
+  ungroup() %>%
+  mutate(SourceTissue = as_factor(SourceTissue), 
+         SourceTissue = fct_lump(SourceTissue, n = 8)) %>%
+  group_by(study) %>%
+  count(SourceTissue) %>% 
+  mutate(prop = round((n / sum(n))*100, 2), 
+         out = paste0(n , ' (', prop, ')')) %>% 
+  select(study, SourceTissue, out) %>%
+  pivot_wider(names_from = study, values_from = out)
+
+## Braak Score 
+ampad %>% 
+  mutate(braaksc = fct_recode(braaksc, '0' = '0', 'I/II' = '1', 'I/II' = '2', 'III/IV' = '3', 'III/IV' = '4', 'V/VI' = '5', 'V/VI' = '6')) %>%
+  count(braaksc) %>% 
+  mutate(prop = round((n / sum(n))*100, 2), 
+         out = paste0(n , ' (', prop, ')')) %>% 
+  select(study, braaksc, out) %>%
+  pivot_wider(names_from = study, values_from = out)
+
+## Cerad Score
+ampad %>% 
+  count(ceradsc) %>% 
+  mutate(prop = round((n / sum(n))*100, 2), 
+         out = paste0(n , ' (', prop, ')')) %>% 
+  select(study, ceradsc, out) %>%
+  pivot_wider(names_from = study, values_from = out) %>% 
+  arrange(ceradsc)
+
+## Thal Score
+ampad %>% 
+  mutate(thal = fct_recode(thal, '0' = '0', '1' = '1', '2/3' = '2', '2/3' = '3', '4/5' = '4', '4/5' = '5')) %>%
+  count(thal) %>% 
+  mutate(prop = round((n / sum(n))*100, 2), 
+         out = paste0(n , ' (', prop, ')')) %>% 
+  select(study, thal, out) %>%
+  pivot_wider(names_from = study, values_from = out) %>% 
+  arrange(thal)
+
+## diagnosis 
+ampad %>% 
+  mutate(dx.raw = fct_recode(dx.raw, NCI = '1', MCI = '2', MCI = '3', AD = '4', AD = '5', Other = '6')) %>%
+  count(dx.raw) %>% 
+  mutate(prop = round((n / sum(n))*100, 2), 
+         out = paste0(n , ' (', prop, ')')) %>% 
+  select(study, dx.raw, out) %>%
+  pivot_wider(names_from = study, values_from = out) %>% 
+  arrange(dx.raw)
+
+write_csv(ampad_SourceTissue, '~/Downloads/ampad_SourceTissue.csv')
+
+```
+
+
+# Alzheimer's Disease Neuroimaging Initiative 
+
+NPTHAL: Thal phase for amyloid plaques by immunohisto-chemistry 
+
+* 0=0 Phase 0 (A0) ; 1=1 Phase 1 (A1) ; 2=2 Phase 2 (A1) ; 3=3 Phase 3 (A2) ; 4=4 Phase 4 (A3) ; 5=5 Phase 5 (A3) ; 8=8 Not assessed ; 9=9 Missing/unknown
+
+NPBRAAK: Braak stage for neurofibrillary degeneration 
+
+* 0=0 Stage 0: AD-type neurofibrillary degeneration not present (B0)
+* 1=1 Stage I (B1)
+* 2=2 Stage II (B1)
+* 3=3 Stage III (B2)
+* 4=4 Stage IV (B2)
+* 5=5 Stage V (B3)
+* 6=6 Stage VI (B3)
+* 7=7 The presence of a tauopathy (other than aging/AD) precludes Braak staging
+* 8=8 Not assessed
+* 9=9 Missing/unknown
+
+NPNEUR: CERAD score for density of neocortical neuritic plaque 
+
+* 0=0 No neuritic plaques (C0)
+* 1=1 Sparse neuritic plaques (C1)
+* 2=2 Moderate neuritic plaques (C2)
+* 3=3 Frequent neuritic plaques (C3)
+* 8=8 Not assessed
+* 9=9 Missing/unknown
+
+NPADNC: NIA-AA Alzheimer's disease neuropathologic change (ADNC) 
+
+* 0=0 Not AD
+* 1=1 Low ADNC 
+* 2=2 Intermediate ADNC
+* 3=3 High ADNC
+* 8=8 Not assessed
+* 9=9 Missing/unknown
+
+```{r, adni, echo=FALSE, message=FALSE}
+adni <- read_csv('data/ADNI/NEUROPATH_04_12_18.csv') %>% 
+  select(RID, NPSEX, RACE, NPDAGE, PMI, NPTHAL, NPBRAAK, NPNEUR, NPADNC, BRAAK_NFT_DX, BRAAK_AB_DX, THAL_AB_DX, BRAAK_LEWY_DX, KHACH_DX, CERAD_DX, NIA_REAGAN_DX, NIA_AA_A_DX, NIA_AA_B_DX, NIA_AA_C_DX, NIA_AA_PROB_DEM_DX)
+
+adni %>% 
+  count(NIA_REAGAN_DX, NPADNC)
+
+```
+
+
+```{r, desc_adni, echo=FALSE}
+skim(adni)
+```
+
+
+```{r, output}
+
+df.ls <- list(rosmap, msbb, mayo, dian)
+names(df.ls) <- c('rosmap', 'msbb', 'mayo', 'dian')
+saveRDS(df.ls, file = "data/ampad_dian.rds")
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

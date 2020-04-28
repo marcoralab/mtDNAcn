@@ -4,7 +4,12 @@ __default__:
   queue: premium
   cores: 1
   mem: 8000
-  time: '60'
+  time: '1:30'
   name: $(basename $(pwd)):{rule}:{wildcards}
   output: logs/{rule}:{wildcards}.stdout
   error: logs/{rule}:{wildcards}.stderr
+phymer:
+  time: '3:00'
+mosdepth:
+  cores: 4
+  mem: 2000

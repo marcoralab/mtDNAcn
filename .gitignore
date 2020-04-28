@@ -1,2 +1,9 @@
 .snakejob/*
+.snakemake/*
 .DS_Store
+data/*
+output/*
+raw/*
+src/*
+temp/*
+.Rhistory
