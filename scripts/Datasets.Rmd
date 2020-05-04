@@ -13,7 +13,7 @@ editor_options:
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_knit$set(root.dir = '/Users/shea/minerva/sc/arion/projects/LOAD/shea/Projects/mDNACN')
+knitr::opts_knit$set(root.dir = '/sc/arion/projects/LOAD/shea/Projects/mDNACN')
 library(readxl)
 library(forcats)
 library(tidyverse)
@@ -23,7 +23,7 @@ library(ggbeeswarm)
 library(ggpubr)
 # library(knitr)
 # library(kableExtra)
-# setwd('/Users/shea/minerva/sc/arion/projects/LOAD/shea/Projects/mDNACN')
+# setwd('/sc/arion/projects/LOAD/shea/Projects/mDNACN')
 ```
 
 # Neuropathological Confirmed AD 
@@ -108,11 +108,14 @@ Whole genome sequencing data was obtained from three cohorts ROSMAP, Mayo and MS
 
 ```{r, datasets, echo = FALSE, message=FALSE, warning=FALSE}
 ## ROSMAP
-rosmap.wgsqc <- read_csv('data/AMPAD_extra/rosmap/WGS_sample_QC_info.csv', guess_max = 10000)
+rosmap.wgsqc <- read_csv("data/AMPAD_extra/rosmap/WGS_sample_QC_info.csv", guess_max = 10000)
+rosmap.pheno <- readxl::read_xlsx("data/AMPAD_extra/rosmap/dataset_641_basic_04-29-2020.xlsx") %>%
+  mutate(projid = as.numeric(projid))
 rosmap.raw <- read_csv('data/AMPAD_extra/rosmap/ROSMAP_Clinical_2019-05_v3.csv') %>%
+  select(projid, race, spanish, cts_mmse30_lv, educ) %>% 
+  left_join(rosmap.pheno, by = 'projid') %>%
   left_join(rosmap.wgsqc, by = 'projid') %>% 
-  filter(!is.na(WGS_id)) %>% 
-  rename(study = Study)
+  filter(!is.na(WGS_id)) 
 
 ## MSBB
 msbb.raw1 <- read_tsv('data/AMPAD/msbb/WGS_Metadata.txt') 
@@ -482,6 +485,7 @@ De jager et al. *A multi-omic atlas of the human frontal cortex for aging and Al
 
 The samples that we have profiled come from two prospective studies of aging-The Religious order Study (ROS) and the Memory and Aging Project (MAP)-that recruit older individuals without known dementia and include (1) detailed cognitive, neuroimaging and other ante-mortem phenotyping and (2) an autopsy at the time of death that includes a structured neuropathologic examination. A subset of the ROSMAP samples (n=1200 for 1179 unique deceased participants) underwent whole genome sequencing, with DNA coming from brain tissue (n=806), whole blood (n=389) or lymphocytes transformed with EBV virus (n=5).
 
+### Variables 
 Clinical Code Book: [Synapese](https://www.synapse.org/#!Synapse:syn3191087)
 
 [cogdx](https://www.radc.rush.edu/docs/var/detail.htm?category=Clinical+Diagnosis&subcategory=Final+consensus+diagnosis&variable=cogdx): Physician’s overall cognitive diagnostic category
@@ -510,6 +514,40 @@ Clinical Code Book: [Synapese](https://www.synapse.org/#!Synapse:syn3191087)
 * 3 = Possible -> Sparse (C1)
 * 4 = No AD -> None (C0) 
 
+[niareagansc](https://www.radc.rush.edu/docs/var/detail.htm?category=Pathology&subcategory=Alzheimer%27s+disease&variable=niareagansc): modified NIA-Reagan diagnosis of Alzheimer’s disease is based on consensus recommendations for postmortem diagnosis of Alzheimer’s disease. The criteria rely on both neurofibrillary tangles (Braak) and neuritic plaques (CERAD).
+
+* 1	= High
+* 2	= Intermediate
+* 3	= Low	
+* 4	= No AD
+
+### Pathology
+
+[Pathology](https://www.radc.rush.edu/docs/var/overview.htm?category=Pathology): post-mortem neuropathologic evaluation
+
++ Alzheimer's disease 
+  - [NIA-Reagan diagnosis of AD](https://www.radc.rush.edu/docs/var/detail.htm?category=Pathology&subcategory=Alzheimer%27s+disease&variable=niareagansc): `niareagansc` modified NIA-Reagan diagnosis of Alzheimer’s disease is based on consensus recommendations for postmortem diagnosis of Alzheimer’s disease. The criteria rely on both neurofibrillary tangles (Braak) and neuritic plaques (CERAD).
+  - [CERAD score](https://www.radc.rush.edu/docs/var/detail.htm?category=Pathology&subcategory=Alzheimer%27s+disease&variable=ceradsc): `ceradsc` CERAD score is a semiquantitative measure of neuritic plaques. A CERAD neuropathologic diagnosis of AD required moderate (probable AD) or frequent neuritic plaques (definite AD) in one or more neocortical regions.
+  - [Braak stage](https://www.radc.rush.edu/docs/var/detail.htm?category=Pathology&subcategory=Alzheimer%27s+disease&variable=braaksc): `braaksc` Braak Stage is a semiquantitative measure of severity of neurofibrillary tangle (NFT) pathology.
+  - [Global AD pathology burden](https://www.radc.rush.edu/docs/var/detail.htm?category=Pathology&subcategory=Alzheimer%27s+disease&variable=gpath): `gpath` Global AD pathology burden is a quantitative summary of AD pathology derived from counts of three AD pathologies: neuritic plaques (n), diffuse plaques (d), and neurofibrillary tangles (nft)
++ Beta-Amyloid 
+  - [amyloid](https://www.radc.rush.edu/docs/var/detail.htm?category=Pathology&subcategory=Beta-Amyloid&variable=amyloid): 	 `amyloid` Overall amyloid level - Mean of 8 brain regions
+  - [plaq_d](https://www.radc.rush.edu/docs/var/detail.htm?category=Pathology&subcategory=Beta-Amyloid&variable=plaq_d): `plaq_d` Diffuse plaque summary based on 5 regions
+  - [plaq_n](https://www.radc.rush.edu/docs/var/detail.htm?category=Pathology&subcategory=Beta-Amyloid&variable=plaq_n): `plaq_n` Neuritic plaque summary based on 5 regions
++ PHF tau Tangles 
+  - [Tangle](https://www.radc.rush.edu/docs/var/detail.htm?category=Pathology&subcategory=PHF+tau+tangles&variable=tangles): `tangles` Tangle density - Mean of 8 brain regions 
+  - [NFT burden](https://www.radc.rush.edu/docs/var/detail.htm?category=Pathology&subcategory=PHF+tau+tangles&variable=nft): `nft` Neurofibrillary tangle summary based on 5 regions
++ [Lewy Body disease](https://www.radc.rush.edu/docs/var/detail.htm?category=Pathology&subcategory=Lewy+body%2fPD&variable=dlbdx): `dlbdx` Pathologic diagnosis of Lewy body diseases - 4 stages
++ Vascular
+  - [gross infarcts](https://www.radc.rush.edu/docs/var/detail.htm?category=Pathology&subcategory=Vascular+-+Infarcts+(Presence+of)&variable=ci_num2_gct): `ci_num_gct` Cerebral Infarctions - Binary - Gross-Chronic-Any Location
+  - [micro infarcts](https://www.radc.rush.edu/docs/var/detail.htm?category=Pathology&subcategory=Vascular+-+Infarcts+(Presence+of)&variable=ci_num2_mct): `ci_num2_mct` Cerebral Infarctions - Binary - Micro-Chronic-Any Location
+  - [Cerebral atherosclerosis](https://www.radc.rush.edu/docs/var/detail.htm?category=Pathology&subcategory=Vascular+-+General+measures&variable=cvda_4gp2): `cvda_4gp2` Cerebral Atherosclerosis Rating - 4 levels (None - severe)
+  - [Cerebral amyloid angiopathy](https://www.radc.rush.edu/docs/var/detail.htm?category=Pathology&subcategory=Vascular+-+General+measures&variable=caa_4gp): `caa_4gp` Cerebral amyloid angiopathy - 4 stages
+  - [Arteriolosclerosis](https://www.radc.rush.edu/docs/var/detail.htm?category=Pathology&subcategory=Vascular+-+General+measures&variable=arteriol_scler): `arteriol_scler` Arteriolosclerosis - 4 stages
++ [Hippocampal sclerosis (Typical)](https://www.radc.rush.edu/docs/var/detail.htm?category=Pathology&subcategory=Hippocampal+sclerosis&variable=hspath_typ): `hspath_typ` Definite presence of typical hippocampal sclerosis
++ [TDP-43 stage](https://www.radc.rush.edu/docs/var/detail.htm?category=Pathology&subcategory=TDP-43&variable=tdp_st4): `tdp_st4` TDP-43 pathology - 4 stages (8 regions)
+
+### Cognition 
 [mmse](https://www.radc.rush.edu/docs/var/detail.htm?category=Cognition&subcategory=Test+scores&variable=cts_mmse30): Mini Mental State Examination is a widely used, 30 item, standardized screening measure of dementia severity. The MMSE can be used as a surrogate measure for the CDR for the staging of dementia in AD [Perneczky et al 2006](https://doi.org/10.1097/01.JGP.0000192478.82189.a8). 
 
 | MMSE | CDR | 
@@ -520,15 +558,17 @@ Clinical Code Book: [Synapese](https://www.synapse.org/#!Synapse:syn3191087)
 | 11-20 | 2 (Moderate) | 
 | 0-10 | 3 (Severe) |
 
+### Data Cleaning 
+
+- removed samples with QC issues (duplicates, gender missmatch etc)
+ 
 ```{r, ROSMAP, echo = FALSE, message=FALSE, warning=FALSE}
 
 rosmap <- rosmap.raw %>%
-  left_join(haplogrep, by = c('WGS_id' = 'SampleID')) %>%
-#  left_join(mtdna, by = c('WGS_id' = 'sample')) %>%
-  left_join(mosdepth, by = c('WGS_id' = 'SampleID')) %>%
-    mutate(aod = str_replace(age_death, '\\+', ''),
-        aod = round(as.numeric(aod), 0),
-        race = as_factor(race),
+  filter(QC == "Pass") %>%
+   left_join(select(haplogrep, -study), by = c('WGS_id' = 'SampleID')) %>%
+   left_join(select(mosdepth, -study), by = c('WGS_id' = 'SampleID')) %>%
+    mutate(race = as_factor(race),
         race = fct_recode(race,'W' = '1', 'B' = '2'),
         z_mtdnacn = scale(mtcn_avg, center = TRUE, scale = TRUE)[,1],
         organ = recode(Source.Tissue.Type, 'Blood' = 'blood', 'Blood-PBMC' = 'blood', 'Whole Blood' = 'blood', 
@@ -543,17 +583,19 @@ rosmap <- rosmap.raw %>%
         dx = recode(cogdx, '1' = 'CTRL', '4' = 'AD', '5' = 'AD'),
         dx = fct_relevel(dx, 'CTRL', 'AD'),
         apoe4 = recode(apoe_genotype, '22' = 'e4-', '23' = 'e4-', '33' = 'e4-', '24' = 'e4+', '34' = 'e4+', '44' = 'e4+'),
-        aod_cat = cut(aod, c(50, 60, 70, 80, 90, Inf), c('50-59', '60-69', '70-79', '80-89', '90+'), right = FALSE),
+        aod_cat = cut(age_death, c(50, 60, 70, 80, 90, Inf), c('50-59', '60-69', '70-79', '80-89', '90+'), right = FALSE),
         aod_cat = ordered(aod_cat, levels = c('50-59', '60-69', '70-79', '80-89', '90+')), 
         msex = as.factor(msex), 
         msex = fct_recode(msex, 'M' = '1', 'F' = '0'),
         dx = as.factor(dx),
         cogdx = factor(cogdx), 
+        dcfdx_lv = factor(dcfdx_lv),
         apoe_genotype = as.factor(apoe_genotype), 
         apoe4 = as.factor(apoe4), 
         study = as.factor(study), 
         braaksc = ordered(braaksc, levels = c('0', '1', '2', '3', '4', '5', '6')), 
         ceradsc = ordered(ceradsc, levels = c('4', '3', '2', '1')), 
+        niareagansc = ordered(niareagansc, levels = c('4', '3', '2', '1')),
         braaksc_B = fct_recode(braaksc, B0 = "0", B1 = "1", B1 = "2", B2 = "3", B2 = "4", B3 = "5", B3 = "6"), 
         ceradsc_C = fct_recode(ceradsc, C0 = "4", C1 = "3", C2 = "2", C3 = "1"), 
         abc = paste0(braaksc_B, ceradsc_C), 
@@ -562,7 +604,8 @@ rosmap <- rosmap.raw %>%
                        "B0C1" = 'low', "B1C1" = 'low', "B2C1" = 'low', "B3C1" = 'low', 
                        "B0C2" = 'low', "B1C2" = 'low', "B2C2" = 'intermediate', "B3C2" = 'intermediate', 
                        "B0C3" = 'low', "B1C3" = 'low', "B2C3"  = 'intermediate', "B3C3" = 'high')) %>%
-  select(id = WGS_id, study, race, educ, sex = msex, apoe = apoe_genotype, apoe4, cts_mmse30_lv, aod, aod_cat, dx.raw = cogdx, dx, braaksc, ceradsc, abc, npadnc, organ, SourceTissue = Source.Tissue.Type, mtcn_avg, z_mtdnacn, Haplogroup, Quality, macro)
+  select(-Range, -scaled_to, -Duplicate, -QC, -Gender_match, -Concordant_with_array, -Concordant_with_RNAseq)
+  # select(id = WGS_id, study, race, educ, sex = msex, apoe = apoe_genotype, apoe4, cts_mmse30_lv, aod = age_death, aod_cat, dx.raw = cogdx, dx, braaksc, ceradsc, abc, npadnc, organ, SourceTissue = Source.Tissue.Type, mtcn_avg, z_mtdnacn, Haplogroup, Quality, macro)
 
 ```
 
@@ -581,21 +624,43 @@ rosmap %>%
          abc = paste0(braaksc, ceradsc)) %>% 
   count(braaksc, ceradsc) %>% 
   pivot_wider(names_from = braaksc, values_from = n) %>% 
+  arrange(ceradsc) %>%
   rename('cerad/braak' = ceradsc) %>%
+  select('cerad/braak', B0, B1, B2, B3) %>%
+  filter(!is.na(`cerad/braak`)) %>%
   knitr::kable(.) 
 
 ```
 
-**Clinical vs Neuropathological diagnosis in ROSMAP**
+**Alzheimer's disease neuropathologic change in ROSMAP**
+```{r, rosmap_niaregan, warning=FALSE, results='asis', echo=FALSE}
+rosmap %>% 
+  select(braaksc, ceradsc, niareagansc) %>% 
+  mutate(braaksc = fct_recode(braaksc, B0 = "0", B1 = "1", B1 = "2", B2 = "3", B2 = "4", B3 = "5", B3 = "6"),
+         ceradsc = fct_recode(ceradsc, C0 = "4", C1 = "3", C2 = "2", C3 = "1"),
+         niareagansc = fct_recode(niareagansc, High = "1", Intermediate = "2", Low = "3", NoAD = "4")) %>% 
+  count(ceradsc, braaksc, niareagansc) %>% 
+  pivot_wider(names_from = niareagansc, values_from = n) %>% 
+#  rename('cerad_braak' = ceradsc) %>%
+  select(-'NA') %>%
+  filter(!is.na(ceradsc)) %>%
+  knitr::kable(.) 
+
+```
+
+**Clinical Diagnosis vs NIA-Reagan diagnosis of AD in ROSMAP**
 ```{r, rosmap_npadnc, warning=FALSE, results='asis', echo=FALSE}
 rosmap %>% 
-  select(dx.raw, npadnc) %>%
-  mutate(Clinical.dx = fct_recode(dx.raw, NCI = "1", PROB_MCI = "2", POSS_MCI = "3", 
-                                  PROB_AD = "4", PROSS_AD = "5", Other = "6")) %>% 
-  count(Clinical.dx, npadnc) %>% 
-  pivot_wider(names_from = npadnc, values_from = n) %>% 
-  rename('Clinical/NPADNC' = Clinical.dx) %>%
-  select('Clinical/NPADNC', low, intermediate, high, 'NA') %>% 
+  select(cogdx, niareagansc) %>%
+  mutate(cogdx = fct_recode(cogdx, NCI = "1", PROB_MCI = "2", POSS_MCI = "3", 
+                                  PROB_AD = "4", POSS_AD = "5", Other = "6"), 
+         niareagansc = fct_recode(niareagansc, High = "1", Intermediate = "2", Low = "3", 
+                                  NoAD = "4")) %>% 
+  count(cogdx, niareagansc) %>% 
+  pivot_wider(names_from = niareagansc, values_from = n) %>% 
+  rename('Clinical/NIA-Reagan' = cogdx) %>%
+  select(-'NA') %>%
+  filter(!is.na(`Clinical/NIA-Reagan`)) %>%
   knitr::kable(.) 
 ```
 
@@ -822,7 +887,7 @@ skim(dian)
 #   ggplot(., aes(x = FAD, y = mtcn_avg, colour = country)) + geom_quasirandom() + theme_bw()
 ```
 
-```{r}
+```{r, eval=FALSE}
 ampad <- bind_rows(select(mayo, id, study, sex, race, apoe, apoe4, aod_cat, thal, braaksc, SourceTissue, dx.raw), 
           select(rosmap, id, study, sex, race, apoe, apoe4, aod_cat, ceradsc, braaksc, SourceTissue, dx.raw ), 
           select(msbb, id, study, sex, race, apoe, apoe4, aod_cat, ceradsc, braaksc, SourceTissue, dx.raw = cerad)) %>% 
