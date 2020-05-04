@@ -7,3 +7,4 @@ raw/*
 src/*
 temp/*
 .Rhistory
+.DS_Store
