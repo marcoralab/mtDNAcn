@@ -144,7 +144,7 @@ rosmap.analysis <- rosmap %>%
   filter(race == 'W') %>%
   filter(dx.raw != 6) %>%
   filter(organ != 'lymphocytes') %>% 
-  filter(aod_cat != '60-69') %>% 
+#  filter(aod_cat != '60-69') %>% 
   mutate(dx.raw = fct_recode(dx.raw, NCI = '1', MCI = '2', MCI = '3', AD = '4', AD = '5'), 
          SourceTissue_lmp = fct_lump(SourceTissue, n = 4)) #%>% 
  # filter(macro %in% c('H', 'V', 'J', 'T', 'U', 'K', 'I', 'W', 'X'))
@@ -172,8 +172,7 @@ GLM: DX ~ mtDNA-CN + Age of Death (categorical) + Sex + apoe4 + study + Source T
 rosmap.mtdna <- rosmap.analysis %>% 
   filter(SourceTissue_lmp != 'Other') %>% 
   filter(dx.raw != 'MCI') %>% 
-  filter(organ != 'blood') %>%
-  mutate(aod_cat = fct_drop(aod_cat))
+  filter(organ != 'blood') 
 ```
 
 ```{r msbb_mtdna_plot, warning=FALSE, echo=FALSE}
@@ -190,7 +189,7 @@ ggplot(rosmap.mtdna, aes(x = dx.raw, y = mtcn_avg, colour = dx.raw)) +
 
 ```{r msbb_mtdna_glm, warning=FALSE, results='asis', echo=FALSE}
 
-rosmap_mtdna_dx <- glm(dx ~ z_mtdnacn + aod_cat + sex + apoe4 + study + SourceTissue, family = 'binomial', data = rosmap.mtdna) 
+rosmap_mtdna_dx <- glm(dx ~ z_mtdnacn + aod + sex + apoe4 + study + SourceTissue, family = 'binomial', data = rosmap.mtdna) 
 
 rosmap_mtdna_dx %>% 
   tidy(conf.int = TRUE, exponentiate = TRUE) %>% 
@@ -369,7 +368,6 @@ rosmap.hg <- rosmap.analysis %>%
   filter(macro %in% c('H', 'V', 'J', 'T', 'U', 'K', 'I', 'W', 'X'))  %>% 
   filter(Quality > 0.8) %>%
   mutate(macro_lmp = fct_drop(macro), 
-         aod_cat = fct_drop(aod_cat), 
          dx.raw = fct_drop(dx.raw))  
 
 ```
@@ -390,7 +388,7 @@ rosmap.hg <- rosmap.analysis %>%
 GLM: Diagnosis ~ Haplgroup + Age of Death (categorical) + Sex + apoe4 + study + Source Tissue
 
 ```{r rosmap_hg_dx_glm, warning=FALSE, results='asis', echo=FALSE}
-rosmap_hg.dx <- glm(dx ~ macro_lmp + aod_cat + sex + apoe4 + study, family = 'binomial', data = rosmap.hg) 
+rosmap_hg.dx <- glm(dx ~ macro_lmp + aod + sex + apoe4 + study, family = 'binomial', data = rosmap.hg) 
 
 rosmap_hg.dx %>% 
   tidy(conf.int = TRUE, exponentiate = TRUE) %>% 
@@ -520,7 +518,8 @@ LM : mtDNA-CN ~ haplogroup + DX + Age of Death + APOE + Sex + Study + Source Tis
 ```{r rosmap_mtdna_hg, warning=FALSE, results='asis', echo=FALSE}
 rosmap_hg_mtdna <- rosmap.hg %>% 
   filter(organ == 'brain') %>% 
-  lm(z_mtdnacn ~ macro_lmp + dx + aod_cat + sex + apoe4 + study + SourceTissue_lmp, data = .) 
+#  filter(SourceTissue == 'Brain-DLPFC') %>% 
+  lm(z_mtdnacn ~ macro_lmp + dx + aod + sex + apoe4 + study + SourceTissue_lmp, data = .) 
 
 rosmap_hg_mtdna %>% 
   tidy(conf.int = TRUE) %>% 
