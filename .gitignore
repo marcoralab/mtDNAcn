@@ -8,3 +8,4 @@ src/*
 temp/*
 .Rhistory
 .DS_Store
+.Rproj.user
