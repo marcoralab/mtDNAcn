@@ -1,0 +1,567 @@
+# ROSMAP
+```{r, warning=F, message=F, error=F, echo=FALSE}
+# library(knitr)
+# library(kableExtra)
+library(tidyverse)
+library(gtsummary)
+library(dlookr)
+library(inspectdf)
+library(skimr)
+knitr::opts_knit$set(root.dir = '/sc/arion/projects/LOAD/shea/Projects/mtDNAcn')
+# setwd('/sc/arion/projects/LOAD/shea/Projects/mtDNAcn')
+```
+
+The samples that we have profiled come from two prospective studies of aging-The Religious order Study (ROS) and the Memory and Aging Project (MAP)-that recruit older individuals without known dementia and include (1) detailed cognitive, neuroimaging and other ante-mortem phenotyping and (2) an autopsy at the time of death that includes a structured neuropathologic examination. A subset of the ROSMAP samples (n=1200 for 1179 unique deceased participants) underwent whole genome sequencing, with DNA coming from brain tissue (n=806), whole blood (n=389) or lymphocytes transformed with EBV virus (n=5) (@10.1038/sdata.2018.142).
+
+Data Dictionaries for ROSMAP can be found at: 
+
+- [AMP-AD](https://adknowledgeportal.synapse.org/Explore/Studies?Study=syn3219045)
+- [RADC](https://www.radc.rush.edu/docs/var/variables.htm)
+
+```{r cars, warning=F, message=F, error=F}
+rosmap.wgsqc <- read_csv("data/AMPAD_extra/rosmap/WGS_sample_QC_info.csv", guess_max = 10000)
+rosmap.pheno <- readxl::read_xlsx("data/AMPAD_extra/rosmap/dataset_641_basic_04-29-2020.xlsx") %>%
+  mutate(projid = as.numeric(projid))
+rosmap.raw <- read_csv('data/AMPAD_extra/rosmap/ROSMAP_Clinical_2019-05_v3.csv') %>%
+  select(projid, race, spanish, cts_mmse30_lv, educ) %>% 
+  left_join(rosmap.pheno, by = 'projid') %>%
+  left_join(rosmap.wgsqc, by = 'projid') %>% 
+  filter(!is.na(WGS_id)) 
+
+mosdepth <- read_tsv('data/mosdepth/mosdepth_all.txt')
+haplogrep <- read_tsv('data/haplogrep/haplogrep_all.txt')
+
+rosmap <- rosmap.raw %>%
+  filter(QC == "Pass") %>%
+  left_join(select(haplogrep, -study), by = c('WGS_id' = 'SampleID')) %>%
+  left_join(select(mosdepth, -study), by = c('WGS_id' = 'SampleID')) %>%
+    mutate(race = as_factor(race),
+        race = fct_recode(race,'W' = '1', 'B' = '2'),
+        z_mtdnacn = scale(mtcn_avg, center = TRUE, scale = TRUE)[,1],
+        spanish = as_factor(spanish),
+        spanish = fct_recode(spanish,'Yes' = '1', 'No' = '2'),
+        organ = recode(Source.Tissue.Type, 'Blood' = 'blood', 'Blood-PBMC' = 'blood', 'Whole Blood' = 'blood', 
+                       'Blood-Cerebellum' = 'brain',  'Brain-Anterior Caudate' = 'brain',
+                       'Brain-Cerebellum' = 'brain', 'Brain-DLPFC' = 'brain', 
+                       'Brain-Frontal Cortex (BA unknown)' = 'brain', 
+                       'Brain-Frontal Pole (BA10-12,32)' = 'brain', 
+                       'Brain-Occipital Association Cortex (BA18,19)' = 'brain', 
+                       'Brain-PCC' = 'brain', 'Brain-Posterior Cingulate Cortex' = 'brain', 
+                       'Brain-region unknown' = 'brain', 
+                       'lymphocytes _transformed _with EBV virus'= 'lymphocytes'),
+        organ = as_factor(organ),
+        ad_reagan = fct_recode(niareagansc, "1" = "1", "1" = "2", "0" = "3", "0" = "4"),
+        apoe4 = recode(apoe_genotype, '22' = 'e4-', '23' = 'e4-', '33' = 'e4-', '24' = 'e4+', '34' = 'e4+', '44' = 'e4+'),
+        aod_cat = cut(age_death, c(50, 60, 70, 80, 90, Inf), c('50-59', '60-69', '70-79', '80-89', '90+'), right = FALSE),
+        aod_cat = ordered(aod_cat, levels = c('50-59', '60-69', '70-79', '80-89', '90+')), 
+        msex = as.factor(msex), 
+        msex = fct_recode(msex, 'M' = '1', 'F' = '0'),
+        cogdx = factor(cogdx), 
+        dcfdx_lv = factor(dcfdx_lv),
+        apoe_genotype = as.factor(apoe_genotype), 
+        apoe4 = as.factor(apoe4), 
+        study = as.factor(study), 
+        braaksc = ordered(braaksc, levels = c('0', '1', '2', '3', '4', '5', '6')), 
+        ceradsc = ordered(ceradsc, levels = c('4', '3', '2', '1')), 
+        dlbdx = as.factor(dlbdx), 
+        ci_num2_mct = as.factor(ci_num2_mct), 
+        ci_num2_gct = as.factor(ci_num2_gct), 
+        cvda_4gp2 = as.factor(cvda_4gp2),
+        caa_4gp = as.factor(caa_4gp),
+        arteriol_scler = as.factor(arteriol_scler),
+         hspath_typ = as.factor(hspath_typ),
+         tdp_st4 = as.factor(tdp_st4),
+        niareagansc = ordered(niareagansc, levels = c('4', '3', '2', '1')), 
+        CDR = cut(cts_mmse30_lv, breaks = c(-Inf, 11, 21, 26, 30, Inf), labels = c(3, 2, 1, 0.5, 0), right = FALSE)) %>%
+  filter(!is.na(study)) 
+
+saveRDS(rosmap, 'output/rosmap.RData')
+
+df <- rosmap %>% 
+    select(study, age_bl, msex, educ, apoe_genotype, cogdx, age_first_ad_dx, Source.Tissue.Type) 
+```
+
+```{r rosmap_dic, echo=FALSE}
+
+rosmap_dic <- tibble(
+  variables = c(
+    "study", "race", "spanish", "msex", "educ", "age_bl", "age_death",
+    "Source.Tissue.Type", "organ", "apoe_genotype", "apoe4",
+    "cogdx", "age_first_ad_dx", "dcfdx_lv"
+    ),
+  definitions = c(
+    "Study", "Racial group", "Spanish ethnicity", "Sex", "Education", "Age at baseline", "Age at death", 
+    "Source tissue for DNA", "collapsed source tissue into organ", "APOE genotypes", "APOE e4 carriers", 
+    "Physician’s overall cognitive diagnostic category", "Age at cycle where first Alzheimer's dementia diagnosis was given", 
+    "Clinical consensus diagnosis of cognitive status at time of death"
+    )
+       )
+
+```
+
+## Demographics 
+
+Demographic variables avaliable in ROSMAP are show in Table \@ref(tab:rosmap-demo-global).    
+
+```{r rosmap-demo-global, echo=FALSE, message=F, tidy=FALSE}
+rosmap %>% 
+  select(study, race, spanish, msex, educ, age_bl, age_death) %>% 
+  diagnose()  %>% 
+  mutate_if(is.numeric, round, 2) %>% 
+  left_join(rosmap_dic) %>% 
+  select(variables, definitions, everything(), -missing_count, -unique_rate) %>% 
+  knitr::kable(caption = "Data Summary")  # %>%
+#  kableExtra::kable_styling() %>%
+#  kableExtra::scroll_box(width = "100%")
+
+```
+
+<br> Descriptive statistics of numerica varibles are presented in Table \@ref(tab:rosmap-demo-numeric). 
+
+```{r rosmap-demo-numeric, echo=FALSE, message=FALSE, tidy=FALSE}
+demo_n <- rosmap %>% 
+  select(study, race, spanish, msex, educ, age_bl, age_death) %>% 
+  inspect_num(.) 
+
+demo_n %>% 
+  select(-hist) %>% 
+  mutate_if(is.numeric, round, 2) %>%
+  knitr::kable(caption = "Variable type: Numeric") 
+```
+
+<br> Frequency and proportions of categorical varibles are presented in Table \@ref(tab:rosmap-demo-factor). 
+
+```{r rosmap-demo-factor, echo=FALSE}
+demo_c <- rosmap %>% 
+  select(study, race, spanish, msex, educ, age_bl, age_death) %>% 
+  mutate_if(is.factor, fct_lump_n, 4) %>%
+  inspect_cat(.)   
+
+demo_c %>% 
+  pull(levels) %>% 
+  bind_rows(.id = "col_name") %>% 
+  rename(level = value) %>% 
+  mutate_if(is.numeric, round, 2) %>% 
+  knitr::kable(caption = "Variable type: Factor") %>%
+  kableExtra::kable_styling(full_width = F)
+```
+
+### Plots 
+
+```{r}
+demo_n %>% show_plot()
+
+demo_c %>% show_plot(high_cardinality = 5)
+```
+
+
+## Genetics 
+
+```{r rosmap-genetic-global, echo=FALSE, message=F, tidy=FALSE}
+rosmap %>% 
+  select(Source.Tissue.Type, organ, 
+         apoe_genotype, apoe4) %>% 
+  diagnose()  %>% 
+  mutate_if(is.numeric, round, 2) %>% 
+  left_join(rosmap_dic) %>% 
+  select(variables, definitions, everything(), -missing_count, -unique_rate) %>% 
+  knitr::kable(caption = "Data Summary")  # %>%
+#  kableExtra::kable_styling() %>%
+#  kableExtra::scroll_box(width = "100%")
+
+```
+<br> 
+
+```{r rosmap-genetic-factor, echo=FALSE}
+genetic_c <- rosmap %>% 
+  select(Source.Tissue.Type, organ, 
+         apoe_genotype, apoe4) %>% 
+#  mutate_if(is.factor, fct_lump_n, 4) %>%
+  mutate_if(is.character, fct_lump_n, 4) %>%
+  inspect_cat(.)   
+
+genetic_c %>% 
+  pull(levels) %>% 
+  bind_rows(.id = "col_name") %>% 
+  rename(level = value) %>% 
+  mutate_if(is.numeric, round, 2) %>% 
+  knitr::kable(caption = "Variable type: Factor") %>%
+  kableExtra::kable_styling(full_width = F)
+```
+
+### Plots 
+
+```{r}
+genetic_c %>% show_plot(high_cardinality = 5)
+```
+
+## Mitochondria 
+
+```{r mt-numeric, echo=FALSE}
+mt_n <- rosmap %>% 
+  select(autosomal_coverage, mt_coverage, mtcn_avg, Haplogroup, Quality, macro) %>% 
+  inspect_num(.) 
+
+mt_n %>% 
+  select(-hist) %>% 
+  mutate_if(is.numeric, round, 2) %>%
+  knitr::kable(caption = "Variable type: Numeric") 
+
+```
+
+```{r rosmap-mt-factor, echo=FALSE}
+mt_c <- rosmap %>% 
+  select(Haplogroup, 
+         macro) %>% 
+  mutate_if(is.character, fct_lump_n, 10) %>%
+  inspect_cat(.)   
+
+mt_c %>% 
+  pull(levels) %>% 
+  bind_rows(.id = "col_name") %>% 
+  rename(level = value) %>% 
+  mutate_if(is.numeric, round, 2) %>% 
+  knitr::kable(caption = "Variable type: Factor") %>%
+  kableExtra::kable_styling(full_width = F)
+```
+
+### Plots 
+
+```{r}
+mt_n %>% show_plot()
+
+mt_c %>% show_plot(high_cardinality = 5)
+```
+
+
+## Clinical Diagnosis 
++ [Clinical cognitive diagnosis summary](https://www.radc.rush.edu/docs/var/detail.htm?category=Clinical+Diagnosis&subcategory=Final+consensus+diagnosis&variable=cogdx): `cogdx` Physician’s overall cognitive diagnostic category
+  * 1 =	NCI: No cognitive impairment (No impaired domains)
+  * 2 =	MCI: Mild cognitive impairment (One impaired domain) and NO other cause of CI
+  * 3 =	MCI: Mild cognitive impairment (One impaired domain) AND another cause of CI
+  * 4 =	AD: Alzheimer’s dementia and NO other cause of CI (NINCDS PROB AD)
+  * 5 =	AD: Alzheimer’s dementia AND another cause of CI (NINCDS POSS AD)
+  * 6 =	Other dementia: Other primary cause of dementia
++ [Age at first Alzheimer's dementia dx](https://www.radc.rush.edu/docs/var/detail.htm?category=Clinical+Diagnosis&subcategory=Dementia&variable=age_first_ad_dx): `age_first_ad_dx` Age at cycle where first Alzheimer's dementia diagnosis was given
++ [Final consensus cognitive diagnosis](https://www.radc.rush.edu/docs/var/detail.htm?category=Clinical+Diagnosis&subcategory=Final+consensus+diagnosis&variable=cogdx): `dcfdx_lv` Clinical consensus diagnosis of cognitive status at time of death - same coding as `cogdx`
+
+```{r, rosmap-dx, echo=FALSE, results='asis'}
+rosmap %>% 
+  select(cogdx, age_first_ad_dx, dcfdx_lv) %>% 
+  diagnose()  %>% 
+  mutate_if(is.numeric, round, 2) %>% 
+  left_join(rosmap_dic) %>% 
+  select(variables, definitions, everything(), -missing_count, -unique_rate) %>% 
+  knitr::kable(caption = "Data Summary")  # %>%
+
+```
+
+
+<br> 
+
+```{r rosmap-dx-numeric, echo=FALSE, message=FALSE, tidy=FALSE}
+dx_vars <- c('cogdx', 'age_first_ad_dx', 'dcfdx_lv')
+
+dx_n <- rosmap %>% 
+  select(dx_vars) %>% 
+  inspect_num(.) 
+
+dx_n %>% 
+  select(-hist) %>% 
+  mutate_if(is.numeric, round, 2) %>%
+  knitr::kable(caption = "Variable type: Numeric") 
+```
+
+<br> 
+
+```{r rosmap-dx-factor, echo=FALSE}
+dx_c <- rosmap %>% 
+  select(dx_vars) %>% 
+#  mutate_if(is.factor, fct_lump_n, 4) %>%
+  inspect_cat(.)   
+
+dx_c %>% 
+  pull(levels) %>% 
+  bind_rows(.id = "col_name") %>% 
+  rename(level = value) %>% 
+  mutate_if(is.numeric, round, 2) %>% 
+  knitr::kable(caption = "Variable type: Factor") %>%
+  kableExtra::kable_styling(full_width = F) %>%
+  kableExtra::collapse_rows(columns = 1, valign = "top") 
+```
+
+### Plots 
+
+```{r, echo=F}
+dx_n %>% show_plot()
+
+dx_c %>% show_plot(high_cardinality = 5)
+```
+
+### Cross-tabs 
+
+```{r, echo=F}
+rosmap %>% 
+ gtsummary::tbl_cross(
+    row = cogdx, 
+    col = dcfdx_lv, 
+    percent = "cell",
+  ) 
+```
+
+## Pathology
+
+[Pathology](https://www.radc.rush.edu/docs/var/overview.htm?category=Pathology): post-mortem neuropathologic evaluation
+
++ Alzheimer's disease 
+  - [NIA-Reagan diagnosis of AD](https://www.radc.rush.edu/docs/var/detail.htm?category=Pathology&subcategory=Alzheimer%27s+disease&variable=niareagansc): `niareagansc` modified NIA-Reagan diagnosis of Alzheimer’s disease is based on consensus recommendations for postmortem diagnosis of Alzheimer’s disease. The criteria rely on both neurofibrillary tangles (Braak) and neuritic plaques (CERAD).
+    * 1	= High; 2	= Intermediate; 3	= Low; 4	= No AD
+  - Dichomtomized NIA-Reagan: `ad_reagan`
+  - [CERAD score](https://www.radc.rush.edu/docs/var/detail.htm?category=Pathology&subcategory=Alzheimer%27s+disease&variable=ceradsc): `ceradsc` CERAD score is a semiquantitative measure of neuritic plaques. A CERAD neuropathologic diagnosis of AD required moderate (probable AD) or frequent neuritic plaques (definite AD) in one or more neocortical regions.
+    * 1 = Definite -> frequent (C3); 2 = Probable -> moderate (C2); 3 = Possible -> Sparse (C1); 4 = No AD -> None (C0) 
+  - [Braak stage](https://www.radc.rush.edu/docs/var/detail.htm?category=Pathology&subcategory=Alzheimer%27s+disease&variable=braaksc): `braaksc` Braak Stage is a semiquantitative measure of severity of neurofibrillary tangle (NFT) pathology.
+    * 0 = 0; 1 = I (entorhinal); 2 = II (entorhinal); 3 = III (limbic); 4 = IV (limbic); 5 = V (neocortical); 6 = VI (neocortical)
+  - [Global AD pathology burden](https://www.radc.rush.edu/docs/var/detail.htm?category=Pathology&subcategory=Alzheimer%27s+disease&variable=gpath): `gpath` Global AD pathology burden is a quantitative summary of AD pathology derived from counts of three AD pathologies: neuritic plaques (n), diffuse plaques (d), and neurofibrillary tangles (nft)
++ Beta-Amyloid 
+  - [amyloid](https://www.radc.rush.edu/docs/var/detail.htm?category=Pathology&subcategory=Beta-Amyloid&variable=amyloid): 	 `amyloid` Overall amyloid level - Mean of 8 brain regions
+  - [plaq_d](https://www.radc.rush.edu/docs/var/detail.htm?category=Pathology&subcategory=Beta-Amyloid&variable=plaq_d): `plaq_d` Diffuse plaque summary based on 5 regions
+  - [plaq_n](https://www.radc.rush.edu/docs/var/detail.htm?category=Pathology&subcategory=Beta-Amyloid&variable=plaq_n): `plaq_n` Neuritic plaque summary based on 5 regions
++ PHF tau Tangles 
+  - [Tangle](https://www.radc.rush.edu/docs/var/detail.htm?category=Pathology&subcategory=PHF+tau+tangles&variable=tangles): `tangles` Tangle density - Mean of 8 brain regions 
+  - [NFT burden](https://www.radc.rush.edu/docs/var/detail.htm?category=Pathology&subcategory=PHF+tau+tangles&variable=nft): `nft` Neurofibrillary tangle summary based on 5 regions
++ [Lewy Body disease](https://www.radc.rush.edu/docs/var/detail.htm?category=Pathology&subcategory=Lewy+body%2fPD&variable=dlbdx): `dlbdx` Pathologic diagnosis of Lewy body diseases - 4 stages
+  - 0 = Not present; 1 = nigral-predominant; 2 = limbic-type; 3 = neocortical-type
++ Vascular
+  - [gross infarcts](https://www.radc.rush.edu/docs/var/detail.htm?category=Pathology&subcategory=Vascular+-+Infarcts+(Presence+of)&variable=ci_num2_gct): `ci_num_gct` Cerebral Infarctions - Binary - Gross-Chronic-Any Location
+  - [micro infarcts](https://www.radc.rush.edu/docs/var/detail.htm?category=Pathology&subcategory=Vascular+-+Infarcts+(Presence+of)&variable=ci_num2_mct): `ci_num2_mct` Cerebral Infarctions - Binary - Micro-Chronic-Any Location
+  - [Cerebral atherosclerosis](https://www.radc.rush.edu/docs/var/detail.htm?category=Pathology&subcategory=Vascular+-+General+measures&variable=cvda_4gp2): `cvda_4gp2` Cerebral Atherosclerosis Rating 
+    * 0 = None; 1 = Mild; 2 = Moderate; 3 = Severe
+  - [Cerebral amyloid angiopathy](https://www.radc.rush.edu/docs/var/detail.htm?category=Pathology&subcategory=Vascular+-+General+measures&variable=caa_4gp): `caa_4gp` Cerebral amyloid angiopathy
+    * 0 = None; 1 = Mild; 2 = Moderate; 3 = Severe
+  - [Arteriolosclerosis](https://www.radc.rush.edu/docs/var/detail.htm?category=Pathology&subcategory=Vascular+-+General+measures&variable=arteriol_scler): `arteriol_scler` Arteriolosclerosis
+    * 0 = None; 1 = Mild; 2 = Moderate; 3 = Severe
++ [Hippocampal sclerosis (Typical)](https://www.radc.rush.edu/docs/var/detail.htm?category=Pathology&subcategory=Hippocampal+sclerosis&variable=hspath_typ): `hspath_typ` Definite presence of typical hippocampal sclerosis
++ [TDP-43 stage](https://www.radc.rush.edu/docs/var/detail.htm?category=Pathology&subcategory=TDP-43&variable=tdp_st4): `tdp_st4` TDP-43 pathology from 8 regions
+  - 0 = None; 1 = Amygdala; 2 = Amygdala + Limbic; 3 = Amygdala + Limbic + Neocortical
+
+```{r, rosmap-path, echo=FALSE, results='asis'}
+path_vars <- c("niareagansc", "ceradsc", "braaksc", "gpath", "amyloid", "plaq_d", "plaq_n", "tangles", "nft", "dlbdx", 
+         "ci_num2_gct", "ci_num2_mct", "cvda_4gp2", "caa_4gp", "arteriol_scler", "hspath_typ", "tdp_st4")
+
+rosmap %>% 
+  select(path_vars) %>% 
+  diagnose()  %>% 
+  mutate_if(is.numeric, round, 2) %>% 
+  left_join(rosmap_dic) %>% 
+  select(variables, definitions, everything(), -missing_count, -unique_rate) %>% 
+  knitr::kable(caption = "Data Summary")  # %>%
+
+```
+
+<br> 
+
+```{r rosmap-path-numeric, echo=FALSE, message=FALSE, tidy=FALSE}
+path_n <- rosmap %>% 
+  select(path_vars) %>% 
+  inspect_num(.) 
+
+path_n %>% 
+  select(-hist) %>% 
+  mutate_if(is.numeric, round, 2) %>%
+  knitr::kable(caption = "Variable type: Numeric", table.attr = "class='dtable'") 
+
+```
+
+<br> 
+
+```{r rosmap-path-factor, echo=FALSE}
+path_c <- rosmap %>% 
+  select(path_vars) %>% 
+  mutate_if(is.factor, fct_lump_n, 10) %>%
+  inspect_cat(.)   
+
+path_c %>% 
+  pull(levels) %>% 
+  bind_rows(.id = "col_name") %>% 
+  rename(level = value) %>% 
+  mutate_if(is.numeric, round, 2) %>% 
+  mutate(level = replace_na(level, "NA")) %>%
+  DT::datatable(caption = "Variable type: Factor", rownames = FALSE)
+#  knitr::kable(caption = "Variable type: Factor") %>%
+#  kableExtra::kable_styling(full_width = F)
+```
+
+### Plots 
+
+```{r rosmap-inspect-plot, echo=F}
+path_n %>% show_plot()
+
+path_c %>% show_plot(high_cardinality = 5)
+
+```
+
+```{r rosmap-path-dx-plot, echo=F, warning=FALSE}
+ggpubr::ggarrange(
+  ## Amyloid by diagnosis 
+  mutate(rosmap, niareagansc = fct_recode(niareagansc, High = "1", Intermediate = "2", Low = "3", NoAD = "4")) %>%
+    ggplot(., aes(x = ceradsc, y = amyloid, color = niareagansc)) + 
+      geom_quasirandom(size = 0.75) + 
+      theme_bw() + theme(legend.position = "bottom"),
+    mutate(rosmap, niareagansc = fct_recode(niareagansc, High = "1", Intermediate = "2", Low = "3", NoAD = "4")) %>%
+    ggplot(., aes(x = braaksc, y = nft, color = niareagansc)) + 
+      geom_quasirandom(size = 0.75) + 
+      theme_bw() + theme(legend.position = "bottom"),
+## Tau by diagnosis
+  mutate(rosmap, dcfdx_lv = fct_recode(dcfdx_lv, NCI = "1", MCI_prob = "2", MCI_poss = "3", 
+                                     AD_prob = "4", AD_poss = "5", dementia = "6")) %>%
+    ggplot(., aes(x = ceradsc, y = amyloid, color = dcfdx_lv)) + 
+      geom_quasirandom(size = 0.75) + 
+      theme_bw() + theme(legend.position = "bottom"), 
+mutate(rosmap, dcfdx_lv = fct_recode(dcfdx_lv, NCI = "1", MCI_prob = "2", MCI_poss = "3", 
+                                     AD_prob = "4", AD_poss = "5", dementia = "6")) %>%
+    ggplot(., aes(x = braaksc, y = nft, color = dcfdx_lv)) + 
+      geom_quasirandom(size = 0.75) + 
+      theme_bw() + theme(legend.position = "bottom")
+
+)
+
+```
+
+
+
+```{r rosmap-path-crosstab-plot, echo = FALSE}
+rosmap_path_crosstab <- rosmap %>% 
+  select(braaksc, ceradsc, niareagansc) %>% 
+  mutate(
+      # braaksc = fct_recode(braaksc, B0 = "0", B1 = "1", B1 = "2", B2 = "3", B2 = "4", B3 = "5", B3 = "6"),
+      # ceradsc = fct_recode(ceradsc, C0 = "4", C1 = "3", C2 = "2", C3 = "1"),
+    ) %>%
+  count(ceradsc, braaksc) %>% 
+  left_join(
+      rosmap %>% 
+    select(braaksc, ceradsc, niareagansc) %>% 
+    mutate(
+      # braaksc = fct_recode(braaksc, B0 = "0", B1 = "1", B1 = "2", B2 = "3", B2 = "4", B3 = "5", B3 = "6"),
+      # ceradsc = fct_recode(ceradsc, C0 = "4", C1 = "3", C2 = "2", C3 = "1"),
+      niareagansc = fct_recode(niareagansc, High = "1", Intermediate = "2", Low = "3", NoAD = "4")
+    ) %>% 
+    count(ceradsc, braaksc, niareagansc) %>% 
+    group_by(ceradsc, braaksc) %>% 
+    arrange(-n) %>% 
+    slice(1) %>% 
+    ungroup() %>% 
+    select(-n)
+  ) %>% 
+  mutate(ceradsc = fct_reorder(ceradsc, desc(ceradsc)), 
+         prop = n / sum(n))
+
+ggplot(rosmap_path_crosstab, aes(y = ceradsc, x = braaksc, label = n)) + 
+  geom_tile(aes(fill = niareagansc, alpha = prop), colour = "white") + 
+  geom_text() + theme_classic() +
+  scale_x_discrete(position = 'top') + 
+  theme_classic() + 
+  scale_fill_manual(values=c("#abdda4","#fee08b","#fdae61","#f46d43","#d53e4f"),na.value = "grey90")
+
+```
+
+
+### Cross-Tabs
+
+```{r, echo=F, warning=FALSE}
+rosmap %>% 
+ gtsummary::tbl_cross(
+    row = ceradsc, 
+    col = braaksc, 
+    percent = "cell",
+  ) 
+```
+
+<br>
+
+```{r, echo=F}
+rosmap %>% 
+ gtsummary::tbl_cross(
+    row = cogdx, 
+    col = niareagansc, 
+    percent = "row",
+  ) 
+
+```
+
+<br>
+
+```{r, echo = FALSE}
+rosmap %>% 
+  select(braaksc, ceradsc, niareagansc) %>% 
+  mutate(braaksc = fct_recode(braaksc, B0 = "0", B1 = "1", B1 = "2", B2 = "3", B2 = "4", B3 = "5", B3 = "6"),
+         ceradsc = fct_recode(ceradsc, C0 = "4", C1 = "3", C2 = "2", C3 = "1"),
+         niareagansc = fct_recode(niareagansc, High = "1", Intermediate = "2", Low = "3", NoAD = "4")) %>% 
+  count(ceradsc, braaksc, niareagansc) %>% 
+  pivot_wider(names_from = niareagansc, values_from = n) %>% 
+#  rename('cerad_braak' = ceradsc) %>%
+#  select(-'NA') %>%
+  filter(!is.na(ceradsc)) %>%
+  knitr::kable(.) %>%
+  kableExtra::kable_styling("striped", full_width = F) %>%
+  kableExtra::collapse_rows(columns = 1, valign = "top")  
+
+
+```
+
+## Cognition 
+[mmse](https://www.radc.rush.edu/docs/var/detail.htm?category=Cognition&subcategory=Test+scores&variable=cts_mmse30): Mini Mental State Examination is a widely used, 30 item, standardized screening measure of dementia severity. The MMSE can be used as a surrogate measure for the CDR for the staging of dementia in AD [Perneczky et al 2006](https://doi.org/10.1097/01.JGP.0000192478.82189.a8). 
+
+| MMSE | CDR | 
+| ---- | --- |
+| 30 | 0 (No) | 
+| 26-29 | 0.5 (Questionable) | 
+| 21-25 | 1 (Mild) | 
+| 11-20 | 2 (Moderate) | 
+| 0-10 | 3 (Severe) |
+
+
+```{r rosmap-cog, echo=FALSE}
+
+cog_vars <- c('cts_mmse30_lv')
+
+cog <- rosmap %>% 
+  select('cts_mmse30_lv') %>% 
+  mutate(CDR = cut(cts_mmse30_lv, breaks = c(-Inf, 11, 21, 26, 30, Inf), labels = c(3, 2, 1, 0.5, 0), right = FALSE)) 
+
+cog %>% 
+  diagnose() 
+```
+
+```{r rosmap-cog-numeric, echo=FALSE, message=FALSE, tidy=FALSE}
+cog_n <- cog %>% 
+  inspect_num(.) 
+
+cog_n %>% 
+  select(-hist) %>% 
+  mutate_if(is.numeric, round, 2) %>%
+  knitr::kable(caption = "Variable type: Numeric", table.attr = "class='dtable'") 
+
+```
+
+```{r rosmap-cog-factor, echo=FALSE}
+cog_c <- cog %>% 
+  inspect_cat(.)   
+
+cog_c %>% 
+  pull(levels) %>% 
+  bind_rows(.id = "col_name") %>% 
+  rename(level = value) %>% 
+  mutate_if(is.numeric, round, 2) %>% 
+  mutate(level = replace_na(level, "NA")) %>%
+  DT::datatable(caption = "Variable type: Factor", rownames = FALSE)
+#  knitr::kable(caption = "Variable type: Factor") %>%
+#  kableExtra::kable_styling(full_width = F)
+```
+
+### Plots 
+
+```{r, echo=F}
+cog_n %>% show_plot()
+
+cog_c %>% show_plot()
+```

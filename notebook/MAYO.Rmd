@@ -1,0 +1,63 @@
+# MAYO
+
+Allen et al *Human whole genome genotype and transcriptome data for Alzheimer’s and other neurodegenerative diseases* [Scientific Data 2016](https://www.nature.com/articles/sdata201689)
+
+Mayo Clinic Alzheimer’s Disease Genetics Studies (MCADGS). Data is provided for the Mayo RNAseq Study, with whole transcriptome data for 275 Cerebellum (CBE) and 276 Temporal cortex (TCX) samples from 312 North American Caucasian subjects with neuropathological diagnosis of AD, progressive supranuclear palsy (PSP), pathologic aging (PA) or elderly controls (CON) without neurodegenerative diseases. Whole genome sequencing was conducted on 349 participants using DNA isolated from either the Temporal cortex (n = 341) or the Cerebellar Cortex (n = 8).
+
+* All ADs had definite diagnosis according to the NINCDS-ADRDA criteria and had Braak NFT stage of IV or greater. 
+* Control subjects had Braak NFT stage of III or less, CERAD neuritic and cortical plaque densities of 0 (none) or 1 (sparse) and lacked any of the following pathologic diagnoses: AD, Parkinson’s disease (PD), DLB, VaD, PSP, motor neuron disease (MND), CBD, Pick’s disease (PiD), Huntington’s disease (HD), FTLD, hippocampal sclerosis (HipScl) or dementia lacking distinctive histology (DLDH). 
+* Subjects with PA also lacked the above diagnoses and had Braak NFT stage of III or less, but had CERAD neuritic and cortical plaque densities of 2 or more. None of the PA subjects had a clinical diagnosis of dementia or mild cognitive impairment. 
+
+Clinical Code Book: [Synapse](https://adknowledgeportal.synapse.org/Explore/Studies?Study=syn5550404)
+
+```{r mayo-load, echo=FALSE}
+## Mayo
+mayo.raw <- read_tsv('data/AMPAD/mayo/WGS_Metadata.txt') %>%
+  mutate(WGS_Participant_ID = as.character(WGS_Participant_ID), study = 'MAYO') 
+
+cbe <- read_csv('data/AMPAD_extra/mayo/MayoRNAseq_RNAseq_CER_covariates.csv') %>% 
+  mutate(SampleID = str_replace(SampleID, '_CER', "")) %>% 
+  select(SampleID, Braak, Thal)
+tcx  <- read_csv('data/AMPAD_extra/mayo/MayoRNAseq_RNAseq_TCX_covariates.csv')  %>% 
+  mutate(SampleID = str_replace(SampleID, '_TCX', "")) %>% 
+  rename(Sex = Gender, Flowcell = FLOWCELL) %>% 
+  select(SampleID, Braak, Thal) %>% 
+  anti_join(cbe, by = 'SampleID') 
+mayo_path <- bind_rows(cbe, tcx)
+
+
+mosdepth <- read_tsv('data/mosdepth/mosdepth_all.txt')
+haplogrep <- read_tsv('data/haplogrep/haplogrep_all.txt')
+
+
+
+```
+
+```{r, mayo-clean, echo = FALSE, message=FALSE}
+
+mayo <- mayo.raw %>%
+  left_join(mayo_path, by = c('WGS_Participant_ID' = 'SampleID')) %>%
+  left_join(haplogrep, by = c('WGS_Participant_ID' = 'SampleID')) %>%
+  left_join(mosdepth, by = c('WGS_Participant_ID' = 'SampleID')) %>%
+  mutate(id = paste0('MAYO', WGS_Participant_ID),
+        apoe4 = recode(ApoE, '22' = 'e4-', '23' = 'e4-', '33' = 'e4-', '24' = 'e4+', '34' = 'e4+', '44' = 'e4+'),
+        aod = str_replace(AgeAtDeath, '90_or_above', '90'),
+        aod = as.numeric(aod),
+        aod_cat = cut(aod, c(50, 60, 70, 80, 90, Inf), c('50-59', '60-69', '70-79', '80-89', '90+'), right = FALSE),
+        aod_cat = ordered(aod_cat, levels = c('50-59', '60-69', '70-79', '80-89', '90+')),
+        Sex = as.factor(Sex), 
+        race = 'W',
+        Diagnosis = as.factor(Diagnosis), 
+        ApoE = as.factor(ApoE), 
+        apoe4 = as.factor(apoe4), 
+        Thal = ordered(Thal, levels = c('0', '1', '2', '3', '4', '5')),
+        braaksc = ordered(floor(Braak), levels = c('0', '1', '2', '3', '4', '5', '6')), 
+        thal_A = fct_recode(Thal, A0 = "0", A1 = "1", A1 = "2", A2 = "3", A3 = "4", A3 = "5"),
+        braaksc_B = fct_recode(braaksc, B0 = "0", B1 = "1", B1 = "2", B2 = "3", B2 = "4", B3 = "5", B3 = "6"), 
+        z_mtdnacn = scale(mtcn_avg, center = TRUE, scale = TRUE)[,1]
+        ) %>%
+  select(id, study, sex = Sex, apoe = ApoE, apoe4, race, aod, aod_cat, thal = Thal, braaksc, SourceTissue = WGS_Source_Tissue_Type, dx.raw = Diagnosis, mtcn_avg, z_mtdnacn, Haplogroup, Quality, macro)
+
+saveRDS(mayo, 'output/mayo.rds')
+```
+

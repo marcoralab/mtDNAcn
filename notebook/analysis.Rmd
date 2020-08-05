@@ -1,0 +1,266 @@
+# Analysis
+```{r, warning=FALSE, message=FALSE}
+library(tidyverse)
+library(broom)
+library(glue)
+library(ggbeeswarm)
+library(gvlma)
+library(inspectdf)
+knitr::opts_knit$set(root.dir = '/sc/arion/projects/LOAD/shea/Projects/mtDNAcn')
+```
+
+```{r analysis-load-data}
+rosmap <- readRDS('output/rosmap.RData')
+msbb <- readRDS('output/msbb.rds')
+
+```
+
+## ROSMAP
+### mtDNAcn
+
+#### Data Wrangling 
+
++ DNA isolated from Brain tissue
+  - DLPFC, Posterior Cingulate Cortex, Cerebellum
++ European Haplogroups only
+  - H, V, J, T, U, K, I, W, X
++ For clinical diagnosis, exclude MCI, AD possible, other dementia
+
+```{r analysis-rosmap-wrangle}
+rosmap_df <- rosmap %>% 
+  filter(Source.Tissue.Type %in% c("Brain-DLPFC", "Brain-Posterior Cingulate Cortex", "Brain-Cerebellum", "Whole Blood")) %>%
+  filter(organ == 'brain') %>% 
+  filter(macro %in% c('H', 'V', 'J', 'T', 'U', 'K', 'I', 'W', 'X')) %>%
+  filter(!is.na(macro)) %>%
+  mutate(ad_reagan = fct_relevel(ad_reagan, "0", "1"),
+         Source.Tissue.Type = fct_inorder(Source.Tissue.Type), 
+         dx = fct_recode(dcfdx_lv, "0" = "1", NULL = "2", NULL = "3", "1" = "4", NULL = "5", NULL = "6")) 
+```
+
+
+#### NIA-Reagan Diagnosis
+
+```{r analysis-rosmap-path-glm}
+rosmap_path_res <- glm(ad_reagan ~ z_mtdnacn + macro + age_death + msex + apoe4 + study + Source.Tissue.Type, 
+                       family = "binomial", data = rosmap_df)
+```
+
+```{r analysis-rosmap-path-tab, echo=FALSE}
+rosmap_path_tab <- tidy(rosmap_path_res)
+
+rosmap_path_tab %>% 
+  mutate_at(., vars("estimate", "std.error", "statistic"), round, 3) %>% 
+  mutate(p.value = glue("{p} {signif}", 
+                        signif = gtools::stars.pval(p.value), 
+                        p = ifelse(p.value < 0.001, formatC(p.value, format = "e", digits = 1), round(p.value, 3))
+                        )) %>%
+  knitr::kable(format = "html", caption = "Assocation of mtDNA with MMSE in ROSMAP") %>%
+  kableExtra::kable_styling("striped", full_width = F)
+```
+
+```{r analysis-rosmap-path-plot}
+ggplot(rosmap_df, aes(x = ad_reagan, y = z_mtdnacn, colour = Source.Tissue.Type)) + 
+  geom_quasirandom() + 
+  geom_pointrange(mapping = aes(x = ad_reagan, y = z_mtdnacn),
+                      show.legend = F, colour = 'black',
+                     # size = 1,
+                      position = position_dodge(width = 1),
+                      shape = 15,
+                      stat = "summary",
+                      fun = median,
+                      fun.min = function(z) {quantile(z,0.25)},
+                      fun.max = function(z) {quantile(z,0.75)}) + 
+  theme_bw() + theme(legend.position = "bottom")
+
+```
+
+#### Clinical diagnosis
+```{r analysis-rosmap-clin-glm}
+rosmap_clin_res <- glm(dx ~ z_mtdnacn + macro + age_death + msex + apoe4 + study + Source.Tissue.Type, family = "binomial", data = rosmap_df)
+```
+
+```{r analysis-rosmap-clin-tab, echo=FALSE}
+rosmap_clin_tab <- tidy(rosmap_clin_res)
+
+rosmap_clin_tab %>% 
+  mutate_at(., vars("estimate", "std.error", "statistic"), round, 3) %>% 
+  mutate(p.value = glue("{p} {signif}", 
+                        signif = gtools::stars.pval(p.value), 
+                        p = ifelse(p.value < 0.001, formatC(p.value, format = "e", digits = 1), round(p.value, 3))
+                        )) %>%
+  knitr::kable(format = "html", caption = "Assocation of mtDNA with MMSE in ROSMAP") %>%
+  kableExtra::kable_styling("striped", full_width = F)
+```
+
+```{r clin-plot}
+rosmap_df %>% 
+  filter(!is.na(dx)) %>%
+  ggplot(., aes(x = dx, y = z_mtdnacn, colour = Source.Tissue.Type)) + 
+    geom_quasirandom() + 
+    geom_pointrange(mapping = aes(x = dx, y = z_mtdnacn),
+                        show.legend = F, colour = 'black',
+                       # size = 1,
+                        position = position_dodge(width = 1),
+                        shape = 15,
+                        stat = "summary",
+                        fun = median,
+                        fun.min = function(z) {quantile(z,0.25)},
+                        fun.max = function(z) {quantile(z,0.75)}) + 
+  theme_bw() + theme(legend.position = "bottom")
+
+
+```
+
+```{r}
+
+lm(sqrt(gpath) ~ z_mtdnacn + macro + age_death + msex + apoe4 + study + Source.Tissue.Type, data = rosmap_df) %>% 
+  tidy(.)
+lm(sqrt(amyloid) ~ z_mtdnacn + macro + age_death + msex + apoe4 + study + Source.Tissue.Type, data = rosmap_df)  %>% 
+  tidy(.)
+lm(sqrt(tangles) ~ z_mtdnacn + macro + age_death + msex + apoe4 + study + Source.Tissue.Type, data = rosmap_df)  %>% 
+  tidy(.)
+
+```
+
+
+### haplogroups 
+
+```{r}
+rosmap_hap <- rosmap %>% 
+  filter(Source.Tissue.Type %in% c("Brain-DLPFC", "Brain-Posterior Cingulate Cortex", "Brain-Cerebellum", "Whole Blood")) %>%
+  filter(macro %in% c('H', 'V', 'J', 'T', 'U', 'K', 'I', 'W', 'X')) %>%
+  filter(!is.na(macro)) %>%
+  mutate(ad_reagan = fct_relevel(ad_reagan, "0", "1"),
+         Source.Tissue.Type = fct_inorder(Source.Tissue.Type), 
+         dx = fct_recode(dcfdx_lv, "0" = "1", NULL = "2", NULL = "3", "1" = "4", NULL = "5", NULL = "6")) 
+
+```
+
+```{r}
+glm(ad_reagan ~ macro + age_death + msex + apoe4 + study + Source.Tissue.Type, 
+                       family = "binomial", data = rosmap_hap) %>% 
+  tidy()
+
+glm(dx ~ macro + age_death + msex + apoe4 + study + Source.Tissue.Type, 
+                       family = "binomial", data = rosmap_hap) %>% 
+  tidy()
+
+lm(sqrt(gpath) ~  macro + age_death + msex + apoe4 + study, data = rosmap_hap) %>% 
+  tidy(.)
+lm(sqrt(amyloid) ~  macro + age_death + msex + apoe4 + study, data = rosmap_hap)  %>% 
+  tidy(.)
+lm(sqrt(nft) ~  macro + age_death + msex + apoe4 + study, data = rosmap_hap)  %>% 
+  tidy(.)
+lm(cts_mmse30_lv ~  macro + age_death + msex + apoe4 + study, data = rosmap_hap)  %>% 
+  tidy(.)
+
+#gvlma(test)
+
+```
+
+
+## MSBB
+
+### Data Wrangling 
+
++ Exclude individules who are not non-hispanic whites 
++ Exclude individules with non-European haplogroups
++ Dichotomize CERAD dx  
+
+```{r load-msbb}
+msbb_df <- msbb  %>% 
+  filter(race == 'W') %>%
+  filter(macro %in% c('H', 'V', 'J', 'T', 'U', 'K', 'I', 'W', 'X')) %>% 
+  mutate(cerad_dx = fct_recode(cerad, "0" = "Normal", "0" = "Possible", "1" = "Probable", "1" = "Definite"), 
+         macro = fct_lump(macro, n = 6, other_level = "IWX"))
+
+```
+
+### NIA-Reagan 
+
+```{r analysis-msbb-path-glm}
+msbb_path_res <- glm(ad_reagan ~ z_mtdnacn + macro + aod + sex + apoe4, 
+                       family = "binomial", data = msbb_df)
+
+```
+
+```{r analysis-msbb-path-tab, echo=FALSE}
+msbb_path_tab <- tidy(msbb_path_res)
+
+msbb_path_tab %>% 
+  mutate_at(., vars("estimate", "std.error", "statistic"), round, 3) %>% 
+  mutate(p.value = glue("{p} {signif}", 
+                        signif = gtools::stars.pval(p.value), 
+                        p = ifelse(p.value < 0.001, formatC(p.value, format = "e", digits = 1), round(p.value, 3))
+                        )) %>%
+  knitr::kable(format = "html", caption = "Assocation of mtDNA with MMSE in msbb") %>%
+  kableExtra::kable_styling("striped", full_width = F)
+```
+
+```{r analysis-msbb-path-plot, echo=FALSE, fig.cap="mtDNAcn by NIA-Regan dx"}
+msbb_df %>% 
+  filter(!is.na(ad_reagan)) %>%
+    ggplot(., aes(x = ad_reagan, y = z_mtdnacn, colour = ad_reagan)) + 
+      geom_quasirandom() + 
+      geom_pointrange(mapping = aes(x = ad_reagan, y = z_mtdnacn),
+                          show.legend = F, colour = 'black',
+                         # size = 1,
+                          position = position_dodge(width = 1),
+                          shape = 15,
+                          stat = "summary",
+                          fun = median,
+                          fun.min = function(z) {quantile(z,0.25)},
+                          fun.max = function(z) {quantile(z,0.75)}) + 
+      theme_bw() + theme(legend.position = "bottom")
+
+```
+
+
+```{r}
+glm(ad_reagan ~ macro + aod + sex + apoe4,  family = "binomial", data = msbb_df) %>% 
+  tidy()
+glm(cerad_dx ~ macro + aod + sex + apoe4,  family = "binomial", data = msbb_df) %>% 
+  tidy()
+lm(NP.1 ~ macro + aod + sex + apoe4, data = msbb_df) %>% 
+  tidy()
+```
+
+### CERAD 
+
+```{r analysis-msbb-cerad-glm}
+msbb_cerad_res <- glm(cerad_dx ~ z_mtdnacn + macro + aod + sex + apoe4, 
+                       family = "binomial", data = msbb_df)
+
+```
+
+```{r analysis-msbb-cerad-tab, echo=FALSE}
+msbb_cerad_tab <- tidy(msbb_cerad_res)
+
+msbb_cerad_tab %>% 
+  mutate_at(., vars("estimate", "std.error", "statistic"), round, 3) %>% 
+  mutate(p.value = glue("{p} {signif}", 
+                        signif = gtools::stars.pval(p.value), 
+                        p = ifelse(p.value < 0.001, formatC(p.value, format = "e", digits = 1), round(p.value, 3))
+                        )) %>%
+  knitr::kable(format = "html", caption = "Assocation of mtDNA with MMSE in msbb") %>%
+  kableExtra::kable_styling("striped", full_width = F)
+```
+
+```{r analysis-msbb-cerad-plot, echo=FALSE, fig.cap="mtDNAcn by CERAD dx"}
+msbb_df %>% 
+  filter(!is.na(cerad_dx)) %>%
+    ggplot(., aes(x = cerad_dx, y = z_mtdnacn, colour = cerad_dx)) + 
+      geom_quasirandom() + 
+      geom_pointrange(mapping = aes(x = cerad_dx, y = z_mtdnacn),
+                          show.legend = F, colour = 'black',
+                         # size = 1,
+                          position = position_dodge(width = 1),
+                          shape = 15,
+                          stat = "summary",
+                          fun = median,
+                          fun.min = function(z) {quantile(z,0.25)},
+                          fun.max = function(z) {quantile(z,0.75)}) + 
+      theme_bw() + theme(legend.position = "bottom")
+
+```
+

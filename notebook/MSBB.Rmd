@@ -1,0 +1,265 @@
+# MSBB 
+
+Samples come from 364 postmortem control, mild cognitive impaired (MCI) and AD brains with rich clinical and pathophysiological data from the Mount Sinai/JJ Peters VA Medical Center Brain Bank (MSBB–Mount Sinai NIH Neurobiobank) cohort. The majority (301) of the samples were of European ancestry, while 36 were African American, 25 were Latino, one was Asian, and one was unknown for race. Neuropathological assessments were performed using CERAD scores and Braak Staging. The CDR scale was conducted for assessment of dementia and cognitive status (@10.1038/sdata.2018.185). 
+
+Clinical Code Book: [Synapse](https://adknowledgeportal.synapse.org/Explore/Studies?Study=syn3159438)
+
+```{r load-mssb}
+## MSBB
+msbb.raw1 <- read_tsv('data/AMPAD/msbb/WGS_Metadata.txt') 
+msbb.raw2 <- read_tsv('data/AMPAD_extra/msbb.wgs.meta.tsv')
+msbb.path <- readxl::read_xlsx('data/AMPAD_extra/msbb/TempAmp_AD-Shea-2-2020.xlsx', sheet = 2) %>% 
+  mutate(id = as.character(id))
+msbb.raw <- msbb.raw1 %>% 
+  select(WGS, individualIdentifier, PMI, RACE, CDR, SEX, NP.1, PlaqueMean, bbscore) %>%
+  left_join(select(msbb.raw2, Libid, AOD, APOE_inferred), by = c('WGS' = 'Libid')) %>% 
+  mutate(SubNum = str_extract(gsub("(?<![0-9])0+", "", individualIdentifier, perl = TRUE), '[:digit:].*')) %>% 
+  left_join(msbb.path, by = c('SubNum' = 'id')) %>%
+  mutate(study = 'MSBB', 
+         WGS = as.character(WGS))
+
+mosdepth <- read_tsv('data/mosdepth/mosdepth_all.txt')
+haplogrep <- read_tsv('data/haplogrep/haplogrep_all.txt')
+
+```
+
+```{r, MSBB, echo = TRUE, message=FALSE}
+
+## Recode NP.1 -> ceradsc to be consistent with ROSMAP
+msbb <- msbb.raw %>%
+  left_join(haplogrep, by = c('WGS' = 'SampleID')) %>%
+  left_join(mosdepth, by = c('WGS' = 'SampleID')) %>%
+  mutate(id = paste0('MSBB', WGS)) %>%
+  mutate(APOE_inferred = recode(APOE_inferred, 'e2/e2' = '22', 'e2/e3' = '23', 'e3/e3' = '33', 'e2/e4' = '24', 'e3/e4' = '34', 'e4/e4' = '44'),
+        apoe4 = recode(APOE_inferred, '22' = 'e4-', '23' = 'e4-', '33' = 'e4-', '24' = 'e4+', '34' = 'e4+', '44' = 'e4+'),
+        SEX = as.factor(SEX), 
+        SourceTissue = 'prefrontal cortex',
+        APOE_inferred = as.factor(APOE_inferred), 
+        apoe4 = as.factor(apoe4), 
+        RACE = as.factor(RACE), 
+        z_mtdnacn = scale(mtcn_avg, center = TRUE, scale = TRUE)[,1],
+        cerad = recode(NP.1, '1' = 'Normal', '2' = 'Definite', '3' = 'Probable', '4' = 'Possible'),
+        cerad = ordered(cerad, levels = c('Normal', 'Possible', 'Probable', 'Definite')),
+        ceradsc = pmax(HippoPlaquesWCoresValue, EntorPlaquesWCoresValue, MidPlaquesWCoresValue, 
+                       SupPlaquesWCoresValue, InfPlaquesWCoresValue, OcciPlaquesWCoresValue),
+        ceradsc = ordered(ceradsc),
+        ceradsc = fct_recode(ceradsc, '4' = '0', '3' = '1', '2' = '3', '1' = '5'),
+        bbscore = ordered(bbscore, levels = c('0', '1', '2', '3', '4', '5', '6')),
+        niareagansc = case_when(
+          ceradsc == 4 & bbscore == 0 ~ 4, 
+          ceradsc == 4 & bbscore %in% c(1:6) ~ 3, 
+          ceradsc == 3 & bbscore %in% c(0:6) ~ 3, 
+          ceradsc == 2 & bbscore %in% c(0:2) ~ 3,
+          ceradsc == 2 & bbscore %in% c(3:6) ~ 2,
+          ceradsc == 1 & bbscore %in% c(0:4) ~ 2,
+          ceradsc == 1 & bbscore %in% c(5:6) ~ 1,
+        ), 
+        niareagansc = ordered(niareagansc, levels = c('4', '3', '2', '1')),
+        ad_reagan = fct_recode(niareagansc, "1" = "1", "1" = "2", "0" = "3", "0" = "4"),
+        braaksc_B = fct_recode(bbscore, B0 = "0", B1 = "1", B1 = "2", B2 = "3", B2 = "4", B3 = "5", B3 = "6"), 
+        ceradsc_C = fct_recode(ceradsc, C0 = "1", C1 = "2", C2 = "3", C3 = "4")) %>%
+  mutate_at(vars(HippoPlaquesWCoresValue, EntorPlaquesWCoresValue, MidPlaquesWCoresValue, 
+                       SupPlaquesWCoresValue, InfPlaquesWCoresValue, OcciPlaquesWCoresValue), 
+            ordered) %>%
+  select(id, study, sex = SEX, race = RACE, SourceTissue, PMI, NP.1, cerad, niareagansc, ad_reagan, ceradsc, HippoPlaquesWCoresValue, EntorPlaquesWCoresValue, MidPlaquesWCoresValue, SupPlaquesWCoresValue, InfPlaquesWCoresValue, OcciPlaquesWCoresValue, braaksc = bbscore, braaksc_B, ceradsc_C, apoe = APOE_inferred, apoe4, aod = AOD, cdr = CDR, PlaqueMean, mtcn_avg, z_mtdnacn, Haplogroup, Quality, macro)
+
+saveRDS(msbb, 'output/msbb.rds')
+```
+
+## Pathology
+
+**Amyloid** 
+
++ `HippoPlaquesWCoresValue`, `EntorPlaquesWCoresValue`, `MidPlaquesWCoresValue`, `SupPlaquesWCoresValue`, `InfPlaquesWCoresValue`, `OcciPlaquesWCoresValue`: Neuritic plaque burden measured in 8 brain regions. (0 = Absent; 1 = Sparese; 3 = Moderate; 5 = Frequent)
+  - requested from Haroutunian, Vahram on March 4 2020
++  `ceradsc`: semiquantitative estimates of neuritic plaque density modified to be implemented without adjustment for age and clinical diagnosis, as implemented in [ROSMAP](https://www.radc.rush.edu/docs/var/detail.htm?category=Pathology&subcategory=Alzheimer%27s+disease&variable=ceradsc)
+  - score is derived from the brain region with the greatest number of neuritic plaques
++ `PlaqueMean`: Average number of plaques across brain regions 
+
+**Nurofibilary Tangles**
+
++ `braaksc`: Braak Stage is a semiquantitative measure of severity of neurofibrillary tangle (NFT) pathology
+
+**Neuropathological Diagnosis**
+
++ `cerad`/`NP.1`: Neuropathology Category as measured by CERAD (1=Normal, 2=Definite AD, 3=probable AD, 4=possible AD)
++ `niareagansc`: modified NIA-Reagan diagnosis of Alzheimer’s disease is based on consensus recommendations for postmortem diagnosis of Alzheimer’s disease. The criteria rely on both neurofibrillary tangles (Braak) and neuritic plaques (CERAD) and does not account for clinical information. 
+  - 1	= High; 2	= Intermediate; 3	= Low; 4	= No AD
+  - Implemented to match coding from
+  [ROSMAP](https://www.radc.rush.edu/docs/var/detail.htm?category=Pathology&subcategory=Alzheimer%27s+disease&variable=niareagansc).  
++ `ad_reagan`: dichotomized NIA-Reagan diagnosis
+
+
+```{r msbb-path-numeric, echo=FALSE, message=FALSE, tidy=FALSE}
+msbb_path_vars <- c('cerad', 'niareagansc', "ceradsc", "braaksc", "PlaqueMean", 
+                    "HippoPlaquesWCoresValue", "EntorPlaquesWCoresValue", "MidPlaquesWCoresValue", "SupPlaquesWCoresValue",
+                    "InfPlaquesWCoresValue", "OcciPlaquesWCoresValue")
+
+msbb_path_n <- msbb %>% 
+  select(all_of(msbb_path_vars)) %>%
+  inspect_num(.) 
+
+msbb_path_n %>% 
+  select(-hist) %>% 
+  mutate_if(is.numeric, round, 2) %>%
+  knitr::kable(caption = "Variable type: Numeric") 
+```
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+msbb_path_n %>% show_plot()
+```
+
+<br>
+
+```{r msbb-path-factor, echo=FALSE}
+msbb_path_c <- msbb %>% 
+  select(msbb_path_vars) %>%
+  mutate_if(is.character, fct_lump_n, 5) %>%
+  inspect_cat(.)   
+
+msbb_path_c %>% 
+  pull(levels) %>% 
+  bind_rows(.id = "col_name") %>% 
+  rename(level = value) %>% 
+  mutate_if(is.numeric, round, 2) %>% 
+  DT::datatable()
+```
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+msbb_path_c %>% show_plot(high_cardinality = 1)
+```
+
+### Cross-tabs
+```{r, echo=F, warning=FALSE}
+msbb %>% 
+ gtsummary::tbl_cross(
+    row = ceradsc, 
+    col = braaksc, 
+    percent = "cell",
+  )
+
+```
+
+```{r, echo=F, warning=FALSE}
+mutate(msbb, niareagansc = fct_recode(niareagansc, High = "1", Intermediate = "2", Low = "3", NoAD = "4")) %>% 
+ gtsummary::tbl_cross(
+    row = cerad, 
+    col = niareagansc, 
+    percent = "cell",
+  )
+
+```
+
+### Plots 
+
+```{r msbb-plot-plq-cerad, echo=FALSE, message=FALSE, warning=FALSE, fig.cap="Distribution of amyloid by neuropathological diagnosis"}
+
+ggpubr::ggarrange(
+ggplot(msbb, aes(x = ceradsc, y = PlaqueMean, color = cerad)) + 
+  geom_quasirandom() + theme_bw() + theme(legend.position = "bottom"), 
+mutate(msbb, niareagansc = fct_recode(niareagansc, High = "1", Intermediate = "2", Low = "3", NoAD = "4")) %>%
+ggplot(., aes(x = ceradsc, y = PlaqueMean, color = niareagansc)) + 
+  geom_quasirandom() + theme_bw() + theme(legend.position = "bottom")
+)
+```
+
+```{r msbb-plot-plq-braak, echo=FALSE, message=FALSE, warning=FALSE, fig.cap="Distribution of neuropathological diagnosis by ceradsc and braaksc"}
+ggpubr::ggarrange(
+ggplot(msbb, aes(x = ceradsc, y = braaksc, color = cerad)) + 
+  geom_quasirandom() + theme_bw() + theme(legend.position = "bottom"), 
+mutate(msbb, niareagansc = fct_recode(niareagansc, High = "1", Intermediate = "2", Low = "3", NoAD = "4")) %>%
+ggplot(., aes(x = ceradsc, y = braaksc, color = niareagansc)) + 
+  geom_quasirandom() + theme_bw() + theme(legend.position = "bottom")
+)
+```
+
+```{r msbb-plot-cdr-niareagan, echo=FALSE, message=FALSE, warning=FALSE, fig.cap="CDR by diagnosis"}
+mutate(msbb, 
+       niareagansc = fct_recode(niareagansc, High = "1", Intermediate = "2", Low = "3", NoAD = "4"), 
+       cdr = as_factor(cdr)) %>% 
+  filter(!is.na(niareagansc)) %>% 
+  ggplot(., aes(x = cdr, fill = niareagansc)) + 
+    geom_bar() + theme_bw() + theme(legend.position = "bottom") 
+
+mutate(msbb, cdr = as_factor(cdr)) %>% 
+  filter(!is.na(cerad)) %>% 
+  ggplot(., aes(x = cdr, fill = cerad)) + 
+    geom_bar() + theme_bw() + theme(legend.position = "bottom") 
+
+```
+
+
+```{r  msbb-plot-cerad-braak, echo=FALSE, message=FALSE, warning=FALSE, fig.cap="Cross-tabs of cerad & braaksc"}
+msbb_path_crosstab <- msbb %>% 
+  filter(!is.na(niareagansc)) %>% 
+  select(braaksc, ceradsc, niareagansc) %>% 
+  mutate(
+      # braaksc = fct_recode(braaksc, B0 = "0", B1 = "1", B1 = "2", B2 = "3", B2 = "4", B3 = "5", B3 = "6"),
+      # ceradsc = fct_recode(ceradsc, C0 = "4", C1 = "3", C2 = "2", C3 = "1"),
+    ) %>%
+  count(ceradsc, braaksc) %>% 
+  left_join(
+      msbb %>% 
+    select(braaksc, ceradsc, niareagansc) %>% 
+    mutate(
+      # braaksc = fct_recode(braaksc, B0 = "0", B1 = "1", B1 = "2", B2 = "3", B2 = "4", B3 = "5", B3 = "6"),
+      # ceradsc = fct_recode(ceradsc, C0 = "4", C1 = "3", C2 = "2", C3 = "1"),
+      niareagansc = fct_recode(niareagansc, High = "1", Intermediate = "2", Low = "3", NoAD = "4")
+    ) %>% 
+    count(ceradsc, braaksc, niareagansc) %>% 
+    group_by(ceradsc, braaksc) %>% 
+    arrange(-n) %>% 
+    slice(1) %>% 
+    ungroup() %>% 
+    select(-n)
+  ) %>% 
+  mutate(ceradsc = fct_reorder(ceradsc, desc(ceradsc)), 
+         prop = n / sum(n)) 
+
+ggplot(msbb_path_crosstab, aes(y = ceradsc, x = braaksc, label = n)) + 
+  geom_tile(aes(fill = niareagansc, alpha = prop), colour = "white") + 
+  geom_text() + theme_classic() +
+  scale_x_discrete(position = 'top') + 
+  theme_classic() + 
+  scale_fill_manual(values=c("#abdda4","#fee08b","#fdae61","#f46d43","#d53e4f"),na.value = "grey90")
+
+```
+
+## Other Variables 
+
+```{r msbb-numeric, echo=FALSE, message=FALSE, tidy=FALSE}
+msbb_vars <- c('sex', 'race', "PMI", "apoe", "apoe4", "cdr", "aod", "mtcn_avg", "Haplogroup", "Quality", "macro")
+
+msbb_n <- msbb %>% 
+  select(all_of(msbb_vars)) %>%
+  inspect_num(.) 
+
+msbb_n %>% 
+  select(-hist) %>% 
+  mutate_if(is.numeric, round, 2) %>%
+  knitr::kable(caption = "Variable type: Numeric") 
+```
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+msbb_n %>% show_plot()
+```
+
+<br>
+
+```{r msbb-factor, echo=FALSE}
+msbb_c <- msbb %>% 
+  select(msbb_vars) %>%
+  mutate_if(is.character, fct_lump_n, 5) %>%
+  inspect_cat(.)   
+
+msbb_c %>% 
+  pull(levels) %>% 
+  bind_rows(.id = "col_name") %>% 
+  rename(level = value) %>% 
+  mutate_if(is.numeric, round, 2) %>% 
+  DT::datatable()
+```
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+msbb_c %>% show_plot()
+```

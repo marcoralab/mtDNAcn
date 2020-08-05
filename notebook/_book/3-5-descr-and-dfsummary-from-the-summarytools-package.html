@@ -1,0 +1,971 @@
+<!DOCTYPE html>
+<html lang="" xml:lang="">
+<head>
+
+  <meta charset="utf-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <title>3.5 descr and dfSummary, from the summarytools package | Assessing the causal association of mtDNAcn with Alzheimer’s disease</title>
+  <meta name="description" content="3.5 descr and dfSummary, from the summarytools package | Assessing the causal association of mtDNAcn with Alzheimer’s disease" />
+  <meta name="generator" content="bookdown 0.18 and GitBook 2.6.7" />
+
+  <meta property="og:title" content="3.5 descr and dfSummary, from the summarytools package | Assessing the causal association of mtDNAcn with Alzheimer’s disease" />
+  <meta property="og:type" content="book" />
+  
+  
+  <meta property="og:description" content="3.5 descr and dfSummary, from the summarytools package | Assessing the causal association of mtDNAcn with Alzheimer’s disease" />
+  
+
+  <meta name="twitter:card" content="summary" />
+  <meta name="twitter:title" content="3.5 descr and dfSummary, from the summarytools package | Assessing the causal association of mtDNAcn with Alzheimer’s disease" />
+  
+  <meta name="twitter:description" content="3.5 descr and dfSummary, from the summarytools package | Assessing the causal association of mtDNAcn with Alzheimer’s disease" />
+  
+
+<meta name="author" content="Dr. Shea Andrews" />
+
+
+
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black" />
+  
+  
+<link rel="prev" href="3-4-skim-from-the-skimr-package.html"/>
+<link rel="next" href="3-6-datamaid.html"/>
+<script src="libs/jquery-2.2.3/jquery.min.js"></script>
+<link href="libs/gitbook-2.6.7/css/style.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-table.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-bookdown.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-highlight.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-search.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-fontsettings.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-clipboard.css" rel="stylesheet" />
+
+
+
+
+
+
+
+
+
+<script src="libs/kePrint-0.0.1/kePrint.js"></script>
+<script src="libs/htmlwidgets-1.5.1/htmlwidgets.js"></script>
+<link href="libs/datatables-css-0.0.0/datatables-crosstalk.css" rel="stylesheet" />
+<script src="libs/datatables-binding-0.11/datatables.js"></script>
+<link href="libs/dt-core-1.10.19/css/jquery.dataTables.min.css" rel="stylesheet" />
+<link href="libs/dt-core-1.10.19/css/jquery.dataTables.extra.css" rel="stylesheet" />
+<script src="libs/dt-core-1.10.19/js/jquery.dataTables.min.js"></script>
+<link href="libs/crosstalk-1.0.0/css/crosstalk.css" rel="stylesheet" />
+<script src="libs/crosstalk-1.0.0/js/crosstalk.min.js"></script>
+
+
+<style type="text/css">
+a.sourceLine { display: inline-block; line-height: 1.25; }
+a.sourceLine { pointer-events: none; color: inherit; text-decoration: inherit; }
+a.sourceLine:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode { white-space: pre; position: relative; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+code.sourceCode { white-space: pre-wrap; }
+a.sourceLine { text-indent: -1em; padding-left: 1em; }
+}
+pre.numberSource a.sourceLine
+  { position: relative; left: -4em; }
+pre.numberSource a.sourceLine::before
+  { content: attr(data-line-number);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; pointer-events: all; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+    color: #aaaaaa;
+  }
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+div.sourceCode
+  {  }
+@media screen {
+a.sourceLine::before { text-decoration: underline; }
+}
+code span.al { color: #ff0000; font-weight: bold; } /* Alert */
+code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
+code span.at { color: #7d9029; } /* Attribute */
+code span.bn { color: #40a070; } /* BaseN */
+code span.bu { } /* BuiltIn */
+code span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
+code span.ch { color: #4070a0; } /* Char */
+code span.cn { color: #880000; } /* Constant */
+code span.co { color: #60a0b0; font-style: italic; } /* Comment */
+code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
+code span.do { color: #ba2121; font-style: italic; } /* Documentation */
+code span.dt { color: #902000; } /* DataType */
+code span.dv { color: #40a070; } /* DecVal */
+code span.er { color: #ff0000; font-weight: bold; } /* Error */
+code span.ex { } /* Extension */
+code span.fl { color: #40a070; } /* Float */
+code span.fu { color: #06287e; } /* Function */
+code span.im { } /* Import */
+code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
+code span.kw { color: #007020; font-weight: bold; } /* Keyword */
+code span.op { color: #666666; } /* Operator */
+code span.ot { color: #007020; } /* Other */
+code span.pp { color: #bc7a00; } /* Preprocessor */
+code span.sc { color: #4070a0; } /* SpecialChar */
+code span.ss { color: #bb6688; } /* SpecialString */
+code span.st { color: #4070a0; } /* String */
+code span.va { color: #19177c; } /* Variable */
+code span.vs { color: #4070a0; } /* VerbatimString */
+code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
+</style>
+
+<link rel="stylesheet" href="style.css" type="text/css" />
+</head>
+
+<body>
+
+
+
+  <div class="book without-animation with-summary font-size-2 font-family-1" data-basepath=".">
+
+    <div class="book-summary">
+      <nav role="navigation">
+
+<ul class="summary">
+<li><a href="./">mtDNAcn in AD</a></li>
+
+<li class="divider"></li>
+<li class="chapter" data-level="" data-path="index.html"><a href="index.html"><i class="fa fa-check"></i>Abstract</a></li>
+<li class="chapter" data-level="1" data-path="1-intro.html"><a href="1-intro.html"><i class="fa fa-check"></i><b>1</b> Introduction</a><ul>
+<li class="chapter" data-level="1.1" data-path="1-1-neuropathological-confirmed-ad.html"><a href="1-1-neuropathological-confirmed-ad.html"><i class="fa fa-check"></i><b>1.1</b> Neuropathological Confirmed AD</a><ul>
+<li class="chapter" data-level="1.1.1" data-path="1-1-neuropathological-confirmed-ad.html"><a href="1-1-neuropathological-confirmed-ad.html#cerad-criteria---1991"><i class="fa fa-check"></i><b>1.1.1</b> CERAD Criteria - 1991</a></li>
+<li class="chapter" data-level="1.1.2" data-path="1-1-neuropathological-confirmed-ad.html"><a href="1-1-neuropathological-confirmed-ad.html#nia-reagan-criteria---1997"><i class="fa fa-check"></i><b>1.1.2</b> NIA-Reagan Criteria - 1997</a></li>
+<li class="chapter" data-level="1.1.3" data-path="1-1-neuropathological-confirmed-ad.html"><a href="1-1-neuropathological-confirmed-ad.html#nia-aa-criteria---2012"><i class="fa fa-check"></i><b>1.1.3</b> NIA-AA Criteria - 2012</a></li>
+</ul></li>
+</ul></li>
+<li class="chapter" data-level="2" data-path="2-methods.html"><a href="2-methods.html"><i class="fa fa-check"></i><b>2</b> Methods</a><ul>
+<li class="chapter" data-level="2.1" data-path="2-1-haplogroup-assignment.html"><a href="2-1-haplogroup-assignment.html"><i class="fa fa-check"></i><b>2.1</b> Haplogroup Assignment</a><ul>
+<li class="chapter" data-level="2.1.1" data-path="2-1-haplogroup-assignment.html"><a href="2-1-haplogroup-assignment.html#haplogrep"><i class="fa fa-check"></i><b>2.1.1</b> Haplogrep</a></li>
+<li class="chapter" data-level="2.1.2" data-path="2-1-haplogroup-assignment.html"><a href="2-1-haplogroup-assignment.html#phy-mer"><i class="fa fa-check"></i><b>2.1.2</b> Phy-Mer</a></li>
+</ul></li>
+<li class="chapter" data-level="2.2" data-path="2-2-estimating-mtdnacn.html"><a href="2-2-estimating-mtdnacn.html"><i class="fa fa-check"></i><b>2.2</b> Estimating mtDNAcn</a><ul>
+<li class="chapter" data-level="2.2.1" data-path="2-2-estimating-mtdnacn.html"><a href="2-2-estimating-mtdnacn.html#fastmitocalc"><i class="fa fa-check"></i><b>2.2.1</b> fastMitoCalc</a></li>
+<li class="chapter" data-level="2.2.2" data-path="2-2-estimating-mtdnacn.html"><a href="2-2-estimating-mtdnacn.html#mosedepth"><i class="fa fa-check"></i><b>2.2.2</b> Mosedepth</a></li>
+</ul></li>
+<li class="chapter" data-level="2.3" data-path="2-3-cohorts.html"><a href="2-3-cohorts.html"><i class="fa fa-check"></i><b>2.3</b> Cohorts</a></li>
+</ul></li>
+<li class="chapter" data-level="3" data-path="3-rosmap.html"><a href="3-rosmap.html"><i class="fa fa-check"></i><b>3</b> ROSMAP</a><ul>
+<li class="chapter" data-level="3.1" data-path="3-1-summary-from-base-r.html"><a href="3-1-summary-from-base-r.html"><i class="fa fa-check"></i><b>3.1</b> summary, from Base R</a></li>
+<li class="chapter" data-level="3.2" data-path="3-2-describe-from-the-hmisc-package.html"><a href="3-2-describe-from-the-hmisc-package.html"><i class="fa fa-check"></i><b>3.2</b> describe, from the Hmisc package</a></li>
+<li class="chapter" data-level="3.3" data-path="3-3-describe-and-describeby-from-the-psych-package.html"><a href="3-3-describe-and-describeby-from-the-psych-package.html"><i class="fa fa-check"></i><b>3.3</b> describe and describeBy, from the psych package</a></li>
+<li class="chapter" data-level="3.4" data-path="3-4-skim-from-the-skimr-package.html"><a href="3-4-skim-from-the-skimr-package.html"><i class="fa fa-check"></i><b>3.4</b> skim, from the skimr package</a></li>
+<li class="chapter" data-level="3.5" data-path="3-5-descr-and-dfsummary-from-the-summarytools-package.html"><a href="3-5-descr-and-dfsummary-from-the-summarytools-package.html"><i class="fa fa-check"></i><b>3.5</b> descr and dfSummary, from the summarytools package</a><ul>
+<li class="chapter" data-level="3.5.1" data-path="3-5-descr-and-dfsummary-from-the-summarytools-package.html"><a href="3-5-descr-and-dfsummary-from-the-summarytools-package.html#freq-for-catagrical-summary"><i class="fa fa-check"></i><b>3.5.1</b> freq for catagrical summary</a></li>
+<li class="chapter" data-level="3.5.2" data-path="3-5-descr-and-dfsummary-from-the-summarytools-package.html"><a href="3-5-descr-and-dfsummary-from-the-summarytools-package.html#frequencies"><i class="fa fa-check"></i><b>3.5.2</b> Frequencies</a></li>
+<li class="chapter" data-level="3.5.3" data-path="3-5-descr-and-dfsummary-from-the-summarytools-package.html"><a href="3-5-descr-and-dfsummary-from-the-summarytools-package.html#data-frame-summary"><i class="fa fa-check"></i><b>3.5.3</b> Data frame summary</a></li>
+</ul></li>
+<li class="chapter" data-level="3.6" data-path="3-6-datamaid.html"><a href="3-6-datamaid.html"><i class="fa fa-check"></i><b>3.6</b> dataMaid</a></li>
+<li class="chapter" data-level="3.7" data-path="3-7-dataexplorer.html"><a href="3-7-dataexplorer.html"><i class="fa fa-check"></i><b>3.7</b> DataExplorer</a></li>
+<li class="chapter" data-level="3.8" data-path="3-8-expandar.html"><a href="3-8-expandar.html"><i class="fa fa-check"></i><b>3.8</b> ExPanDaR</a></li>
+<li class="chapter" data-level="3.9" data-path="3-9-explore.html"><a href="3-9-explore.html"><i class="fa fa-check"></i><b>3.9</b> explore</a></li>
+<li class="chapter" data-level="3.10" data-path="3-10-funmodeling.html"><a href="3-10-funmodeling.html"><i class="fa fa-check"></i><b>3.10</b> funModeling</a></li>
+<li class="chapter" data-level="3.11" data-path="3-11-smarteda.html"><a href="3-11-smarteda.html"><i class="fa fa-check"></i><b>3.11</b> SmartEDA</a></li>
+<li class="chapter" data-level="3.12" data-path="3-12-inspectdf.html"><a href="3-12-inspectdf.html"><i class="fa fa-check"></i><b>3.12</b> inspectdf</a><ul>
+<li class="chapter" data-level="3.12.1" data-path="3-12-inspectdf.html"><a href="3-12-inspectdf.html#global-summary"><i class="fa fa-check"></i><b>3.12.1</b> Global Summary</a></li>
+<li class="chapter" data-level="3.12.2" data-path="3-12-inspectdf.html"><a href="3-12-inspectdf.html#numeric-data"><i class="fa fa-check"></i><b>3.12.2</b> Numeric Data</a></li>
+<li class="chapter" data-level="3.12.3" data-path="3-12-inspectdf.html"><a href="3-12-inspectdf.html#categorical-data"><i class="fa fa-check"></i><b>3.12.3</b> Categorical Data</a></li>
+</ul></li>
+<li class="chapter" data-level="3.13" data-path="3-13-dlookr.html"><a href="3-13-dlookr.html"><i class="fa fa-check"></i><b>3.13</b> dlookr</a></li>
+<li class="chapter" data-level="3.14" data-path="3-14-tbl-summary-from-the-gtsummary-package.html"><a href="3-14-tbl-summary-from-the-gtsummary-package.html"><i class="fa fa-check"></i><b>3.14</b> tbl_summary, from the gtsummary package</a></li>
+</ul></li>
+<li class="chapter" data-level="4" data-path="4-final-words.html"><a href="4-final-words.html"><i class="fa fa-check"></i><b>4</b> Final Words</a></li>
+<li class="chapter" data-level="" data-path="references.html"><a href="references.html"><i class="fa fa-check"></i>References</a></li>
+<li class="divider"></li>
+<li><a href="https://github.com/rstudio/bookdown" target="blank">Published with bookdown</a></li>
+
+</ul>
+
+      </nav>
+    </div>
+
+    <div class="book-body">
+      <div class="body-inner">
+        <div class="book-header" role="navigation">
+          <h1>
+            <i class="fa fa-circle-o-notch fa-spin"></i><a href="./">Assessing the causal association of mtDNAcn with Alzheimer’s disease</a>
+          </h1>
+        </div>
+
+        <div class="page-wrapper" tabindex="-1" role="main">
+          <div class="page-inner">
+
+            <section class="normal" id="section-">
+<div id="descr-and-dfsummary-from-the-summarytools-package" class="section level2">
+<h2><span class="header-section-number">3.5</span> descr and dfSummary, from the summarytools package</h2>
+<p><a href="https://cran.r-project.org/web/packages/summarytools/vignettes/Introduction.html">Introduction to summarytools</a></p>
+<ul>
+<li>dscr and freq only work numeric and categroical data respectivly</li>
+<li>dfSummary works for both numeric and categorical varibles</li>
+<li>dfSummary produces a nice report, but rendering is not working correctly
+### descr for numerical summary</li>
+</ul>
+<div class="sourceCode" id="cb19"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb19-1" data-line-number="1">rosmap <span class="op">%&gt;%</span><span class="st"> </span></a>
+<a class="sourceLine" id="cb19-2" data-line-number="2"><span class="st">  </span><span class="kw">select</span>(study, age_bl, msex, educ, apoe_genotype, cogdx, age_first_ad_dx) <span class="op">%&gt;%</span><span class="st"> </span></a>
+<a class="sourceLine" id="cb19-3" data-line-number="3"><span class="st">  </span>summarytools<span class="op">::</span><span class="kw">descr</span>(., <span class="dt">transpose =</span> <span class="ot">TRUE</span>, <span class="dt">stats =</span> <span class="st">&quot;common&quot;</span>)</a></code></pre></div>
+<pre><code>## Non-numerical variable(s) ignored: study, msex, apoe_genotype, cogdx</code></pre>
+<p>Descriptive Statistics<br />
+rosmap<br />
+N: 1179</p>
+<table>
+<thead>
+<tr class="header">
+<th></th>
+<th align="right">Mean</th>
+<th align="right">Std.Dev</th>
+<th align="right">Min</th>
+<th align="right">Median</th>
+<th align="right">Max</th>
+<th align="right">N.Valid</th>
+<th align="right">Pct.Valid</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>age_bl</td>
+<td align="right">80.85</td>
+<td align="right">6.89</td>
+<td align="right">63.02</td>
+<td align="right">81.30</td>
+<td align="right">102.15</td>
+<td align="right">1179.00</td>
+<td align="right">100.00</td>
+</tr>
+<tr class="even">
+<td>age_first_ad_dx</td>
+<td align="right">87.32</td>
+<td align="right">6.39</td>
+<td align="right">68.93</td>
+<td align="right">87.38</td>
+<td align="right">107.23</td>
+<td align="right">411.00</td>
+<td align="right">34.86</td>
+</tr>
+<tr class="odd">
+<td>educ</td>
+<td align="right">16.38</td>
+<td align="right">3.60</td>
+<td align="right">5.00</td>
+<td align="right">16.00</td>
+<td align="right">30.00</td>
+<td align="right">1179.00</td>
+<td align="right">100.00</td>
+</tr>
+</tbody>
+</table>
+<div id="freq-for-catagrical-summary" class="section level3">
+<h3><span class="header-section-number">3.5.1</span> freq for catagrical summary</h3>
+<div class="sourceCode" id="cb21"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb21-1" data-line-number="1">rosmap <span class="op">%&gt;%</span><span class="st"> </span></a>
+<a class="sourceLine" id="cb21-2" data-line-number="2"><span class="st">  </span><span class="kw">select</span>(study, age_bl, msex, educ, apoe_genotype, cogdx, age_first_ad_dx) <span class="op">%&gt;%</span><span class="st"> </span></a>
+<a class="sourceLine" id="cb21-3" data-line-number="3"><span class="st">  </span>summarytools<span class="op">::</span><span class="kw">freq</span>(., <span class="dt">plain.ascii =</span> <span class="ot">FALSE</span>, <span class="dt">style =</span> <span class="st">&quot;rmarkdown&quot;</span>)</a></code></pre></div>
+<pre><code>## Variable(s) ignored: age_bl</code></pre>
+</div>
+<div id="frequencies" class="section level3">
+<h3><span class="header-section-number">3.5.2</span> Frequencies</h3>
+<div id="rosmapstudy" class="section level4">
+<h4><span class="header-section-number">3.5.2.1</span> rosmap$study</h4>
+<p><strong>Type:</strong> Factor</p>
+<table>
+<thead>
+<tr class="header">
+<th align="right"> </th>
+<th align="right">Freq</th>
+<th align="right">% Valid</th>
+<th align="right">% Valid Cum.</th>
+<th align="right">% Total</th>
+<th align="right">% Total Cum.</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="right"><strong>MAP</strong></td>
+<td align="right">597</td>
+<td align="right">50.64</td>
+<td align="right">50.64</td>
+<td align="right">50.64</td>
+<td align="right">50.64</td>
+</tr>
+<tr class="even">
+<td align="right"><strong>ROS</strong></td>
+<td align="right">582</td>
+<td align="right">49.36</td>
+<td align="right">100.00</td>
+<td align="right">49.36</td>
+<td align="right">100.00</td>
+</tr>
+<tr class="odd">
+<td align="right"><strong>&lt;NA&gt;</strong></td>
+<td align="right">0</td>
+<td align="right"></td>
+<td align="right"></td>
+<td align="right">0.00</td>
+<td align="right">100.00</td>
+</tr>
+<tr class="even">
+<td align="right"><strong>Total</strong></td>
+<td align="right">1179</td>
+<td align="right">100.00</td>
+<td align="right">100.00</td>
+<td align="right">100.00</td>
+<td align="right">100.00</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div id="rosmapmsex" class="section level4">
+<h4><span class="header-section-number">3.5.2.2</span> rosmap$msex</h4>
+<p><strong>Type:</strong> Factor</p>
+<table>
+<thead>
+<tr class="header">
+<th align="right"> </th>
+<th align="right">Freq</th>
+<th align="right">% Valid</th>
+<th align="right">% Valid Cum.</th>
+<th align="right">% Total</th>
+<th align="right">% Total Cum.</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="right"><strong>F</strong></td>
+<td align="right">779</td>
+<td align="right">66.07</td>
+<td align="right">66.07</td>
+<td align="right">66.07</td>
+<td align="right">66.07</td>
+</tr>
+<tr class="even">
+<td align="right"><strong>M</strong></td>
+<td align="right">400</td>
+<td align="right">33.93</td>
+<td align="right">100.00</td>
+<td align="right">33.93</td>
+<td align="right">100.00</td>
+</tr>
+<tr class="odd">
+<td align="right"><strong>&lt;NA&gt;</strong></td>
+<td align="right">0</td>
+<td align="right"></td>
+<td align="right"></td>
+<td align="right">0.00</td>
+<td align="right">100.00</td>
+</tr>
+<tr class="even">
+<td align="right"><strong>Total</strong></td>
+<td align="right">1179</td>
+<td align="right">100.00</td>
+<td align="right">100.00</td>
+<td align="right">100.00</td>
+<td align="right">100.00</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div id="rosmapeduc" class="section level4">
+<h4><span class="header-section-number">3.5.2.3</span> rosmap$educ</h4>
+<p><strong>Type:</strong> Numeric</p>
+<table>
+<thead>
+<tr class="header">
+<th align="right"> </th>
+<th align="right">Freq</th>
+<th align="right">% Valid</th>
+<th align="right">% Valid Cum.</th>
+<th align="right">% Total</th>
+<th align="right">% Total Cum.</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="right"><strong>5</strong></td>
+<td align="right">2</td>
+<td align="right">0.17</td>
+<td align="right">0.17</td>
+<td align="right">0.17</td>
+<td align="right">0.17</td>
+</tr>
+<tr class="even">
+<td align="right"><strong>6</strong></td>
+<td align="right">1</td>
+<td align="right">0.08</td>
+<td align="right">0.25</td>
+<td align="right">0.08</td>
+<td align="right">0.25</td>
+</tr>
+<tr class="odd">
+<td align="right"><strong>7</strong></td>
+<td align="right">5</td>
+<td align="right">0.42</td>
+<td align="right">0.68</td>
+<td align="right">0.42</td>
+<td align="right">0.68</td>
+</tr>
+<tr class="even">
+<td align="right"><strong>8</strong></td>
+<td align="right">9</td>
+<td align="right">0.76</td>
+<td align="right">1.44</td>
+<td align="right">0.76</td>
+<td align="right">1.44</td>
+</tr>
+<tr class="odd">
+<td align="right"><strong>9</strong></td>
+<td align="right">7</td>
+<td align="right">0.59</td>
+<td align="right">2.04</td>
+<td align="right">0.59</td>
+<td align="right">2.04</td>
+</tr>
+<tr class="even">
+<td align="right"><strong>10</strong></td>
+<td align="right">12</td>
+<td align="right">1.02</td>
+<td align="right">3.05</td>
+<td align="right">1.02</td>
+<td align="right">3.05</td>
+</tr>
+<tr class="odd">
+<td align="right"><strong>11</strong></td>
+<td align="right">14</td>
+<td align="right">1.19</td>
+<td align="right">4.24</td>
+<td align="right">1.19</td>
+<td align="right">4.24</td>
+</tr>
+<tr class="even">
+<td align="right"><strong>12</strong></td>
+<td align="right">186</td>
+<td align="right">15.78</td>
+<td align="right">20.02</td>
+<td align="right">15.78</td>
+<td align="right">20.02</td>
+</tr>
+<tr class="odd">
+<td align="right"><strong>13</strong></td>
+<td align="right">55</td>
+<td align="right">4.66</td>
+<td align="right">24.68</td>
+<td align="right">4.66</td>
+<td align="right">24.68</td>
+</tr>
+<tr class="even">
+<td align="right"><strong>14</strong></td>
+<td align="right">77</td>
+<td align="right">6.53</td>
+<td align="right">31.21</td>
+<td align="right">6.53</td>
+<td align="right">31.21</td>
+</tr>
+<tr class="odd">
+<td align="right"><strong>15</strong></td>
+<td align="right">47</td>
+<td align="right">3.99</td>
+<td align="right">35.20</td>
+<td align="right">3.99</td>
+<td align="right">35.20</td>
+</tr>
+<tr class="even">
+<td align="right"><strong>16</strong></td>
+<td align="right">241</td>
+<td align="right">20.44</td>
+<td align="right">55.64</td>
+<td align="right">20.44</td>
+<td align="right">55.64</td>
+</tr>
+<tr class="odd">
+<td align="right"><strong>17</strong></td>
+<td align="right">39</td>
+<td align="right">3.31</td>
+<td align="right">58.95</td>
+<td align="right">3.31</td>
+<td align="right">58.95</td>
+</tr>
+<tr class="even">
+<td align="right"><strong>18</strong></td>
+<td align="right">185</td>
+<td align="right">15.69</td>
+<td align="right">74.64</td>
+<td align="right">15.69</td>
+<td align="right">74.64</td>
+</tr>
+<tr class="odd">
+<td align="right"><strong>19</strong></td>
+<td align="right">45</td>
+<td align="right">3.82</td>
+<td align="right">78.46</td>
+<td align="right">3.82</td>
+<td align="right">78.46</td>
+</tr>
+<tr class="even">
+<td align="right"><strong>20</strong></td>
+<td align="right">104</td>
+<td align="right">8.82</td>
+<td align="right">87.28</td>
+<td align="right">8.82</td>
+<td align="right">87.28</td>
+</tr>
+<tr class="odd">
+<td align="right"><strong>21</strong></td>
+<td align="right">66</td>
+<td align="right">5.60</td>
+<td align="right">92.88</td>
+<td align="right">5.60</td>
+<td align="right">92.88</td>
+</tr>
+<tr class="even">
+<td align="right"><strong>22</strong></td>
+<td align="right">38</td>
+<td align="right">3.22</td>
+<td align="right">96.10</td>
+<td align="right">3.22</td>
+<td align="right">96.10</td>
+</tr>
+<tr class="odd">
+<td align="right"><strong>23</strong></td>
+<td align="right">15</td>
+<td align="right">1.27</td>
+<td align="right">97.37</td>
+<td align="right">1.27</td>
+<td align="right">97.37</td>
+</tr>
+<tr class="even">
+<td align="right"><strong>24</strong></td>
+<td align="right">14</td>
+<td align="right">1.19</td>
+<td align="right">98.56</td>
+<td align="right">1.19</td>
+<td align="right">98.56</td>
+</tr>
+<tr class="odd">
+<td align="right"><strong>25</strong></td>
+<td align="right">10</td>
+<td align="right">0.85</td>
+<td align="right">99.41</td>
+<td align="right">0.85</td>
+<td align="right">99.41</td>
+</tr>
+<tr class="even">
+<td align="right"><strong>26</strong></td>
+<td align="right">4</td>
+<td align="right">0.34</td>
+<td align="right">99.75</td>
+<td align="right">0.34</td>
+<td align="right">99.75</td>
+</tr>
+<tr class="odd">
+<td align="right"><strong>27</strong></td>
+<td align="right">1</td>
+<td align="right">0.08</td>
+<td align="right">99.83</td>
+<td align="right">0.08</td>
+<td align="right">99.83</td>
+</tr>
+<tr class="even">
+<td align="right"><strong>28</strong></td>
+<td align="right">1</td>
+<td align="right">0.08</td>
+<td align="right">99.92</td>
+<td align="right">0.08</td>
+<td align="right">99.92</td>
+</tr>
+<tr class="odd">
+<td align="right"><strong>30</strong></td>
+<td align="right">1</td>
+<td align="right">0.08</td>
+<td align="right">100.00</td>
+<td align="right">0.08</td>
+<td align="right">100.00</td>
+</tr>
+<tr class="even">
+<td align="right"><strong>&lt;NA&gt;</strong></td>
+<td align="right">0</td>
+<td align="right"></td>
+<td align="right"></td>
+<td align="right">0.00</td>
+<td align="right">100.00</td>
+</tr>
+<tr class="odd">
+<td align="right"><strong>Total</strong></td>
+<td align="right">1179</td>
+<td align="right">100.00</td>
+<td align="right">100.00</td>
+<td align="right">100.00</td>
+<td align="right">100.00</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div id="rosmapapoe_genotype" class="section level4">
+<h4><span class="header-section-number">3.5.2.4</span> rosmap$apoe_genotype</h4>
+<p><strong>Type:</strong> Factor</p>
+<table>
+<thead>
+<tr class="header">
+<th align="right"> </th>
+<th align="right">Freq</th>
+<th align="right">% Valid</th>
+<th align="right">% Valid Cum.</th>
+<th align="right">% Total</th>
+<th align="right">% Total Cum.</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="right"><strong>22</strong></td>
+<td align="right">7</td>
+<td align="right">0.60</td>
+<td align="right">0.60</td>
+<td align="right">0.59</td>
+<td align="right">0.59</td>
+</tr>
+<tr class="even">
+<td align="right"><strong>23</strong></td>
+<td align="right">145</td>
+<td align="right">12.39</td>
+<td align="right">12.99</td>
+<td align="right">12.30</td>
+<td align="right">12.89</td>
+</tr>
+<tr class="odd">
+<td align="right"><strong>24</strong></td>
+<td align="right">22</td>
+<td align="right">1.88</td>
+<td align="right">14.87</td>
+<td align="right">1.87</td>
+<td align="right">14.76</td>
+</tr>
+<tr class="even">
+<td align="right"><strong>33</strong></td>
+<td align="right">714</td>
+<td align="right">61.03</td>
+<td align="right">75.90</td>
+<td align="right">60.56</td>
+<td align="right">75.32</td>
+</tr>
+<tr class="odd">
+<td align="right"><strong>34</strong></td>
+<td align="right">264</td>
+<td align="right">22.56</td>
+<td align="right">98.46</td>
+<td align="right">22.39</td>
+<td align="right">97.71</td>
+</tr>
+<tr class="even">
+<td align="right"><strong>44</strong></td>
+<td align="right">18</td>
+<td align="right">1.54</td>
+<td align="right">100.00</td>
+<td align="right">1.53</td>
+<td align="right">99.24</td>
+</tr>
+<tr class="odd">
+<td align="right"><strong>&lt;NA&gt;</strong></td>
+<td align="right">9</td>
+<td align="right"></td>
+<td align="right"></td>
+<td align="right">0.76</td>
+<td align="right">100.00</td>
+</tr>
+<tr class="even">
+<td align="right"><strong>Total</strong></td>
+<td align="right">1179</td>
+<td align="right">100.00</td>
+<td align="right">100.00</td>
+<td align="right">100.00</td>
+<td align="right">100.00</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div id="rosmapcogdx" class="section level4">
+<h4><span class="header-section-number">3.5.2.5</span> rosmap$cogdx</h4>
+<p><strong>Type:</strong> Factor</p>
+<table>
+<thead>
+<tr class="header">
+<th align="right"> </th>
+<th align="right">Freq</th>
+<th align="right">% Valid</th>
+<th align="right">% Valid Cum.</th>
+<th align="right">% Total</th>
+<th align="right">% Total Cum.</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="right"><strong>1</strong></td>
+<td align="right">374</td>
+<td align="right">31.72</td>
+<td align="right">31.72</td>
+<td align="right">31.72</td>
+<td align="right">31.72</td>
+</tr>
+<tr class="even">
+<td align="right"><strong>2</strong></td>
+<td align="right">273</td>
+<td align="right">23.16</td>
+<td align="right">54.88</td>
+<td align="right">23.16</td>
+<td align="right">54.88</td>
+</tr>
+<tr class="odd">
+<td align="right"><strong>3</strong></td>
+<td align="right">20</td>
+<td align="right">1.70</td>
+<td align="right">56.57</td>
+<td align="right">1.70</td>
+<td align="right">56.57</td>
+</tr>
+<tr class="even">
+<td align="right"><strong>4</strong></td>
+<td align="right">433</td>
+<td align="right">36.73</td>
+<td align="right">93.30</td>
+<td align="right">36.73</td>
+<td align="right">93.30</td>
+</tr>
+<tr class="odd">
+<td align="right"><strong>5</strong></td>
+<td align="right">58</td>
+<td align="right">4.92</td>
+<td align="right">98.22</td>
+<td align="right">4.92</td>
+<td align="right">98.22</td>
+</tr>
+<tr class="even">
+<td align="right"><strong>6</strong></td>
+<td align="right">21</td>
+<td align="right">1.78</td>
+<td align="right">100.00</td>
+<td align="right">1.78</td>
+<td align="right">100.00</td>
+</tr>
+<tr class="odd">
+<td align="right"><strong>&lt;NA&gt;</strong></td>
+<td align="right">0</td>
+<td align="right"></td>
+<td align="right"></td>
+<td align="right">0.00</td>
+<td align="right">100.00</td>
+</tr>
+<tr class="even">
+<td align="right"><strong>Total</strong></td>
+<td align="right">1179</td>
+<td align="right">100.00</td>
+<td align="right">100.00</td>
+<td align="right">100.00</td>
+<td align="right">100.00</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<div id="data-frame-summary" class="section level3">
+<h3><span class="header-section-number">3.5.3</span> Data frame summary</h3>
+<div class="sourceCode" id="cb23"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb23-1" data-line-number="1"><span class="co"># rosmap %&gt;%</span></a>
+<a class="sourceLine" id="cb23-2" data-line-number="2"><span class="co">#   select(study, age_bl, msex, educ, apoe_genotype, cogdx, age_first_ad_dx) %&gt;%</span></a>
+<a class="sourceLine" id="cb23-3" data-line-number="3"><span class="co">#    summarytools::dfSummary(., plain.ascii = FALSE, style = &quot;grid&quot;, </span></a>
+<a class="sourceLine" id="cb23-4" data-line-number="4"><span class="co">#           graph.magnif = 0.75, valid.col = FALSE, tmp.img.dir = &quot;/temp&quot;) </span></a>
+<a class="sourceLine" id="cb23-5" data-line-number="5"></a>
+<a class="sourceLine" id="cb23-6" data-line-number="6"><span class="kw">print</span>(</a>
+<a class="sourceLine" id="cb23-7" data-line-number="7">  summarytools<span class="op">::</span><span class="kw">dfSummary</span>(</a>
+<a class="sourceLine" id="cb23-8" data-line-number="8">    <span class="kw">select</span>(rosmap, study, age_bl, msex, educ, apoe_genotype, cogdx, age_first_ad_dx), </a>
+<a class="sourceLine" id="cb23-9" data-line-number="9">    <span class="dt">graph.magnif =</span> <span class="fl">0.75</span>, <span class="dt">valid.col =</span> <span class="ot">FALSE</span>, <span class="dt">bootstrap.css =</span> <span class="ot">TRUE</span>, <span class="dt">plain.ascii =</span> <span class="ot">FALSE</span></a>
+<a class="sourceLine" id="cb23-10" data-line-number="10">    ), </a>
+<a class="sourceLine" id="cb23-11" data-line-number="11">  <span class="dt">method =</span> <span class="st">&#39;render&#39;</span></a>
+<a class="sourceLine" id="cb23-12" data-line-number="12">  ) </a></code></pre></div>
+<pre><code>Warning in if (grepl(re1, str, perl = TRUE)) {: the condition has length &gt; 1 and
+only the first element will be used</code></pre>
+<pre><code>Warning in if (grepl(re2, str, perl = TRUE)) {: the condition has length &gt; 1 and
+only the first element will be used</code></pre>
+<pre><code>Warning in if (grepl(re3, str, perl = TRUE)) {: the condition has length &gt; 1 and
+only the first element will be used</code></pre>
+<p>Error in pryr::where(obj_name) : length(name) == 1 is not TRUE
+<div class="container st-container">
+<h3>Data Frame Summary</h3>
+<h4></h4>
+<strong>Dimensions</strong>: 1179 x 7
+  <br/><strong>Duplicates</strong>: 16
+<br/>
+<table class="table table-striped table-bordered st-table st-table-striped st-table-bordered st-multiline ">
+  <thead>
+    <tr>
+      <th align="center" class="st-protect-top-border"><strong>No</strong></th>
+      <th align="center" class="st-protect-top-border"><strong>Variable</strong></th>
+      <th align="center" class="st-protect-top-border"><strong>Stats / Values</strong></th>
+      <th align="center" class="st-protect-top-border"><strong>Freqs (% of Valid)</strong></th>
+      <th align="center" class="st-protect-top-border"><strong>Graph</strong></th>
+      <th align="center" class="st-protect-top-border"><strong>Missing</strong></th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td align="center">1</td>
+      <td align="left">study
+[factor]</td>
+      <td align="left">1. MAP
+2. ROS</td>
+      <td align="left" style="padding:0;vertical-align:middle"><table style="border-collapse:collapse;border:none;margin:0"><tr style="background-color:transparent"><td style="padding:0 5px 0 7px;margin:0;border:0" align="right">597</td><td style="padding:0 2px 0 0;border:0;" align="left">(</td><td style="padding:0;border:0" align="right">50.6%</td><td style="padding:0 4px 0 2px;border:0" align="left">)</td></tr><tr style="background-color:transparent"><td style="padding:0 5px 0 7px;margin:0;border:0" align="right">582</td><td style="padding:0 2px 0 0;border:0;" align="left">(</td><td style="padding:0;border:0" align="right">49.4%</td><td style="padding:0 4px 0 2px;border:0" align="left">)</td></tr></table></td>
+      <td align="left" style="vertical-align:middle;padding:0;background-color:transparent"><img style="border:none;background-color:transparent;padding:0" src="data:image/png;base64, iVBORw0KGgoAAAANSUhEUgAAAEUAAAAtCAQAAABSI26VAAAAAmJLR0QA/4ePzL8AAAAHdElNRQfkBQ0JCTSELNDqAAAAeklEQVRYw+3WIRKAMAxE0YbhoGg4D+jcFGzaAURFsuKvi2nfTCLW7qaSpRoA5T9rHK70w9ntg9LalgrxbhJaEBQoUKBAgQJlLAleSLHYlmz6mdnE34UWJETpbuVM7rZHdxGF3daHWWhBUKBAgQIFChTZblsboQVBecsDzaULoRNk7bcAAAAldEVYdGRhdGU6Y3JlYXRlADIwMjAtMDUtMTNUMTM6MDk6NTItMDQ6MDDG7FmMAAAAJXRFWHRkYXRlOm1vZGlmeQAyMDIwLTA1LTEzVDEzOjA5OjUyLTA0OjAwt7HhMAAAAD10RVh0aWNjOmNvcHlyaWdodABDb3B5cmlnaHQgMjAwNyBBcHBsZSBJbmMuLCBhbGwgcmlnaHRzIHJlc2VydmVkLp5m3CkAAAAjdEVYdGljYzpkZXNjcmlwdGlvbgBHZW5lcmljIFJHQiBQcm9maWxlGqc4jgAAACR0RVh0aWNjOm1hbnVmYWN0dXJlcgBHZW5lcmljIFJHQiBQcm9maWxlHD1oPgAAAB10RVh0aWNjOm1vZGVsAEdlbmVyaWMgUkdCIFByb2ZpbGXqb66rAAAAAElFTkSuQmCC"></td>
+      <td align="center">0
+(0%)</td>
+    </tr>
+    <tr>
+      <td align="center">2</td>
+      <td align="left">age_bl
+[numeric]</td>
+      <td align="left">Mean (sd) : 80.8 (6.9)
+min < med < max:
+63 < 81.3 < 102.1
+IQR (CV) : 9.3 (0.1)</td>
+      <td align="left" style="vertical-align:middle">1100 distinct values</td>
+      <td align="left" style="vertical-align:middle;padding:0;background-color:transparent"><img style="border:none;background-color:transparent;padding:0" src="data:image/png;base64, iVBORw0KGgoAAAANSUhEUgAAAHUAAABVCAQAAADdoWMBAAAAAmJLR0QA/4ePzL8AAAAHdElNRQfkBQ0JCTSELNDqAAABC0lEQVR42u2aTQ7CIBQGxfSUHkHPU4/gNXUpC0gshRbnzezaRekkX/h5j/S+ROF69g+oquoelvwhDRxorU4Kj4HD5oMuzV/ZzK349nXY+IECrCoRVYmoSkRVIqoSUZWIqkRUJaIqEVWJdK8YrtN2RgYUR88ugtYIFGBViahK5MD2VI3y8tS/PzeBamlxGrE0BQqwqkRUJaIqEVWJ7NgtzVtv6K563JauD4ECrCoRVYmoSkRVIqoSUZVIINUJqvtlaqfh9gbHtKr9e+8/qP5btWGH6ry3G7YRaFpSlYiqRFQloioRVYkEUp32EFej/Zre36m293QDBTjleXhCDuFf7lmwE86uSqAAq0rkA8zzGn0ZExHRAAAAJXRFWHRkYXRlOmNyZWF0ZQAyMDIwLTA1LTEzVDEzOjA5OjUyLTA0OjAwxuxZjAAAACV0RVh0ZGF0ZTptb2RpZnkAMjAyMC0wNS0xM1QxMzowOTo1Mi0wNDowMLex4TAAAAA9dEVYdGljYzpjb3B5cmlnaHQAQ29weXJpZ2h0IDIwMDcgQXBwbGUgSW5jLiwgYWxsIHJpZ2h0cyByZXNlcnZlZC6eZtwpAAAAI3RFWHRpY2M6ZGVzY3JpcHRpb24AR2VuZXJpYyBSR0IgUHJvZmlsZRqnOI4AAAAkdEVYdGljYzptYW51ZmFjdHVyZXIAR2VuZXJpYyBSR0IgUHJvZmlsZRw9aD4AAAAddEVYdGljYzptb2RlbABHZW5lcmljIFJHQiBQcm9maWxl6m+uqwAAAABJRU5ErkJggg=="></td>
+      <td align="center">0
+(0%)</td>
+    </tr>
+    <tr>
+      <td align="center">3</td>
+      <td align="left">msex
+[factor]</td>
+      <td align="left">1. F
+2. M</td>
+      <td align="left" style="padding:0;vertical-align:middle"><table style="border-collapse:collapse;border:none;margin:0"><tr style="background-color:transparent"><td style="padding:0 5px 0 7px;margin:0;border:0" align="right">779</td><td style="padding:0 2px 0 0;border:0;" align="left">(</td><td style="padding:0;border:0" align="right">66.1%</td><td style="padding:0 4px 0 2px;border:0" align="left">)</td></tr><tr style="background-color:transparent"><td style="padding:0 5px 0 7px;margin:0;border:0" align="right">400</td><td style="padding:0 2px 0 0;border:0;" align="left">(</td><td style="padding:0;border:0" align="right">33.9%</td><td style="padding:0 4px 0 2px;border:0" align="left">)</td></tr></table></td>
+      <td align="left" style="vertical-align:middle;padding:0;background-color:transparent"><img style="border:none;background-color:transparent;padding:0" src="data:image/png;base64, iVBORw0KGgoAAAANSUhEUgAAAFcAAAAtCAQAAABxeD9AAAAAAmJLR0QA/4ePzL8AAAAHdElNRQfkBQ0JCTSELNDqAAAAh0lEQVRYw+3XsQqAMAyE4UR8UGd9Hp37prq2igjS0F75b8sSvuGGxE9TytQaALefzPlwdFnk1V+4Zktr2yOpmMTKABcuXLhw4cKFOyD3dkCm1p6PeH6R++81kcmFYmUQ4xbd3av+altAt8J+tVTfanJlgAsXLly4cOHCHZCr/Kv1H7EywI3MBRENC6H7n3iAAAAAJXRFWHRkYXRlOmNyZWF0ZQAyMDIwLTA1LTEzVDEzOjA5OjUyLTA0OjAwxuxZjAAAACV0RVh0ZGF0ZTptb2RpZnkAMjAyMC0wNS0xM1QxMzowOTo1Mi0wNDowMLex4TAAAAA9dEVYdGljYzpjb3B5cmlnaHQAQ29weXJpZ2h0IDIwMDcgQXBwbGUgSW5jLiwgYWxsIHJpZ2h0cyByZXNlcnZlZC6eZtwpAAAAI3RFWHRpY2M6ZGVzY3JpcHRpb24AR2VuZXJpYyBSR0IgUHJvZmlsZRqnOI4AAAAkdEVYdGljYzptYW51ZmFjdHVyZXIAR2VuZXJpYyBSR0IgUHJvZmlsZRw9aD4AAAAddEVYdGljYzptb2RlbABHZW5lcmljIFJHQiBQcm9maWxl6m+uqwAAAABJRU5ErkJggg=="></td>
+      <td align="center">0
+(0%)</td>
+    </tr>
+    <tr>
+      <td align="center">4</td>
+      <td align="left">educ
+[numeric]</td>
+      <td align="left">Mean (sd) : 16.4 (3.6)
+min < med < max:
+5 < 16 < 30
+IQR (CV) : 5 (0.2)</td>
+      <td align="left" style="vertical-align:middle">25 distinct values</td>
+      <td align="left" style="vertical-align:middle;padding:0;background-color:transparent"><img style="border:none;background-color:transparent;padding:0" src="data:image/png;base64, iVBORw0KGgoAAAANSUhEUgAAAHUAAABVCAQAAADdoWMBAAAAAmJLR0QA/4ePzL8AAAAHdElNRQfkBQ0JCTSELNDqAAABGklEQVR42u3aQRKCMAxGYetwSo+g58EjeE3d1jJM1YYmvvxv5wb5xoC2WJ6nLJ29T0BUUUda6hfF+ODr5kZws36LTvUJLD8f5aMub68ec51NiQZYVGKiEhOVmKjERCUmKjFRiR28Xm1rF+szl+qTqZ5L9UQDLCoxUYkN3YH993mnUWPt8/ZKNMCiEhOVmKjERCUmKrHJGy5tM/eanKkzlwuJBjgR1XiA18D/zjSmRl6qJxpgUYmJSiwR1fmHYduRv4mDUY/8Xk40wKISE5WYqMREJSYqMVGJiUpMVGKJqME2XNos95qCUy33mr6iRn7ONkjd0ryftI0MdOdT9aZZnk/WO/B/X4u9Sq2746jX6louON1uia5VUYm9AKjTJRkM2+bZAAAAJXRFWHRkYXRlOmNyZWF0ZQAyMDIwLTA1LTEzVDEzOjA5OjUyLTA0OjAwxuxZjAAAACV0RVh0ZGF0ZTptb2RpZnkAMjAyMC0wNS0xM1QxMzowOTo1Mi0wNDowMLex4TAAAAA9dEVYdGljYzpjb3B5cmlnaHQAQ29weXJpZ2h0IDIwMDcgQXBwbGUgSW5jLiwgYWxsIHJpZ2h0cyByZXNlcnZlZC6eZtwpAAAAI3RFWHRpY2M6ZGVzY3JpcHRpb24AR2VuZXJpYyBSR0IgUHJvZmlsZRqnOI4AAAAkdEVYdGljYzptYW51ZmFjdHVyZXIAR2VuZXJpYyBSR0IgUHJvZmlsZRw9aD4AAAAddEVYdGljYzptb2RlbABHZW5lcmljIFJHQiBQcm9maWxl6m+uqwAAAABJRU5ErkJggg=="></td>
+      <td align="center">0
+(0%)</td>
+    </tr>
+    <tr>
+      <td align="center">5</td>
+      <td align="left">apoe_genotype
+[factor]</td>
+      <td align="left">1. 22
+2. 23
+3. 24
+4. 33
+5. 34
+6. 44</td>
+      <td align="left" style="padding:0;vertical-align:middle"><table style="border-collapse:collapse;border:none;margin:0"><tr style="background-color:transparent"><td style="padding:0 5px 0 7px;margin:0;border:0" align="right">7</td><td style="padding:0 2px 0 0;border:0;" align="left">(</td><td style="padding:0;border:0" align="right">0.6%</td><td style="padding:0 4px 0 2px;border:0" align="left">)</td></tr><tr style="background-color:transparent"><td style="padding:0 5px 0 7px;margin:0;border:0" align="right">145</td><td style="padding:0 2px 0 0;border:0;" align="left">(</td><td style="padding:0;border:0" align="right">12.4%</td><td style="padding:0 4px 0 2px;border:0" align="left">)</td></tr><tr style="background-color:transparent"><td style="padding:0 5px 0 7px;margin:0;border:0" align="right">22</td><td style="padding:0 2px 0 0;border:0;" align="left">(</td><td style="padding:0;border:0" align="right">1.9%</td><td style="padding:0 4px 0 2px;border:0" align="left">)</td></tr><tr style="background-color:transparent"><td style="padding:0 5px 0 7px;margin:0;border:0" align="right">714</td><td style="padding:0 2px 0 0;border:0;" align="left">(</td><td style="padding:0;border:0" align="right">61.0%</td><td style="padding:0 4px 0 2px;border:0" align="left">)</td></tr><tr style="background-color:transparent"><td style="padding:0 5px 0 7px;margin:0;border:0" align="right">264</td><td style="padding:0 2px 0 0;border:0;" align="left">(</td><td style="padding:0;border:0" align="right">22.6%</td><td style="padding:0 4px 0 2px;border:0" align="left">)</td></tr><tr style="background-color:transparent"><td style="padding:0 5px 0 7px;margin:0;border:0" align="right">18</td><td style="padding:0 2px 0 0;border:0;" align="left">(</td><td style="padding:0;border:0" align="right">1.5%</td><td style="padding:0 4px 0 2px;border:0" align="left">)</td></tr></table></td>
+      <td align="left" style="vertical-align:middle;padding:0;background-color:transparent"><img style="border:none;background-color:transparent;padding:0" src="data:image/png;base64, iVBORw0KGgoAAAANSUhEUgAAAFEAAAB1CAQAAACcu8WdAAAAAmJLR0QA/4ePzL8AAAAHdElNRQfkBQ0JCTSELNDqAAABAklEQVR42u3aMQ6DMBBEUYg4KH3Ok943JV20WEASMN4Z6f9UllI82RSLxbgM6j2yARA7tYTfS+bBjCqDXYQIUSWIEFWCCFEliC0a44g4Zms+RZXBLhoQp7g4fjF4Jj0H03o57/6x5PgGi4OGCFEliBBVgghRpWrSKdmejXgxaNHG1J01Xe9V7eKc7flOVAwiRJUgQlQJIkSVKmLJ9mzE1N0iA+If1/FdC8/cz9fxPSurlcFBQ4SoEkSIKkGEqBLX8WczezG4PHXff3l/ceoud/sGi4OGCFEliBBVgghRJabus5lN3QZEvtO5gagYRIgqQYSoEkSIKrl9p6OZ30ErZkB8A/yVKu6WrR2XAAAAJXRFWHRkYXRlOmNyZWF0ZQAyMDIwLTA1LTEzVDEzOjA5OjUyLTA0OjAwxuxZjAAAACV0RVh0ZGF0ZTptb2RpZnkAMjAyMC0wNS0xM1QxMzowOTo1Mi0wNDowMLex4TAAAAA9dEVYdGljYzpjb3B5cmlnaHQAQ29weXJpZ2h0IDIwMDcgQXBwbGUgSW5jLiwgYWxsIHJpZ2h0cyByZXNlcnZlZC6eZtwpAAAAI3RFWHRpY2M6ZGVzY3JpcHRpb24AR2VuZXJpYyBSR0IgUHJvZmlsZRqnOI4AAAAkdEVYdGljYzptYW51ZmFjdHVyZXIAR2VuZXJpYyBSR0IgUHJvZmlsZRw9aD4AAAAddEVYdGljYzptb2RlbABHZW5lcmljIFJHQiBQcm9maWxl6m+uqwAAAABJRU5ErkJggg=="></td>
+      <td align="center">9
+(0.76%)</td>
+    </tr>
+    <tr>
+      <td align="center">6</td>
+      <td align="left">cogdx
+[factor]</td>
+      <td align="left">1. 1
+2. 2
+3. 3
+4. 4
+5. 5
+6. 6</td>
+      <td align="left" style="padding:0;vertical-align:middle"><table style="border-collapse:collapse;border:none;margin:0"><tr style="background-color:transparent"><td style="padding:0 5px 0 7px;margin:0;border:0" align="right">374</td><td style="padding:0 2px 0 0;border:0;" align="left">(</td><td style="padding:0;border:0" align="right">31.7%</td><td style="padding:0 4px 0 2px;border:0" align="left">)</td></tr><tr style="background-color:transparent"><td style="padding:0 5px 0 7px;margin:0;border:0" align="right">273</td><td style="padding:0 2px 0 0;border:0;" align="left">(</td><td style="padding:0;border:0" align="right">23.2%</td><td style="padding:0 4px 0 2px;border:0" align="left">)</td></tr><tr style="background-color:transparent"><td style="padding:0 5px 0 7px;margin:0;border:0" align="right">20</td><td style="padding:0 2px 0 0;border:0;" align="left">(</td><td style="padding:0;border:0" align="right">1.7%</td><td style="padding:0 4px 0 2px;border:0" align="left">)</td></tr><tr style="background-color:transparent"><td style="padding:0 5px 0 7px;margin:0;border:0" align="right">433</td><td style="padding:0 2px 0 0;border:0;" align="left">(</td><td style="padding:0;border:0" align="right">36.7%</td><td style="padding:0 4px 0 2px;border:0" align="left">)</td></tr><tr style="background-color:transparent"><td style="padding:0 5px 0 7px;margin:0;border:0" align="right">58</td><td style="padding:0 2px 0 0;border:0;" align="left">(</td><td style="padding:0;border:0" align="right">4.9%</td><td style="padding:0 4px 0 2px;border:0" align="left">)</td></tr><tr style="background-color:transparent"><td style="padding:0 5px 0 7px;margin:0;border:0" align="right">21</td><td style="padding:0 2px 0 0;border:0;" align="left">(</td><td style="padding:0;border:0" align="right">1.8%</td><td style="padding:0 4px 0 2px;border:0" align="left">)</td></tr></table></td>
+      <td align="left" style="vertical-align:middle;padding:0;background-color:transparent"><img style="border:none;background-color:transparent;padding:0" src="data:image/png;base64, iVBORw0KGgoAAAANSUhEUgAAADYAAAB1CAQAAACvgNqUAAAAAmJLR0QA/4ePzL8AAAAHdElNRQfkBQ0JCTSELNDqAAAA1ElEQVRo3u3bSw6EMAiA4WHiQd17HmfNTXUpmmniAzTgz8rGpl8qRtBEmT73xfdGqzDW2cHPKYGDLMd2yW49rXegtHmmbs7AwMDAkmCbp76GYmLrjZxeph12/ZfkbDzVFgy7r/7ltkAPzK2bMzAwMLAkGG2BS/yp1Psr79HY7KwP3VndWx8MDAwsJ6ahWN1K/XRb4BwmNwHf9W3oalQ3Z2BgYGBJMF7gXaJZqSNe4xuVWkN2VvfWBwMDA0uCUald4um2gO/6YGBgYGABmIZiws8B6bAZX9siDsXxJzUAAAAldEVYdGRhdGU6Y3JlYXRlADIwMjAtMDUtMTNUMTM6MDk6NTItMDQ6MDDG7FmMAAAAJXRFWHRkYXRlOm1vZGlmeQAyMDIwLTA1LTEzVDEzOjA5OjUyLTA0OjAwt7HhMAAAAD10RVh0aWNjOmNvcHlyaWdodABDb3B5cmlnaHQgMjAwNyBBcHBsZSBJbmMuLCBhbGwgcmlnaHRzIHJlc2VydmVkLp5m3CkAAAAjdEVYdGljYzpkZXNjcmlwdGlvbgBHZW5lcmljIFJHQiBQcm9maWxlGqc4jgAAACR0RVh0aWNjOm1hbnVmYWN0dXJlcgBHZW5lcmljIFJHQiBQcm9maWxlHD1oPgAAAB10RVh0aWNjOm1vZGVsAEdlbmVyaWMgUkdCIFByb2ZpbGXqb66rAAAAAElFTkSuQmCC"></td>
+      <td align="center">0
+(0%)</td>
+    </tr>
+    <tr>
+      <td align="center">7</td>
+      <td align="left">age_first_ad_dx
+[numeric]</td>
+      <td align="left">Mean (sd) : 87.3 (6.4)
+min < med < max:
+68.9 < 87.4 < 107.2
+IQR (CV) : 8.2 (0.1)</td>
+      <td align="left" style="vertical-align:middle">391 distinct values</td>
+      <td align="left" style="vertical-align:middle;padding:0;background-color:transparent"><img style="border:none;background-color:transparent;padding:0" src="data:image/png;base64, iVBORw0KGgoAAAANSUhEUgAAAHUAAABVCAQAAADdoWMBAAAAAmJLR0QA/4ePzL8AAAAHdElNRQfkBQ0JCTSELNDqAAABCklEQVR42u2aQQ6DIBAAa+Mr+4T2PfYJ/WZ7LAdIFEFxduamMa4TV5Bdpu8tCvezH0BVVfcwpwdTx0BLcVB4dQybBp2r77KZR/bs57D4gRJYVSKqElGViKpEVCWiKhFViahKRFUiqhIJpHpgcbREvkLcvjo8gGquPtyjOmwC17MM28XskMBnNyxKBEpgVYmoSkRVIqoSUZWIqkRUJaIqEVWJqEpEVSKqEtlR3R+3ZdFc9bgeWhtM4PMpfR71LeZhVdv38wIlsKpEVCWiKhFViQRSXfFjeLXF2g7VcfeXbSNQAgdSHXYRV6J+o/TlVOuLPJdTzVOcJZK3PaXXvCHTyp9nSZVNoBFYVSI/ow4cFMJDbiEAAAAldEVYdGRhdGU6Y3JlYXRlADIwMjAtMDUtMTNUMTM6MDk6NTItMDQ6MDDG7FmMAAAAJXRFWHRkYXRlOm1vZGlmeQAyMDIwLTA1LTEzVDEzOjA5OjUyLTA0OjAwt7HhMAAAAD10RVh0aWNjOmNvcHlyaWdodABDb3B5cmlnaHQgMjAwNyBBcHBsZSBJbmMuLCBhbGwgcmlnaHRzIHJlc2VydmVkLp5m3CkAAAAjdEVYdGljYzpkZXNjcmlwdGlvbgBHZW5lcmljIFJHQiBQcm9maWxlGqc4jgAAACR0RVh0aWNjOm1hbnVmYWN0dXJlcgBHZW5lcmljIFJHQiBQcm9maWxlHD1oPgAAAB10RVh0aWNjOm1vZGVsAEdlbmVyaWMgUkdCIFByb2ZpbGXqb66rAAAAAElFTkSuQmCC"></td>
+      <td align="center">768
+(65.14%)</td>
+    </tr>
+  </tbody>
+</table>
+<p>Generated by <a href='https://github.com/dcomtois/summarytools'>summarytools</a> 0.9.5 (<a href='https://www.r-project.org/'>R</a> version 3.6.2)<br/>2020-05-13</p>
+</div></p>
+</div>
+</div>
+            </section>
+
+          </div>
+        </div>
+      </div>
+<a href="3-4-skim-from-the-skimr-package.html" class="navigation navigation-prev " aria-label="Previous page"><i class="fa fa-angle-left"></i></a>
+<a href="3-6-datamaid.html" class="navigation navigation-next " aria-label="Next page"><i class="fa fa-angle-right"></i></a>
+    </div>
+  </div>
+<script src="libs/gitbook-2.6.7/js/app.min.js"></script>
+<script src="libs/gitbook-2.6.7/js/lunr.js"></script>
+<script src="libs/gitbook-2.6.7/js/clipboard.min.js"></script>
+<script src="libs/gitbook-2.6.7/js/plugin-search.js"></script>
+<script src="libs/gitbook-2.6.7/js/plugin-sharing.js"></script>
+<script src="libs/gitbook-2.6.7/js/plugin-fontsettings.js"></script>
+<script src="libs/gitbook-2.6.7/js/plugin-bookdown.js"></script>
+<script src="libs/gitbook-2.6.7/js/jquery.highlight.js"></script>
+<script src="libs/gitbook-2.6.7/js/plugin-clipboard.js"></script>
+<script>
+gitbook.require(["gitbook"], function(gitbook) {
+gitbook.start({
+"sharing": {
+"github": false,
+"facebook": true,
+"twitter": true,
+"linkedin": false,
+"weibo": false,
+"instapaper": false,
+"vk": false,
+"all": ["facebook", "twitter", "linkedin", "weibo", "instapaper"]
+},
+"fontsettings": {
+"theme": "white",
+"family": "sans",
+"size": 2
+},
+"edit": {
+"link": null,
+"text": null
+},
+"history": {
+"link": null,
+"text": null
+},
+"view": {
+"link": null,
+"text": null
+},
+"download": ["notebook.pdf", "notebook.epub"],
+"toc": {
+"collapse": "section"
+}
+});
+});
+</script>
+
+</body>
+
+</html>

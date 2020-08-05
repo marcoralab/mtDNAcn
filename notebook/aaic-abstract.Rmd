@@ -1,0 +1,136 @@
+# AAIC Abstract 
+```{r, warning=F, message=F, error=F, echo=FALSE}
+# library(knitr)
+# library(kableExtra)
+library(tidyverse)
+library(ggbeeswarm)
+library(broom)
+library(knitr)
+knitr::opts_knit$set(root.dir = '/sc/arion/projects/LOAD/shea/Projects/mtDNAcn')
+```
+
+**Mitochondrial DNA copy number is associated with cognitive impairment** 
+
+**Background:** Increasing evidence has implicated mitochondrial dysfunction in the pathogenesis of Alzheimer’s Disease. Mitochondria contain their own DNA outside of the nuclear genome, with every cell having between 100-10,000 copies of mtDNA. Mitochondrial DNA copy number (mtDNA-CN) has been used as a surrogate measure of mitochondrial function, with reduced mtDNA-CN associated with age-related diseases. The aim of this study was to evaluate the association of mtDNA-CN with cognitive impairment.
+
+```{r aaic-rosmap}
+rosmap.raw  <- readRDS('output/rosmap.RData') 
+rosmap <- rosmap.raw %>% 
+  filter(Source.Tissue.Type %in% c("Brain-DLPFC", "Brain-Posterior Cingulate Cortex", "Brain-Cerebellum", "Whole Blood")) %>%
+  filter(organ == 'brain') %>% 
+  filter(macro %in% c('H', 'V', 'J', 'T', 'U', 'K', 'I', 'W', 'X')) %>%
+  filter(!is.na(macro)) %>%
+  filter(!is.na(cts_mmse30_lv)) %>%
+  filter(!is.na(apoe4)) %>% 
+  mutate(Source.Tissue.Type = str_replace(Source.Tissue.Type, "Brain-", ""), 
+         Source.Tissue.Type = str_replace(Source.Tissue.Type, "Posterior Cingulate Cortex", "PCC")) %>%
+  select(cts_mmse30_lv, niareagansc, dcfdx_lv, cts_mmse30_lv, pmi, study, age_death, msex, 
+         Source.Tissue.Type, organ, apoe4, z_mtdnacn, mtcn_avg, macro)
+
+```
+
+
+```{r aaic-msbb}
+msbb.raw <- readRDS('output/msbb.rds')
+
+msbb <- msbb.raw  %>% 
+  filter(race == 'W') %>%
+  filter(macro %in% c('H', 'V', 'J', 'T', 'U', 'K', 'I', 'W', 'X')) 
+
+```
+
+**Methods:** We evaluated the association of mtDNA-CN with the extended Clinical Dementia Rating (CDR) scale in the Mount Sinai Brain Bank (MSBB) and with mini mental state exam (MMSE) in the Religious Orders Studies and the Memory Aging Project (ROSMAP). Relative mtDNA-CN was estimated as the ratio of mitochondrial genomes to nuclear genomes in `r nrow(msbb) + nrow(rosmap)` non-Hispanic white subjects (MSBB = `r nrow(msbb)`; ROSMAP = `r nrow(rosmap)`) using whole-genome sequencing data generated from DNA isolated from post-mortem brain tissue (MSBB: prefrontal cortex; ROSMAP: dorsolateral prefrontal cortex [DLPFC], posterior cingulate cortex [PCC], or cerebellum). Linear regression adjusting for age of death, sex, APOE, study, mitochondrial haplogroup and source tissue were used to evaluate the association of mtDNA-CN with cognitive impairment.
+
+```{r aaic-mod}
+## CDR analysis
+cdr_res <- lm(cdr ~ z_mtdnacn  + aod + sex + apoe4 + macro, data = msbb)
+cdr_tab <- tidy(cdr_res)
+
+## MMSE analysis
+mmse_res <- lm(cts_mmse30_lv ~ z_mtdnacn  + age_death + msex + apoe4 + study + Source.Tissue.Type + macro, data = rosmap)
+mmse_tab <- tidy(mmse_res)
+```
+
+**Results:** In the MSBB, a one standard deviation decrease (1 s.d. `r round(sd(msbb$mtcn_avg))`) in mtDNA-CN was associated with a higher CDR score ($\beta$(se) = `r filter(cdr_tab, term == "z_mtdnacn") %>% pull(estimate) %>% round(., 2) * -1` (`r filter(cdr_tab, term == "z_mtdnacn") %>% pull(std.error) %>% round(., 2)`), p = `r filter(cdr_tab, term == "z_mtdnacn") %>% pull(p.value) %>% formatC(., format = "e", digits = 2)`, \@ref(print-aaic-plots)). Similarly, in ROSMAP a one standard deviation decrease (1 s.d. `r round(sd(rosmap$mtcn_avg))`) in mtDNA-CN was associated with a lower MMSE score ($\beta$(se) = `r filter(mmse_tab, term == "z_mtdnacn") %>% pull(estimate) %>% round(., 2) * -1` (`r filter(mmse_tab, term == "z_mtdnacn") %>% pull(std.error) %>% round(., 2)`), p = `r filter(mmse_tab, term == "z_mtdnacn") %>% pull(p.value) %>% formatC(., format = "e", digits = 2)`, \@ref(print-aaic-plots)). 
+
+```{r aaic-plots, echo=FALSE, message=FALSE, warning=FALSE}
+p1 <-  ggplot(rosmap, aes(x = cts_mmse30_lv, y = z_mtdnacn, color = Source.Tissue.Type)) + 
+  geom_quasirandom(size = 0.75) + 
+  geom_smooth(method = "lm", size = 0.75) + 
+  ggsci::scale_color_jco() + 
+  labs(x = "MMSE", y = "Standardized mtDNAcn", 
+#       title = "Relationship between MMSE and mtDNAcn in ROSMAP", 
+       color = "Tissue") + 
+  theme_bw() + 
+  theme(legend.position = "bottom", 
+        text = element_text(size=10), 
+        axis.text.x = element_text(color = "grey20", size = 10, face = "plain"),
+        axis.text.y = element_text(color = "grey20", size = 10, face = "plain"),  
+        axis.title.x = element_text(color = "grey20", size = 10, face = "plain"),
+        axis.title.y = element_text(color = "grey20", size = 10, face = "plain")
+        )
+
+ggsave('docs/rosmap_mmse.png', p1, width = 90, height = 90, units = "mm", dpi = 300)
+
+p2 <- ggplot(msbb, aes(x = cdr, y = z_mtdnacn, colour = SourceTissue)) + 
+  geom_quasirandom(size = 0.75) + 
+  geom_smooth(method = "lm", size = 0.75) + 
+  #ggsci::scale_color_jco() + 
+  scale_colour_manual(values = "#CD534CFF") + 
+  scale_x_continuous(breaks = c(0, 0.5, 1, 2, 3, 4, 5)) + 
+  labs(x = "Extended CDR", y = "Standardized mtDNAcn", 
+#       title = "Relationship between CDR and mtDNAcn in MSBB", 
+       color = "Tissue") + 
+  theme_bw() + 
+  theme(legend.position = "bottom", 
+        text = element_text(size=10), 
+        axis.text.x = element_text(color = "grey20", size = 10, face = "plain"),
+        axis.text.y = element_text(color = "grey20", size = 10, face = "plain"),  
+        axis.title.x = element_text(color = "grey20", size = 10, face = "plain"),
+        axis.title.y = element_text(color = "grey20", size = 10, face = "plain"))
+
+ggsave('docs/msbb_cdr.png', p2, width = 90, height = 90, units = "mm", dpi = 300)
+
+```
+
+
+
+```{r print-aaic-plots, echo=FALSE, message=FALSE, fig.cap='Relationship between mtDNAcn and CDR & MMSE in MSBB and ROSMAP'}
+ggpubr::ggarrange(p2, p1, labels="AUTO")
+```
+
+<br>
+
+```{r aaic-tab-cdr, echo=FALSE}
+cdr_tab %>% 
+  mutate_at(., vars("estimate", "std.error", "statistic"), round, 3) %>% 
+  mutate(p.value = ifelse(p.value < 0.001, formatC(p.value, format = "e", digits = 2), round(p.value, 3))) %>%
+  knitr::kable(format = "html", caption = "Assocation of mtDNA with CDR in MSBB")  %>%
+  kableExtra::kable_styling("striped", full_width = F) %>%
+  kableExtra::pack_rows("Haplogroup", 6, 13)
+```
+
+<br>
+
+```{r aaic-tab-mmse, echo=FALSE}
+mmse_tab %>% 
+  mutate_at(., vars("estimate", "std.error", "statistic"), round, 3) %>% 
+  mutate(p.value = ifelse(p.value < 0.001, formatC(p.value, format = "e", digits = 2), round(p.value, 3))) %>%
+  knitr::kable(format = "html", caption = "Assocation of mtDNA with MMSE in ROSMAP") %>%
+  kableExtra::kable_styling("striped", full_width = F) %>%
+  kableExtra::pack_rows("Tissue", 7, 8) %>%
+  kableExtra::pack_rows("Haplogroup", 9, 16)
+```
+
+<br>
+
+**Conclusion:** Mitochondrial dysfunction as measured by mtDNA-CN is associated with worse cognitive performance, suggesting that mitochondrial function plays a role in the pathogenesis of Alzheimer’s Disease. However, further research is needed to determine if mitochondrial dysfunction causes, mediates, or is a by-product of AD pathogenesis, in particular whether neuronal loss is an unobserved confounder that could be driving the observed associations. 
+
+```{r, eval=FALSE, echo=FALSE}
+
+gvlma(cdr_res) %>% summary()
+
+gvlma(mmse_res) %>% summary()
+
+```
+

@@ -1,0 +1,77 @@
+# Introduction {#intro}
+
+## Neuropathological Confirmed AD 
+There is consensus to disentangle the clinicopathologic term “Alzheimer’s disease” from AD neuropathologic change. The former refers to clinical signs and symptoms of cognitive and behavioral changes that are typical for patients who have substantial AD neuropathologic change,and is the focus of recent NIA–AA-sponsored consensus re-ports on three defined stages in a clinical continuum that includes preclinical, mild cognitive impairment, anddementia. The latter refers to the presence and extentof neuropathologic changes of AD observed at autopsy, re-gardless of the clinical setting.
+
+### CERAD Criteria - 1991
+Protocol provides neuropathologic definitions of such terms as “definite Alzheimer’s disease’’ (AD), “probable AD,” “possible AD,” and “normal brain” to indicate levels of diagnostic certainty (@Mirra479). The CERAD Neuritic Plaque score forms the basis of later neuropathological difinitions. 
+
+Sections are tacken from: 
+
+- [middle frontal gyrus](https://en.wikipedia.org/wiki/Middle_frontal_gyrus)
+- [superior](https://en.wikipedia.org/wiki/Superior_temporal_gyrus) and [middle](https://en.wikipedia.org/wiki/Middle_temporal_gyrus) temporal gyri
+- [inferior parietal lobule](https://en.wikipedia.org/wiki/Inferior_parietal_lobule)
+- [hippocampus](https://en.wikipedia.org/wiki/Hippocampus) and [entorhinal cortex](https://en.wikipedia.org/wiki/Entorhinal_cortex)
+- [midbrain](https://en.wikipedia.org/wiki/Midbrain)
+
+And scored as a semiquantitative measurment: 
+
+- Absent
+- Sparese
+- Moderate 
+- Frequent 
+
+An age-related plaque score is then determined by combining the age of the patient at death and the semiquantitative measure of plaques in the *most severely affected region of the neocortex*. This score is then intergrated with with clinical information the presence or absence of dementia. 
+
+### NIA-Reagan Criteria - 1997
+
+The modified NIA-Reagan diagnosis of Alzheimer’s disease is based on consensus recommendations for postmortem diagnosis of Alzheimer’s disease. The criteria rely on both neurofibrillary tangles (Braak) and neuritic plaques (CERAD). See [NIA Working group consensus 1997](https://doi.org/10.1016/S0197-4580(97)00057-2) and corresponding editorial by [Hyman et al 1997](https://doi.org/10.1097/00005072-199710000-00002). Traditionaly, the criteria require a history of dementia, insofar as they were designed to help address the question of whether AD was the underlying cause of a patient’s dementia.
+
+- CERAD score is a semiquantitative measure of neuritic plaques
+  + No neuritic plaques (C0)
+  + Sparse/infrequent neuritic plaques (C1)
+  + Moderate neuritic plaques (C2)
+  + Frequent neuritic plaques (C3)
+- Braak Stage is a semiquantitative measure of severity of neurofibrillary tangle (NFT) pathology.
+  + no NFTs (B0)
+  + stages I/II, with NFTs predominantly in en-torhinal cortex and closely related areas (B1)
+  + stages III/IV, withNFTs more abundant in hippocampus and amygdala whileextending slightly into association cortex (B2)
+  + stages V/VI,with NFTs widely distributed throughout the neocortex (B3)
+
+| CERAD / Braak | 0 | I/II | III/IV | V/VI |
+| ------------- | - | - | - | - |
+| None | **Normal** | - | - | - |
+| Sparse | - | **Low** | - | - |
+| Moderate | - | - |**Intermediate** | - |
+| Frequent | - | - | - | **High** |
+
+### NIA-AA Criteria - 2012
+
+The NIA-AA criteria updated and revised the 1997 NIA-Reagan criteria to recognize the pre-clinical stage of AD, enhance the assessment of AD to include amyloid accumulation as well as neurofibrillary change and neuritic plaques. Hyman et al 2012. The criteria relies on an 'ABC' score for AD neuropathologic change that incorporates histopathologic assessments of amyloid β deposits (A - Thal phase), staging of neurofibrillary tangles (B - CERAD), and scoring of neuritic plaques (C - Braak Stage). See [Hyman et al 2012](https://doi.org/10.1016/j.jalz.2011.10.007) for guidlines and [Montine et al 2012](https://doi.org/10.1007/s00401-011-0910-3) for a practial guide.
+
+- Thal Phase is a semiquantitiative measure of the distribution of AB
+  + phase 0 or no amyloid
+  + phase 1 or isocortical
+  + phase 2 or limbic
+  + phase 3 or basal ganglia
+  + phase 4 or basal forebrain and midbrain
+  + phase 5 or pons/medulla oblongata and cerebellum
+
+| Thal | CERAD               | Braak: | None or I/II (B0 or B1) | III/IV (B2) | V/VI (B3) | 
+| -    | ----------          | ------ | - | - | - | 
+| 0 (A0)   | None (C0)       |        | Other<sup>§</sup> | Other<sup>§</sup>  | Other<sup>§</sup>  |  
+| 1/2 (A1)  | None - Sparse (C0 or C1)|        | Low | Low | Low<sup>¶</sup>  | 
+|      | Modearte - Frequent C2 or C3) |        | Low<sup>†</sup>  | Intermediate | Intermediate<sup>¶</sup>  | 
+| 3 (A2)   | Any C           |        | Low<sup>†</sup>  | Intermediate | Intermediate<sup>¶</sup>  | 
+| 4/5 (A3)  | None - Sparse (C0 or C1) |        | Low<sup>†</sup>  | Intermediate | Intermediate<sup>¶</sup>  | 
+|      | Modearte - Frequent C2 or C3) |        | Low<sup>†</sup>  | Intermediate | High | 
+
+<sup>§</sup>Medial temporal lobe NFTs in the absence of significant Ab or neuritic plaques occur in older people and may be seen in individuals without cognitiveimpairment, with mild impairment, or with cognitive impairment from causes other than AD. Consider other diseases when clinically or pathologically indicated.
+
+<sup>¶</sup>Widespread NFTs with some Ab/amyloid plaques or limited neuritic plaques are relatively infrequent, and when they occur, other diseases, particularlytauopathies, should be considered. Such cases may not fit easily into a specific Braak stage, which is intended for categorization of AD-type NFTs.
+
+<sup>†</sup>Higher levels of Ab or neuritic plaques with low Braak stage should prompt consideration of contribution by comorbidities such as vascular brain injury,LBD, or HS. Also, consider additional sections as well as repeat or additional protocols to demonstrate other non-AD lesions
+
+For individuals **without cognitive impairmentat** the time tissue was obtained, it is possible that AD neuropathologic change may predate onset ofsymptoms by years. For individuals **with cognitive impairmentat** the time tissue was obtained, “Intermediate” or “High” level (Table 2) of AD neuropathologic change should be considered adequate explanation of cognitive impairment or dementia. When “Low” level of AD neuropathologic change is observed in the setting of cognitive impairment, it is likely that other diseases are present. In all cases with cognitive impairment, regardless of the extent of AD neuropathologicchange, it is essential to determine the presence or absence, as well as extent, of other disease(s) that might have contributed to the clinical deficits. 
+
+Possibility that Thal amyloid stages do not substantially contribute to predicting antemortem cognition compared to CERAD neuritic plaque scores and Braak NFT stages [Serrano-Pozo et al 2016](https://doi.org/10.1093/jnen/nlw026). 

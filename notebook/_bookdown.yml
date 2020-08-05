@@ -1,0 +1,6 @@
+book_filename: "notebook"
+rmd_files: ["index.Rmd", "01-intro.Rmd", "02-methods.Rmd", "ROSMAP.Rmd", "MSBB.Rmd", "MAYO.Rmd", "analysis.Rmd", "aaic-abstract.Rmd", "03-summary.Rmd", "04-references.Rmd"]
+delete_merged_file: true
+language:
+  ui:
+    chapter_name: "Chapter "

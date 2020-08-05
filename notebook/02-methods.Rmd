@@ -1,0 +1,59 @@
+# Methods
+This section describes the general methods used for calling mitochondrial haplogroups, estimating mtDNAcn and the cohorts used in the analysis. 
+
+## Haplogroup Assignment
+
+### Haplogrep
+Weissensteiner, H. et al. (2016). HaploGrep 2: mitochondrial haplogroup classification in the era of high-throughput sequencing. [Nucleic acids research  44(W1), W58-63](https://dx.doi.org/10.1093/nar/gkw233)
+
+- assigns haplogroups based on phylotree and uses a generic rule-based system for immediate quality control
+- vcf input
+
+### Phy-Mer
+Navarro-Gomez, D et al (2014). Phy-Mer: a novel alignment-free and reference-independent mitochondrial haplogroup classifier. [Bioinformatics (Oxford, England)  31(8), 1310-2](https://dx.doi.org/10.1093/bioinformatics/btu825)
+
+- novel mitochondrial genome haplogroup-defining algorithm using a k-mer approach by decomposes a mitochondrial sequence into a set of all possible k-mers, which are then compared against each of the k-mer sets of all haplogroups
+- input a NGS data (.bam, .cram)
+
+## Estimating mtDNAcn 
+
+Mitochondrial DNA Copy Number estimation
+
+- mtDNA-CN can be estimated as the ratio of the average mitochodnrial DNA coverage by the average autosomal DNA coverage
+  + mtDNA-CN = (mtDNA average coverage / autosomal DNA average coverage) * 2
+
+### fastMitoCalc  
+Qian, Y., et al. (2017). **fastMitoCalc: an ultra-fast program to estimate mitochondrial DNA copy number from whole-genome sequences.** [Bioinformatics 33(9), 1399-1401.](https://dx.doi.org/10.1093/bioinformatics/btw835)
+
+- uses a randomly selected small subset (0.1%) of the nuclear genome to estimate autosomal DNA coverage accurately for estimation of the mtDNA-CN. 
+
+### Mosedepth 
+Pedersen, B., Quinlan, A. (2017). **Mosdepth: quick coverage calculation for genomes and exomes** [Bioinformatics  34(5), 867-868.](https://dx.doi.org/10.1093/bioinformatics/btx699)
+
+- Mosdepth uses a simple algorithm that is computationally efficient enableing it to quickly calculating genome-wide sequencing coverage. Not specifically designed for estimating mtDNA-CN, but provides coverage estimates of the autosome and mitochondrial genome. 
+
+## Cohorts 
+
+**Accelerating Medicine Partnership in Alzheimer's Disease (AMP-AD)**
+
+Whole genome sequencing data was obtained from three cohorts using AMP-AD knowledge portal.  
+
+- ROSMAP
+- Mayo
+- MSBB
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
