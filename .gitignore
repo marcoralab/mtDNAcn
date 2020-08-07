@@ -1,6 +1,7 @@
 .snakejob/*
 .snakemake/*
-.DS_Store
+.DS_Stor
+sandbox/*
 data/*
 output/*
 raw/*
