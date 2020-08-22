@@ -13,3 +13,7 @@ phymer:
 mosdepth:
   cores: 4
   mem: 2000
+vcf_merge:
+  cores: 32
+  mem: 2000
+  time: '144:00'

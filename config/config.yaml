@@ -1,5 +1,9 @@
 # snakejob -j 100
-# snakejob -j 5000 --notemp --keep-going
-# snakejob -j 5000 --until freebayes --notemp
+# snakejob -j 5000 --notemp --keep-going --until mtDNAcn_mosdepth
+# snakejob -j 5000 --until copy --notemp
+# snakejob -j 5000 --until mosdepth --notemp
+# snakejob -j 5000 --until mity --notemp
+# snakejob -j 5000 --until bgzip --notemp
 # snakejob -j 5000 --until haplogrep --notemp
-BamFile: [MAP15387421, MAP22868024]
+
+workdir: "/sc/arion/projects/LOAD/shea/Projects/mtDNAcn"
