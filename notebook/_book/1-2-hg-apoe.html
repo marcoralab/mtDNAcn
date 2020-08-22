@@ -4,21 +4,21 @@
 
   <meta charset="utf-8" />
   <meta http-equiv="X-UA-Compatible" content="IE=edge" />
-  <title>Chapter 1 Introduction | Assessing the causal association of mtDNAcn with Alzheimer’s disease</title>
-  <meta name="description" content="Chapter 1 Introduction | Assessing the causal association of mtDNAcn with Alzheimer’s disease" />
+  <title>1.2 hg * APOE | Assessing the causal association of mtDNAcn with Alzheimer’s disease</title>
+  <meta name="description" content="1.2 hg * APOE | Assessing the causal association of mtDNAcn with Alzheimer’s disease" />
   <meta name="generator" content="bookdown 0.19 and GitBook 2.6.7" />
 
-  <meta property="og:title" content="Chapter 1 Introduction | Assessing the causal association of mtDNAcn with Alzheimer’s disease" />
+  <meta property="og:title" content="1.2 hg * APOE | Assessing the causal association of mtDNAcn with Alzheimer’s disease" />
   <meta property="og:type" content="book" />
   
   
-  <meta property="og:description" content="Chapter 1 Introduction | Assessing the causal association of mtDNAcn with Alzheimer’s disease" />
+  <meta property="og:description" content="1.2 hg * APOE | Assessing the causal association of mtDNAcn with Alzheimer’s disease" />
   
 
   <meta name="twitter:card" content="summary" />
-  <meta name="twitter:title" content="Chapter 1 Introduction | Assessing the causal association of mtDNAcn with Alzheimer’s disease" />
+  <meta name="twitter:title" content="1.2 hg * APOE | Assessing the causal association of mtDNAcn with Alzheimer’s disease" />
   
-  <meta name="twitter:description" content="Chapter 1 Introduction | Assessing the causal association of mtDNAcn with Alzheimer’s disease" />
+  <meta name="twitter:description" content="1.2 hg * APOE | Assessing the causal association of mtDNAcn with Alzheimer’s disease" />
   
 
 <meta name="author" content="Dr. Shea Andrews" />
@@ -30,8 +30,8 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black" />
   
   
-<link rel="prev" href="index.html"/>
-<link rel="next" href="1-1-project-updates.html"/>
+<link rel="prev" href="1-1-project-updates.html"/>
+<link rel="next" href="1-3-neuropathological-confirmed-ad.html"/>
 <script src="libs/jquery-2.2.3/jquery.min.js"></script>
 <link href="libs/gitbook-2.6.7/css/style.css" rel="stylesheet" />
 <link href="libs/gitbook-2.6.7/css/plugin-table.css" rel="stylesheet" />
@@ -163,16 +163,50 @@
           <div class="page-inner">
 
             <section class="normal" id="section-">
-<div id="intro" class="section level1">
-<h1><span class="header-section-number">Chapter 1</span> Introduction</h1>
+<div id="hg-apoe" class="section level2">
+<h2><span class="header-section-number">1.2</span> hg * APOE</h2>
+<ul>
+<li>Joint calling of mitochondrial varints using bcbio</li>
+<li><p>Check DIAN fasta file for mosdepth - needs to be hg38, not 19 (but might be fine if it is chrM, not MT)
+### 2020-08-06</p></li>
+<li>SampleIDs for DIAN
+<ul>
+<li>changed from WGS ID (file name) to sample ID</li>
+<li>causes issues with fastmitocalc, which uses file name as prefix in output</li>
+</ul></li>
+<li>bcbio.variation.recall
+<ul>
+<li>Does not work when samples are mapped to differen builds. while MT positions are the same, chrm label is different which means the samples on other builds are not recalled.</li>
+</ul></li>
+<li><p>installed <a href="https://crossmap.readthedocs.io/en/latest/">crossmap</a> using conda install rather than pip</p></li>
+</ul>
+<div id="section" class="section level3">
+<h3><span class="header-section-number">1.2.1</span> 2020-08-05</h3>
+<ul>
+<li>Looking at conducting joint calling using bcbio
+<ul>
+<li>Issues with DIAN files, in particular it uses hg38, while AMP-AD uses 37
+<ul>
+<li>Not sure if this will be an issue, may just be able to use the same reference fasta</li>
+<li>Tried using <a href="https://crossmap.readthedocs.io/en/latest/">crossmap</a> to liftover bam files, however mtDNA was unmapped, renames mtDNA as “M” rathern than “MT”, also was rather dodgy to get working on minerva, ended up testing it locally</li>
+</ul></li>
+<li>DIAN sampleIDs are different from file names, which must match read groups in bam files for bcbio</li>
+</ul></li>
+<li>Redoing sampleIDs for DIAN
+<ul>
+<li>encounted issue with broken symlinks - took a while to diagnoses and fix</li>
+<li>pipeline is working again</li>
+</ul></li>
+</ul>
+</div>
 </div>
             </section>
 
           </div>
         </div>
       </div>
-<a href="index.html" class="navigation navigation-prev " aria-label="Previous page"><i class="fa fa-angle-left"></i></a>
-<a href="1-1-project-updates.html" class="navigation navigation-next " aria-label="Next page"><i class="fa fa-angle-right"></i></a>
+<a href="1-1-project-updates.html" class="navigation navigation-prev " aria-label="Previous page"><i class="fa fa-angle-left"></i></a>
+<a href="1-3-neuropathological-confirmed-ad.html" class="navigation navigation-next " aria-label="Next page"><i class="fa fa-angle-right"></i></a>
     </div>
   </div>
 <script src="libs/gitbook-2.6.7/js/app.min.js"></script>

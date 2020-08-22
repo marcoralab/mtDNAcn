@@ -1,5 +1,43 @@
 # Introduction {#intro}
 
+## Project Updates 
+
+Updates to project - just like a wet lab Lab Book 
+
+### To Do 
+
+- Joint calling of mitochondrial varints using bcbio
+
+### 2020-08-07
+
++ trying to bcbio working 
+  - got it working on test set of five samples 
+  - used sed to rename chr lables in DIAN
++ Not working on full sample list...
+
+### 2020-08-06
+
++ SampleIDs for DIAN
+  - changed from WGS ID (file name) to sample ID
+  - causes issues with fastmitocalc, which uses file name as prefix in output
++ bcbio.variation.recall
+  - Does not work when samples are mapped to differen builds. while MT positions are the same, chrm label is different which means the samples on other builds are not recalled.
++ installed [crossmap](https://crossmap.readthedocs.io/en/latest/) using conda install rather than pip
+  - crossmap does not work due to chain files using chrM as label, does not lift over correctly
+  - solution - use sed to rename all instances of chrM (or MT) to MT. Worked on example file from DIAN. allowed bcbio to work
+
+
+### 2020-08-05
+
++ Looking at conducting joint calling using bcbio 
+  - Issues with DIAN files, in particular it uses hg38, while AMP-AD uses 37
+    * Not sure if this will be an issue, may just be able to use the same reference fasta
+    * Tried using [crossmap](https://crossmap.readthedocs.io/en/latest/) to liftover bam files, however mtDNA was unmapped, renames mtDNA as "M" rathern than "MT", also was rather dodgy to get working on minerva, ended up testing it locally 
+  - DIAN sampleIDs are different from file names, which must match read groups in bam files for bcbio
++ Redoing sampleIDs for DIAN
+  - encounted issue with broken symlinks - took a while to diagnoses and fix 
+  - pipeline is working again
+
 ## Neuropathological Confirmed AD 
 There is consensus to disentangle the clinicopathologic term “Alzheimer’s disease” from AD neuropathologic change. The former refers to clinical signs and symptoms of cognitive and behavioral changes that are typical for patients who have substantial AD neuropathologic change,and is the focus of recent NIA–AA-sponsored consensus re-ports on three defined stages in a clinical continuum that includes preclinical, mild cognitive impairment, anddementia. The latter refers to the presence and extentof neuropathologic changes of AD observed at autopsy, re-gardless of the clinical setting.
 

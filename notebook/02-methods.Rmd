@@ -1,6 +1,55 @@
 # Methods
 This section describes the general methods used for calling mitochondrial haplogroups, estimating mtDNAcn and the cohorts used in the analysis. 
 
+## Mitochondrial DNA
+
+### ADNI
+Ridge, P., et al. (2018). Assembly of 809 whole mitochondrial genomes with clinical, imaging, and fluid biomarker phenotyping [Alzheimer's & Dementia  14(4), 514-519](https://dx.doi.org/10.1016/j.jalz.2017.11.013)
+
+Called mitochondrial SNVs in ADNI using freebayes and assigned haplogroups using Phy-Mer
+
+- ADNI was mapped to Hg19 which uses of the mitochondrial genome, represented as chrM, corresponding to NC_001807
+- Since chrM and NC_012920 only differ by a few bases, we were able to extract only those reads that mapped to chrM (with SAMtools [46]), rather than all reads corresponding to the whole nuclear and mitochondrial genomes.
+- Extracted reads were remapped to NC_012920 using BurrowsWheeler Aligner.
+- performed local realignments around indels and base recalibration with Genome Analysis Toolkit to refine the new mappings.
+- Used FreeBayes to joint-call variants
+  - ploidy 1
+  - min-alternate-fraction 0.6
+  - removed variants with quality less than 20
+- converted the resulting variant call format (VCF) file to fasta with vcf2fasta 
+- annotated mitochondrial haplotypes with PhyMer from fasta
+
+### AMP-AD
+For futher details on alignement see: [ROSMAP](https://www.synapse.org/#!Synapse:syn10901595), [Mayo](https://www.synapse.org/#!Synapse:syn10901601) and [MSBB](https://www.synapse.org/#!Synapse:syn10901600) WGS germline analysis
+
+- Whole Genome data are processed on NYGC automated pipeline.
+- Paired-end 150bp reads were aligned to the GRCh37 human reference using the Burrows-Wheeler Aligner (BWA-MEM v0.7.08)
+- processed using the GATK best-practices workflow that includes marking of duplicate reads by the use of Picard tools v1.83, local realignment around indels, and base quality score recalibration (BQSR) via Genome Analysis Toolkit (GATK v3.4.0).
+
+### DIAN
+
+Unknown... 
+
+### Calling Mitochondrial Variants in AMP-AD & DIAN
+
+Mitochondrial Variants were called per sample using [Freebayes](https://arxiv.org/abs/1207.3907)
+
+- Freebayes 1.3.2 and removed variants with a quality score less then 20
+  - rCRS used as reference genome (either hg19 or hg38)
+  - min-mapping-quality 30  
+  - min-base-quality 24
+  - min-alternate-fraction 0.6
+  - min-alternate-count 4  
+  - ploidy 1  
+
+Alternative approaches
+
+- [gatk Mutect2](https://github.com/broadinstitute/gatk-docs/blob/master/blog-2012-to-2019/2019-03-05-New!_Mitochondrial_Analysis_with_Mutect2.md?id=23598): mitochondrial calling pipline based on Mutect2 from gatk. Very little documentation
+- [mity](https://www.biorxiv.org/content/10.1101/852210v1): Pipeline for calling mitochhondrial SNVs and INDELs, based on freebayes.
+- [bcbio variation recall](https://github.com/bcbio/bcbio.variation.recall): Squaring off multiple samples, called independently, by recalling at all identified genomic positions. Can combine this with the above freebayes approach 
+- Joint calling with freebayes: Run into memory issues trying to call all samples jointly. Possibly call in batchs (chort). Need to work out genome references between chorts (i.e. MT (hg19) vs chrM (hg38))
+
+
 ## Haplogroup Assignment
 
 ### Haplogrep
