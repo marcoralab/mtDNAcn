@@ -1,3 +1,8 @@
+---
+output: html_document
+editor_options: 
+  chunk_output_type: console
+---
 # Analysis
 ```{r, warning=FALSE, message=FALSE}
 library(tidyverse)
@@ -10,24 +15,45 @@ knitr::opts_knit$set(root.dir = '/sc/arion/projects/LOAD/shea/Projects/mtDNAcn')
 ```
 
 ```{r analysis-load-data}
-rosmap <- readRDS('output/rosmap.RData')
-msbb <- readRDS('output/msbb.rds')
-
+rosmap.raw <- read_rds('output/rosmap.rds')
+msbb.raw <- read_rds('output/msbb.rds')
+mayo.raw <- read_rds('output/mayo.rds')
 ```
 
-## ROSMAP
-### mtDNAcn
+## Statistical Analysis Plan 
 
-#### Data Wrangling 
+**PLANNED ANALYSIS BY AIMS:** Using whole-genome sequencing and neuropathology from AMP-AD (MSBB, ROSMAP, Mayo) we investigate the assocation of mitochondrial haplogroups and mtDNAcn with neurpathologicaly defined AD and neuropathology. 
 
-+ DNA isolated from Brain tissue
-  - DLPFC, Posterior Cingulate Cortex, Cerebellum
+**Aim 1:** Investigate the association of mt-hgs with AD neuropathologic change   
+
+*Hypothesis 1a:* mt-hgs will be differentially associated with neuropathologicaly confirmed AD. 
+
+*Hypothesis 1b:* mt-hgs will be differentially associated with neuropatholgy markers of AD. 
+
+*Rational:* mt-hgs have been assocaited with clinically diagnosed AD, however, due to the heterogenity in the underlying neuropathology not all cases or controls may had Alzheimer’s disease due to AD neuropathologic change which would weaken the statistical power to determine an association with AD. Secondly, using endophenotypes of AD such as neuropathology may further increase statistical power. 
+
+*Primary Proposed Analysis:* AMP-AD cohorts will be limited to non-hispanic whites and European- haplogroups only. For neuropathologicaly confirmed AD, modified regan diagnosis will be used as the outcome for ROSMAP and MSBB, for Mayo Controls+Pathologic Aging and AD diagnosis will be used as outcomes. Logistic regression adjusting for age at death, sex and APOE will be used to evaluate the associations of the mt-hgs with neuropathologicaly confirmed AD seperatly in each cohort. Fixed-effects meta-analysis will be used to measure the combined effect of the haplogroups in AMP-AD. Linear regression will be used to investigate the association with AD neurpathology. 
+
+*Anticipated Problems and Alternative Approaches:* Small cells sizes may result in low statistical power, espically for some haplogroups (i.e. I,W,X), can alterntivly conduct a joint analysis. Differences in study designes (population based - ROSMAP; case-control - MSBB, Mayo) and neurpathology definitions may result in between study heterogenity. Can possibly include ADNI using a A/T/N based diagnosis. 
+
+*Secondary, exploratory analysis:* Using ROSAMP, we can 1) examine the association of mt-hgs with additional neuropathological measures such as infarcts, TDP-43 and; 2) evaluate differential associations between clinically defined AD and neuropathologicaly confirmed AD.  
+
+## Data Wrangling 
+
+### ROSMAP
++ Caucasians only 
 + European Haplogroups only
   - H, V, J, T, U, K, I, W, X
-+ For clinical diagnosis, exclude MCI, AD possible, other dementia
++ mtDNAcn analysis
+  - DNA isolated from Brain tissue
+    - DLPFC, Posterior Cingulate Cortex, Cerebellum
++ Neuropatholgical Diagnosis 
+  - 
++ Clinical diagnosis at last visit
+  - exclude MCI, AD possible, other dementia
 
-```{r analysis-rosmap-wrangle}
-rosmap_df <- rosmap %>% 
+```{r analysis-rosmap-wrangle, eval=F}
+rosmap_df <- rosmap.raw %>% 
   filter(Source.Tissue.Type %in% c("Brain-DLPFC", "Brain-Posterior Cingulate Cortex", "Brain-Cerebellum", "Whole Blood")) %>%
   filter(organ == 'brain') %>% 
   filter(macro %in% c('H', 'V', 'J', 'T', 'U', 'K', 'I', 'W', 'X')) %>%
@@ -37,15 +63,43 @@ rosmap_df <- rosmap %>%
          dx = fct_recode(dcfdx_lv, "0" = "1", NULL = "2", NULL = "3", "1" = "4", NULL = "5", NULL = "6")) 
 ```
 
+### MSBB
 
++ Exclude individules who are not non-hispanic whites 
++ Exclude individules with non-European haplogroups
++ Dichotomize CERAD dx  
+
+```{r analysis-msbb-wrangle, eval=F}
+msbb_df <- msbb  %>% 
+  filter(race == 'W') %>%
+  filter(macro %in% c('H', 'V', 'J', 'T', 'U', 'K', 'I', 'W', 'X')) %>% 
+  mutate(cerad_dx = fct_recode(cerad, "0" = "Normal", "0" = "Possible", "1" = "Probable", "1" = "Definite"), 
+         macro = fct_lump(macro, n = 6, other_level = "IWX"))
+
+```
+
+### Mayo
+
++ Exclude individules who are not non-hispanic whites 
++ Exclude individules with non-European haplogroups
++ Dichotomize CERAD dx  
+
+```{r analysis-mayo-wrangle, eval=F}
+mayo_df <- mayo.raw  
+
+```
+
+
+## mtDNAcn
+### ROSMAP
 #### NIA-Reagan Diagnosis
 
-```{r analysis-rosmap-path-glm}
+```{r analysis-rosmap-path-glm, eval=F}
 rosmap_path_res <- glm(ad_reagan ~ z_mtdnacn + macro + age_death + msex + apoe4 + study + Source.Tissue.Type, 
                        family = "binomial", data = rosmap_df)
 ```
 
-```{r analysis-rosmap-path-tab, echo=FALSE}
+```{r analysis-rosmap-path-tab, echo=FALSE, eval=F}
 rosmap_path_tab <- tidy(rosmap_path_res)
 
 rosmap_path_tab %>% 
@@ -58,7 +112,7 @@ rosmap_path_tab %>%
   kableExtra::kable_styling("striped", full_width = F)
 ```
 
-```{r analysis-rosmap-path-plot}
+```{r analysis-rosmap-path-plot, eval=F}
 ggplot(rosmap_df, aes(x = ad_reagan, y = z_mtdnacn, colour = Source.Tissue.Type)) + 
   geom_quasirandom() + 
   geom_pointrange(mapping = aes(x = ad_reagan, y = z_mtdnacn),
@@ -75,11 +129,11 @@ ggplot(rosmap_df, aes(x = ad_reagan, y = z_mtdnacn, colour = Source.Tissue.Type)
 ```
 
 #### Clinical diagnosis
-```{r analysis-rosmap-clin-glm}
+```{r analysis-rosmap-clin-glm, eval=F}
 rosmap_clin_res <- glm(dx ~ z_mtdnacn + macro + age_death + msex + apoe4 + study + Source.Tissue.Type, family = "binomial", data = rosmap_df)
 ```
 
-```{r analysis-rosmap-clin-tab, echo=FALSE}
+```{r analysis-rosmap-clin-tab, echo=FALSE, eval=F}
 rosmap_clin_tab <- tidy(rosmap_clin_res)
 
 rosmap_clin_tab %>% 
@@ -92,7 +146,7 @@ rosmap_clin_tab %>%
   kableExtra::kable_styling("striped", full_width = F)
 ```
 
-```{r clin-plot}
+```{r clin-plot, eval=F}
 rosmap_df %>% 
   filter(!is.na(dx)) %>%
   ggplot(., aes(x = dx, y = z_mtdnacn, colour = Source.Tissue.Type)) + 
@@ -111,7 +165,7 @@ rosmap_df %>%
 
 ```
 
-```{r}
+```{r, eval=F}
 
 lm(sqrt(gpath) ~ z_mtdnacn + macro + age_death + msex + apoe4 + study + Source.Tissue.Type, data = rosmap_df) %>% 
   tidy(.)
@@ -125,7 +179,7 @@ lm(sqrt(tangles) ~ z_mtdnacn + macro + age_death + msex + apoe4 + study + Source
 
 ### haplogroups 
 
-```{r}
+```{r, eval=F}
 rosmap_hap <- rosmap %>% 
   filter(Source.Tissue.Type %in% c("Brain-DLPFC", "Brain-Posterior Cingulate Cortex", "Brain-Cerebellum", "Whole Blood")) %>%
   filter(macro %in% c('H', 'V', 'J', 'T', 'U', 'K', 'I', 'W', 'X')) %>%
@@ -136,7 +190,7 @@ rosmap_hap <- rosmap %>%
 
 ```
 
-```{r}
+```{r, eval=F}
 glm(ad_reagan ~ macro + age_death + msex + apoe4 + study + Source.Tissue.Type, 
                        family = "binomial", data = rosmap_hap) %>% 
   tidy()
@@ -167,7 +221,7 @@ lm(cts_mmse30_lv ~  macro + age_death + msex + apoe4 + study, data = rosmap_hap)
 + Exclude individules with non-European haplogroups
 + Dichotomize CERAD dx  
 
-```{r load-msbb}
+```{r load-msbb, eval=F}
 msbb_df <- msbb  %>% 
   filter(race == 'W') %>%
   filter(macro %in% c('H', 'V', 'J', 'T', 'U', 'K', 'I', 'W', 'X')) %>% 
@@ -178,13 +232,13 @@ msbb_df <- msbb  %>%
 
 ### NIA-Reagan 
 
-```{r analysis-msbb-path-glm}
+```{r analysis-msbb-path-glm, eval=F}
 msbb_path_res <- glm(ad_reagan ~ z_mtdnacn + macro + aod + sex + apoe4, 
                        family = "binomial", data = msbb_df)
 
 ```
 
-```{r analysis-msbb-path-tab, echo=FALSE}
+```{r analysis-msbb-path-tab, echo=FALSE, eval=F}
 msbb_path_tab <- tidy(msbb_path_res)
 
 msbb_path_tab %>% 
@@ -197,7 +251,7 @@ msbb_path_tab %>%
   kableExtra::kable_styling("striped", full_width = F)
 ```
 
-```{r analysis-msbb-path-plot, echo=FALSE, fig.cap="mtDNAcn by NIA-Regan dx"}
+```{r analysis-msbb-path-plot, echo=FALSE, fig.cap="mtDNAcn by NIA-Regan dx", eval=F}
 msbb_df %>% 
   filter(!is.na(ad_reagan)) %>%
     ggplot(., aes(x = ad_reagan, y = z_mtdnacn, colour = ad_reagan)) + 
@@ -216,7 +270,7 @@ msbb_df %>%
 ```
 
 
-```{r}
+```{r, eval=F}
 glm(ad_reagan ~ macro + aod + sex + apoe4,  family = "binomial", data = msbb_df) %>% 
   tidy()
 glm(cerad_dx ~ macro + aod + sex + apoe4,  family = "binomial", data = msbb_df) %>% 
@@ -227,13 +281,13 @@ lm(NP.1 ~ macro + aod + sex + apoe4, data = msbb_df) %>%
 
 ### CERAD 
 
-```{r analysis-msbb-cerad-glm}
+```{r analysis-msbb-cerad-glm, eval=F}
 msbb_cerad_res <- glm(cerad_dx ~ z_mtdnacn + macro + aod + sex + apoe4, 
                        family = "binomial", data = msbb_df)
 
 ```
 
-```{r analysis-msbb-cerad-tab, echo=FALSE}
+```{r analysis-msbb-cerad-tab, echo=FALSE, eval=F}
 msbb_cerad_tab <- tidy(msbb_cerad_res)
 
 msbb_cerad_tab %>% 
@@ -246,7 +300,7 @@ msbb_cerad_tab %>%
   kableExtra::kable_styling("striped", full_width = F)
 ```
 
-```{r analysis-msbb-cerad-plot, echo=FALSE, fig.cap="mtDNAcn by CERAD dx"}
+```{r analysis-msbb-cerad-plot, echo=FALSE, fig.cap="mtDNAcn by CERAD dx", eval=F}
 msbb_df %>% 
   filter(!is.na(cerad_dx)) %>%
     ggplot(., aes(x = cerad_dx, y = z_mtdnacn, colour = cerad_dx)) + 
