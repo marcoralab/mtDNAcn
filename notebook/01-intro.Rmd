@@ -6,7 +6,17 @@ Updates to project - just like a wet lab Lab Book
 
 ### To Do 
 
-- Joint calling of mitochondrial varints using bcbio
+### 2020-08-22
++ Initial visulizations of blood cell counts vs mtDNAcn do not show a strong relationship that would indicate a reason for the observed bimodal distribution in the samples with DNA isolated from blood.
++ Maybe due to a batch effect? May be observable if we had date of visit to see if mtDNAcn distribution changes after a given date.
+
+### 2020-08-22
+
++ Succesfully used bc.bio to call conduct joint calling of AMP-AD + DIAN samples. At a macro haplogroup level, there is little difference in haplogroup assignments. For haplogroups, ~500 samples have a different haplogroup assignment. 
++ Obtained additional ROSMAP datasets including information on [blood cell counts](https://www.radc.rush.edu/docs/var/overview.htm?category=Blood+Measures&subcategory=Routine+laboratory+tests). Plan on evaluting assocation of mtDNAcn with platlets. 
++ mtDNAcn estimates from whole blood DNA can be confounded by cell type heterogeneity, and by the presence of platelets, as platelets do not have nDNA, but have mtDNA, which artificially inflates mtDNAcn. [Han, L. et al 2019](https://dx.doi.org/10.1016/j.psyneuen.2019.04.004)
++ cell counts for samples with available RNA-sequencing data can be deconvoluted using gene expression measured in whole blood. [Yang, S. et al 2020](https://dx.doi.org/10.1101/2020.07.17.209023)
+  - Aran, D., Hu, Z., Butte, A. (2017). xCell: digitally portraying the tissue cellular heterogeneity landscape. [Genome Biology  18(1), 220](https://dx.doi.org/10.1186/s13059-017-1349-1)
 
 ### 2020-08-07
 
@@ -39,7 +49,7 @@ Updates to project - just like a wet lab Lab Book
   - pipeline is working again
 
 ## Neuropathological Confirmed AD 
-There is consensus to disentangle the clinicopathologic term “Alzheimer’s disease” from AD neuropathologic change. The former refers to clinical signs and symptoms of cognitive and behavioral changes that are typical for patients who have substantial AD neuropathologic change,and is the focus of recent NIA–AA-sponsored consensus re-ports on three defined stages in a clinical continuum that includes preclinical, mild cognitive impairment, anddementia. The latter refers to the presence and extentof neuropathologic changes of AD observed at autopsy, re-gardless of the clinical setting.
+There is consensus to disentangle the clinicopathologic term “Alzheimer’s disease” from AD neuropathologic change. The former refers to clinical signs and symptoms of cognitive and behavioral changes that are typical for patients who have substantial AD neuropathologic change, and is the focus of recent NIA–AA-sponsored consensus reports on three defined stages in a clinical continuum that includes preclinical, mild cognitive impairment, anddementia. The latter refers to the presence and extent of neuropathologic changes of AD observed at autopsy, re-gardless of the clinical setting.
 
 ### CERAD Criteria - 1991
 Protocol provides neuropathologic definitions of such terms as “definite Alzheimer’s disease’’ (AD), “probable AD,” “possible AD,” and “normal brain” to indicate levels of diagnostic certainty (@Mirra479). The CERAD Neuritic Plaque score forms the basis of later neuropathological difinitions. 
