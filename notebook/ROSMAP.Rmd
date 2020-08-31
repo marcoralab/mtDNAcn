@@ -1,8 +1,14 @@
+---
+output: html_document
+editor_options: 
+  chunk_output_type: console
+---
 # ROSMAP
 ```{r, warning=F, message=F, error=F, echo=FALSE}
 # library(knitr)
 # library(kableExtra)
 library(tidyverse)
+library(janitor)
 library(gtsummary)
 library(dlookr)
 library(inspectdf)
@@ -18,25 +24,52 @@ Data Dictionaries for ROSMAP can be found at:
 - [AMP-AD](https://adknowledgeportal.synapse.org/Explore/Studies?Study=syn3219045)
 - [RADC](https://www.radc.rush.edu/docs/var/variables.htm)
 
-```{r cars, warning=F, message=F, error=F}
-rosmap.wgsqc <- read_csv("data/AMPAD_extra/rosmap/WGS_sample_QC_info.csv", guess_max = 10000)
-rosmap.pheno <- readxl::read_xlsx("data/AMPAD_extra/rosmap/dataset_641_basic_04-29-2020.xlsx") %>%
+```{r load-rosmap, warning=F, message=F, error=F}
+## Phenotypic data
+rosmap.pheno_bl <- readxl::read_xlsx("data/AMPAD_extra/rosmap/dataset_899_basic_08-22-2020.xlsx") %>%
   mutate(projid = as.numeric(projid))
-rosmap.raw <- read_csv('data/AMPAD_extra/rosmap/ROSMAP_Clinical_2019-05_v3.csv') %>%
-  select(projid, race, spanish, cts_mmse30_lv, educ) %>% 
-  left_join(rosmap.pheno, by = 'projid') %>%
-  left_join(rosmap.wgsqc, by = 'projid') %>% 
-  filter(!is.na(WGS_id)) 
+rosmap.pheno_long.raw <- readxl::read_xlsx("data/AMPAD_extra/rosmap/dataset_899_long_08-22-2020.xlsx") %>%
+  mutate(projid = as.numeric(projid))
 
-mosdepth <- read_tsv('data/mosdepth/mosdepth_all.txt')
-haplogrep <- read_tsv('data/haplogrep/haplogrep_all.txt')
+# wgs_clinical.raw <- read_csv('data/AMPAD_extra/rosmap/ROSMAP_Clinical_2019-05_v3.csv')
+## Mitochondrial 
+rosmap.wgsqc <- read_csv("data/AMPAD_extra/rosmap/WGS_sample_QC_info.csv", guess_max = 10000)
+mosdepth <- read_tsv("data/mosdepth/mosdepth_mtDNAcn_All.txt")
+haplogrep <- read_tsv("data/haplogrep/haplogrep_jointAll.txt")
+```
 
-rosmap <- rosmap.raw %>%
-  filter(QC == "Pass") %>%
-  left_join(select(haplogrep, -study), by = c('WGS_id' = 'SampleID')) %>%
-  left_join(select(mosdepth, -study), by = c('WGS_id' = 'SampleID')) %>%
-    mutate(race = as_factor(race),
-        race = fct_recode(race,'W' = '1', 'B' = '2'),
+```{r munge-rosmap, warning=F, message=F, error=F}
+## extract baseline and last vist values and spread
+rosmap.pheno_long <- rosmap.pheno_long.raw %>% 
+  group_by(projid) %>%
+  slice(c(which.min(fu_year), which.max(fu_year))) %>%
+  mutate(visit = case_when(fu_year == min(fu_year) ~ "bl", 
+                           fu_year == max(fu_year) ~ "lv")) %>%
+  distinct(., fu_year, .keep_all = TRUE) %>%
+  ungroup() %>%
+  pivot_wider(names_from = visit, values_from = c(-projid, -study, -scaled_to))
+
+## Merge WGS files 
+rosmap_wgs <- rosmap.wgsqc %>% 
+  select(projid, SampleID = WGS_id, Source.Tissue.Type, QC) %>% 
+  left_join(mosdepth, by = "SampleID") %>% 
+  left_join(haplogrep, by = "SampleID") %>% 
+  filter(QC == "Pass") %>% 
+  mutate(macro = case_when(
+    str_detect(Haplogroup, "^L|^HV|^JT") ~ substr(Haplogroup, start = 1, stop = 2), 
+    TRUE ~ substr(Haplogroup, start = 1, stop = 1)
+  ))
+
+### 16 duplicate IDS 
+# get_dupes(rosmap_wgs, projid)  %>% 
+#   print(n = Inf)
+
+rosmap <- rosmap.pheno_bl %>%
+  left_join(rosmap.pheno_long, by = c("projid", "study", "scaled_to")) %>%
+  left_join(rosmap_wgs, by = "projid") %>%
+    mutate(race7 = as_factor(race7),
+        race7 = fct_recode(race7,'White' = '1', 'Black' = '2', "AMR" = "3", "Oceania" = "4", 
+                               "Asian" = "5", "Other" = "6", "Other" = "7"),
         z_mtdnacn = scale(mtcn_avg, center = TRUE, scale = TRUE)[,1],
         spanish = as_factor(spanish),
         spanish = fct_recode(spanish,'Yes' = '1', 'No' = '2'),
@@ -50,13 +83,19 @@ rosmap <- rosmap.raw %>%
                        'Brain-region unknown' = 'brain', 
                        'lymphocytes _transformed _with EBV virus'= 'lymphocytes'),
         organ = as_factor(organ),
-        ad_reagan = fct_recode(niareagansc, "1" = "1", "1" = "2", "0" = "3", "0" = "4"),
         apoe4 = recode(apoe_genotype, '22' = 'e4-', '23' = 'e4-', '33' = 'e4-', '24' = 'e4+', '34' = 'e4+', '44' = 'e4+'),
+        tomm40_hap = as_factor(tomm40_hap),
+        tomm40_hap = fct_recode(tomm40_hap, 'S/S' = '1', 'S/L' = '2', "S/VL" = "3", "L/L" = "4", "L/VL" = "5", "VL/VL" = "6"),
         aod_cat = cut(age_death, c(50, 60, 70, 80, 90, Inf), c('50-59', '60-69', '70-79', '80-89', '90+'), right = FALSE),
         aod_cat = ordered(aod_cat, levels = c('50-59', '60-69', '70-79', '80-89', '90+')), 
         msex = as.factor(msex), 
         msex = fct_recode(msex, 'M' = '1', 'F' = '0'),
         cogdx = factor(cogdx), 
+        r_pd_bl = factor(r_pd_bl), 
+        r_pd_lv = factor(r_pd_lv), 
+        r_stroke_bl = factor(r_stroke_bl), 
+        r_stroke_lv = factor(r_stroke_lv), 
+        dcfdx_bl = factor(dcfdx_bl),
         dcfdx_lv = factor(dcfdx_lv),
         apoe_genotype = as.factor(apoe_genotype), 
         apoe4 = as.factor(apoe4), 
@@ -75,7 +114,7 @@ rosmap <- rosmap.raw %>%
         CDR = cut(cts_mmse30_lv, breaks = c(-Inf, 11, 21, 26, 30, Inf), labels = c(3, 2, 1, 0.5, 0), right = FALSE)) %>%
   filter(!is.na(study)) 
 
-saveRDS(rosmap, 'output/rosmap.RData')
+write_rds(rosmap, 'output/rosmap.rds')
 
 df <- rosmap %>% 
     select(study, age_bl, msex, educ, apoe_genotype, cogdx, age_first_ad_dx, Source.Tissue.Type) 
@@ -83,29 +122,43 @@ df <- rosmap %>%
 
 ```{r rosmap_dic, echo=FALSE}
 
-rosmap_dic <- tibble(
-  variables = c(
-    "study", "race", "spanish", "msex", "educ", "age_bl", "age_death",
-    "Source.Tissue.Type", "organ", "apoe_genotype", "apoe4",
-    "cogdx", "age_first_ad_dx", "dcfdx_lv"
-    ),
-  definitions = c(
-    "Study", "Racial group", "Spanish ethnicity", "Sex", "Education", "Age at baseline", "Age at death", 
-    "Source tissue for DNA", "collapsed source tissue into organ", "APOE genotypes", "APOE e4 carriers", 
-    "Physician’s overall cognitive diagnostic category", "Age at cycle where first Alzheimer's dementia diagnosis was given", 
-    "Clinical consensus diagnosis of cognitive status at time of death"
-    )
-       )
+rosmap_dic <- tribble(
+  ~variables, ~definitions,
+  "study", "Study",
+  "race7", "Racial group",
+  "spanish", "Spanish ethnicity",
+  "msex", "Sex",
+  "educ", "Education", 
+  "age_bl", "Age at baseline",
+  "age_at_visit_bl", "Age at baseline", 
+  "age_at_visit_lv", "Age at last visit",
+  "age_death", "Age at death",
+  "Source.Tissue.Type",  "Source tissue for DNA",
+  "organ", "collapsed source tissue into organ", 
+  "apoe_genotype", "APOE genotypes",
+  "apoe4", "APOE e4 carriers",
+  "dcfdx_bl", "Physician’s overall cognitive diagnostic category - baseline",
+  "dcfdx_lv", "Physician’s overall cognitive diagnostic category - last visit",
+  "r_pd_bl", "Diagnosis of Parkinson's disease - baseline",
+  "r_pd_lv", "Diagnosis of Parkinson's disease  - last visit",
+  "r_stroke_bl", "Diagnosis of stroke made by clinician - baseline",
+  "r_stroke_lv", "Diagnosis of stroke made by clinician - last visit",
+  "age_first_ad_dx", "Age at cycle where first Alzheimer's dementia diagnosis was given", 
+  "cogdx", "Clinical consensus diagnosis of cognitive status at time of death", 
+  "fu_year_bl", "follow-up year at baseline", 
+  "fu_year_lv", "follow-up year at last visit",
+  "tomm40_hap", "TOMM40 genotype"
+      )
 
 ```
 
 ## Demographics 
 
-Demographic variables avaliable in ROSMAP are show in Table \@ref(tab:rosmap-demo-global).    
+Demographic variables avaliable in ROSMAP are shown in Table \@ref(tab:rosmap-demo-global).    
 
 ```{r rosmap-demo-global, echo=FALSE, message=F, tidy=FALSE}
 rosmap %>% 
-  select(study, race, spanish, msex, educ, age_bl, age_death) %>% 
+  select(study, race7, spanish, msex, educ, age_bl, age_death) %>% 
   diagnose()  %>% 
   mutate_if(is.numeric, round, 2) %>% 
   left_join(rosmap_dic) %>% 
@@ -120,7 +173,7 @@ rosmap %>%
 
 ```{r rosmap-demo-numeric, echo=FALSE, message=FALSE, tidy=FALSE}
 demo_n <- rosmap %>% 
-  select(study, race, spanish, msex, educ, age_bl, age_death) %>% 
+  select(study, race7, spanish, msex, educ, age_bl, age_at_visit_lv, age_death, fu_year_bl, fu_year_lv) %>% 
   inspect_num(.) 
 
 demo_n %>% 
@@ -133,7 +186,7 @@ demo_n %>%
 
 ```{r rosmap-demo-factor, echo=FALSE}
 demo_c <- rosmap %>% 
-  select(study, race, spanish, msex, educ, age_bl, age_death) %>% 
+  select(study, race7, spanish, msex, educ, age_bl, age_at_visit_lv, age_death) %>% 
   mutate_if(is.factor, fct_lump_n, 4) %>%
   inspect_cat(.)   
 
@@ -160,7 +213,7 @@ demo_c %>% show_plot(high_cardinality = 5)
 ```{r rosmap-genetic-global, echo=FALSE, message=F, tidy=FALSE}
 rosmap %>% 
   select(Source.Tissue.Type, organ, 
-         apoe_genotype, apoe4) %>% 
+         apoe_genotype, apoe4, tomm40_hap) %>% 
   diagnose()  %>% 
   mutate_if(is.numeric, round, 2) %>% 
   left_join(rosmap_dic) %>% 
@@ -175,7 +228,7 @@ rosmap %>%
 ```{r rosmap-genetic-factor, echo=FALSE}
 genetic_c <- rosmap %>% 
   select(Source.Tissue.Type, organ, 
-         apoe_genotype, apoe4) %>% 
+         apoe_genotype, apoe4, tomm40_hap) %>% 
 #  mutate_if(is.factor, fct_lump_n, 4) %>%
   mutate_if(is.character, fct_lump_n, 4) %>%
   inspect_cat(.)   
@@ -227,15 +280,83 @@ mt_c %>%
 
 ### Plots 
 
-```{r}
+```{r mt-plots}
 mt_n %>% show_plot()
 
 mt_c %>% show_plot(high_cardinality = 5)
 ```
 
+### diagnosis and mtDNAcn
+
+```{r dx-mtdnacn}
+mtcn_dx <- rosmap %>%
+    filter(!is.na(mtcn_avg)) %>%
+    mutate(Source.Tissue.Type = fct_lump_n(Source.Tissue.Type, 5), 
+      dx_lv = fct_recode(dcfdx_lv, "CTRL" = "1", 
+                            "MCI" = "2", "MCI" = "3", 
+                            "AD" = "4", "AD" = "5", "AD" = "6"), 
+         dx_bl = fct_recode(dcfdx_bl, "CTRL" = "1", 
+                            "MCI" = "2", "MCI" = "3", 
+                            "AD" = "4", "AD" = "5", "AD" = "6")) 
+
+mtcn_dx %>%
+  ggplot(., aes(x = Source.Tissue.Type, y = mtcn_avg, colour = dx_bl)) + 
+    ggbeeswarm::geom_quasirandom(dodge.width=1) + 
+    facet_grid(organ ~ ., scales = "free") + 
+  theme_bw()
+
+mtcn_dx %>%
+  ggplot(., aes(x = Source.Tissue.Type, y = mtcn_avg, colour = r_pd_lv)) + 
+    ggbeeswarm::geom_quasirandom(dodge.width=1) + 
+    facet_grid(organ ~ ., scales = "free") + 
+  theme_bw()
+
+```
+
+### Blood cell counts and mtDNAcn
++ mtDNAcn estimates from whole blood DNA can be confounded by cell type heterogeneity, and by the presence of platelets, as platelets do not have nDNA, but have mtDNA, which artificially inflates mtDNAcn. [Han, L. et al 2019](https://dx.doi.org/10.1016/j.psyneuen.2019.04.004)
++ A subset of patients in ROSMAP have longitudinal measures of blood cell counts - can test if bimodal distribution of mtDNAcn in whole blood is due to cell type heterogeneity
+
+```{r blood-mt}
+
+blood_mt <- rosmap %>%
+  mutate(dx_lv = fct_recode(dcfdx_lv, "CTRL" = "1", 
+                            "MCI" = "2", "MCI" = "3", 
+                            "AD" = "4", "AD" = "5", "AD" = "6"), 
+         dx_bl = fct_recode(dcfdx_bl, "CTRL" = "1", 
+                            "MCI" = "2", "MCI" = "3", 
+                            "AD" = "4", "AD" = "5", "AD" = "6")) %>% 
+  select(projid, study, Source.Tissue.Type,
+         age_at_visit_bl, age_at_visit_lv,
+         platelet_bl, rbc_bl, rdw_bl, wbc_bl,
+         platelet_lv, rbc_lv, rdw_lv, wbc_lv,
+         dx_bl, dx_lv,
+         mtcn_avg) %>% 
+  pivot_longer(c(-study, -Source.Tissue.Type, -projid, -mtcn_avg, -dx_lv, -dx_bl, -age_at_visit_bl, -age_at_visit_lv), 
+               names_to = "cells", values_to = "value")
+  
+blood_mt %>% 
+  filter(Source.Tissue.Type == "Whole Blood") %>%
+  filter(str_detect(cells, "platelet_lv|rbc_lv|rdw_lv|wbc_lv")) %>%
+  ggplot(., aes(x = value, y = mtcn_avg, colour = dx_lv)) + 
+    facet_grid(. ~ cells, scales = "free") + 
+    geom_point() + 
+    theme_bw() + 
+    theme(legend.position = "bottom")
+
+blood_mt %>% 
+  filter(Source.Tissue.Type == "Whole Blood") %>%
+  filter(str_detect(cells, "platelet_bl|rbc_bl|rdw_bl|wbc_bl")) %>%
+  ggplot(., aes(x = value, y = mtcn_avg, colour = dx_lv)) + 
+    facet_grid(. ~ cells, scales = "free") + 
+    geom_point() +
+    theme_bw() + 
+    theme(legend.position = "bottom")
+
+```
 
 ## Clinical Diagnosis 
-+ [Clinical cognitive diagnosis summary](https://www.radc.rush.edu/docs/var/detail.htm?category=Clinical+Diagnosis&subcategory=Final+consensus+diagnosis&variable=cogdx): `cogdx` Physician’s overall cognitive diagnostic category
++ [Clinical cognitive diagnosis summary](https://www.radc.rush.edu/docs/var/detail.htm?category=Clinical+Diagnosis&subcategory=Final+consensus+diagnosis&variable=cogdx): `dcfdx` Physician’s overall cognitive diagnostic category
   * 1 =	NCI: No cognitive impairment (No impaired domains)
   * 2 =	MCI: Mild cognitive impairment (One impaired domain) and NO other cause of CI
   * 3 =	MCI: Mild cognitive impairment (One impaired domain) AND another cause of CI
@@ -243,11 +364,22 @@ mt_c %>% show_plot(high_cardinality = 5)
   * 5 =	AD: Alzheimer’s dementia AND another cause of CI (NINCDS POSS AD)
   * 6 =	Other dementia: Other primary cause of dementia
 + [Age at first Alzheimer's dementia dx](https://www.radc.rush.edu/docs/var/detail.htm?category=Clinical+Diagnosis&subcategory=Dementia&variable=age_first_ad_dx): `age_first_ad_dx` Age at cycle where first Alzheimer's dementia diagnosis was given
-+ [Final consensus cognitive diagnosis](https://www.radc.rush.edu/docs/var/detail.htm?category=Clinical+Diagnosis&subcategory=Final+consensus+diagnosis&variable=cogdx): `dcfdx_lv` Clinical consensus diagnosis of cognitive status at time of death - same coding as `cogdx`
++ [Final consensus cognitive diagnosis](https://www.radc.rush.edu/docs/var/detail.htm?category=Clinical+Diagnosis&subcategory=Final+consensus+diagnosis&variable=cogdx): `cogdx` Clinical consensus diagnosis of cognitive status at time of death - same coding as `dcfdx`
++ [Clinical Parkinson's disease](https://www.radc.rush.edu/docs/var/detail.htm?category=Clinical+Diagnosis&subcategory=Parkinson%27s+disease&variable=r_pd): `r_pd` is made by a clinician through review of self report questions, neurological exam (when available), cognitive testing, and interview of participant. 
+  * 1 =	Highly Probable
+  * 2 =	Probable
+  * 3 =	Possible
+  * 4 =	Not Present
++ [Stroke diagnosis](https://www.radc.rush.edu/docs/var/detail.htm?category=Clinical+Diagnosis&subcategory=Stroke&variable=r_stroke): `r_stroke` s made by a clinician through review of self report questions, neurological exam (when available), cognitive testing, and interview of participant.
+  * 1 =	Highly Probable
+  * 2 =	Probable
+  * 3 =	Possible
+  * 4 =	Not Present
+
 
 ```{r, rosmap-dx, echo=FALSE, results='asis'}
 rosmap %>% 
-  select(cogdx, age_first_ad_dx, dcfdx_lv) %>% 
+  select(cogdx, age_first_ad_dx, dcfdx_bl, dcfdx_lv, r_pd_bl, r_pd_lv, r_stroke_bl, r_stroke_lv) %>% 
   diagnose()  %>% 
   mutate_if(is.numeric, round, 2) %>% 
   left_join(rosmap_dic) %>% 
@@ -260,7 +392,8 @@ rosmap %>%
 <br> 
 
 ```{r rosmap-dx-numeric, echo=FALSE, message=FALSE, tidy=FALSE}
-dx_vars <- c('cogdx', 'age_first_ad_dx', 'dcfdx_lv')
+dx_vars <- c('cogdx', 'age_first_ad_dx', 'dcfdx_bl', 'dcfdx_lv', 
+             "r_pd_bl", "r_pd_lv", "r_stroke_bl", "r_stroke_lv")
 
 dx_n <- rosmap %>% 
   select(dx_vars) %>% 
@@ -343,6 +476,19 @@ rosmap %>%
 + [Hippocampal sclerosis (Typical)](https://www.radc.rush.edu/docs/var/detail.htm?category=Pathology&subcategory=Hippocampal+sclerosis&variable=hspath_typ): `hspath_typ` Definite presence of typical hippocampal sclerosis
 + [TDP-43 stage](https://www.radc.rush.edu/docs/var/detail.htm?category=Pathology&subcategory=TDP-43&variable=tdp_st4): `tdp_st4` TDP-43 pathology from 8 regions
   - 0 = None; 1 = Amygdala; 2 = Amygdala + Limbic; 3 = Amygdala + Limbic + Neocortical
++ [Microglia](https://www.radc.rush.edu/docs/var/overview.htm?category=Pathology&subcategory=Microglia): Immunohistochemistry for microglia
+  - mglia123_caud_vm 
+  - mglia123_it 
+  - mglia123_mf 
+  - mglia123_put_p 
+  - mglia23_caud_vm 
+  - mglia23_it 
+  - mglia23_mf 
+  - mglia23_put_p 
+  - mglia3_caud_vm 
+  - mglia3_it 
+  - mglia3_mf 
+  - mglia3_put_p
 
 ```{r, rosmap-path, echo=FALSE, results='asis'}
 path_vars <- c("niareagansc", "ceradsc", "braaksc", "gpath", "amyloid", "plaq_d", "plaq_n", "tangles", "nft", "dlbdx", 
@@ -405,22 +551,22 @@ ggpubr::ggarrange(
   ## Amyloid by diagnosis 
   mutate(rosmap, niareagansc = fct_recode(niareagansc, High = "1", Intermediate = "2", Low = "3", NoAD = "4")) %>%
     ggplot(., aes(x = ceradsc, y = amyloid, color = niareagansc)) + 
-      geom_quasirandom(size = 0.75) + 
+      ggbeeswarm::geom_quasirandom(size = 0.75) + 
       theme_bw() + theme(legend.position = "bottom"),
     mutate(rosmap, niareagansc = fct_recode(niareagansc, High = "1", Intermediate = "2", Low = "3", NoAD = "4")) %>%
     ggplot(., aes(x = braaksc, y = nft, color = niareagansc)) + 
-      geom_quasirandom(size = 0.75) + 
+      ggbeeswarm::geom_quasirandom(size = 0.75) + 
       theme_bw() + theme(legend.position = "bottom"),
 ## Tau by diagnosis
   mutate(rosmap, dcfdx_lv = fct_recode(dcfdx_lv, NCI = "1", MCI_prob = "2", MCI_poss = "3", 
                                      AD_prob = "4", AD_poss = "5", dementia = "6")) %>%
     ggplot(., aes(x = ceradsc, y = amyloid, color = dcfdx_lv)) + 
-      geom_quasirandom(size = 0.75) + 
+      ggbeeswarm::geom_quasirandom(size = 0.75) + 
       theme_bw() + theme(legend.position = "bottom"), 
 mutate(rosmap, dcfdx_lv = fct_recode(dcfdx_lv, NCI = "1", MCI_prob = "2", MCI_poss = "3", 
                                      AD_prob = "4", AD_poss = "5", dementia = "6")) %>%
     ggplot(., aes(x = braaksc, y = nft, color = dcfdx_lv)) + 
-      geom_quasirandom(size = 0.75) + 
+      ggbeeswarm::geom_quasirandom(size = 0.75) + 
       theme_bw() + theme(legend.position = "bottom")
 
 )
@@ -469,6 +615,9 @@ ggplot(rosmap_path_crosstab, aes(y = ceradsc, x = braaksc, label = n)) +
 
 ```{r, echo=F, warning=FALSE}
 rosmap %>% 
+  select(ceradsc, braaksc) %>% 
+  mutate(ceradsc = as.character(ceradsc), 
+         braaksc = as.character(braaksc)) %>%
  gtsummary::tbl_cross(
     row = ceradsc, 
     col = braaksc, 
@@ -509,7 +658,7 @@ rosmap %>%
 ```
 
 ## Cognition 
-[mmse](https://www.radc.rush.edu/docs/var/detail.htm?category=Cognition&subcategory=Test+scores&variable=cts_mmse30): Mini Mental State Examination is a widely used, 30 item, standardized screening measure of dementia severity. The MMSE can be used as a surrogate measure for the CDR for the staging of dementia in AD [Perneczky et al 2006](https://doi.org/10.1097/01.JGP.0000192478.82189.a8). 
++ [mmse](https://www.radc.rush.edu/docs/var/detail.htm?category=Cognition&subcategory=Test+scores&variable=cts_mmse30): Mini Mental State Examination is a widely used, 30 item, standardized screening measure of dementia severity. The MMSE can be used as a surrogate measure for the CDR for the staging of dementia in AD [Perneczky et al 2006](https://doi.org/10.1097/01.JGP.0000192478.82189.a8). 
 
 | MMSE | CDR | 
 | ---- | --- |
@@ -519,14 +668,31 @@ rosmap %>%
 | 11-20 | 2 (Moderate) | 
 | 0-10 | 3 (Severe) |
 
++ Domains 
+  - [Global cognitive function](https://www.radc.rush.edu/docs/var/detail.htm?category=Cognition&subcategory=Global+cognition&variable=cogn_global): `cogn_global`
+  - [Episodic memory](https://www.radc.rush.edu/docs/var/detail.htm?category=Cognition&subcategory=Domains&variable=cogn_ep): `cogn_ep`
+  - [Working memory](https://www.radc.rush.edu/docs/var/detail.htm?category=Cognition&subcategory=Domains&variable=cogn_wo): `cogn_wo`
+  - [Semantic memory](https://www.radc.rush.edu/docs/var/detail.htm?category=Cognition&subcategory=Domains&variable=cogn_se): `cogn_se`
+  - [Perceptual orientation](https://www.radc.rush.edu/docs/var/detail.htm?category=Cognition&subcategory=Domains&variable=cogn_po): `cogn_po`
+  - [Perceptual speed](https://www.radc.rush.edu/docs/var/detail.htm?category=Cognition&subcategory=Domains&variable=cogn_ps): `cogn_ps`
++ Estimated Slopes 
+  - [Global cognitive function](https://www.radc.rush.edu/docs/var/detail.htm?category=Cognition&subcategory=Estimated+slopes&variable=cogng_random_slope): `cogng_random_slope`
+  - [Episodic memory](https://www.radc.rush.edu/docs/var/detail.htm?category=Cognition&subcategory=Estimated+slopes&variable=cognep_random_slope): `cognep_random_slope`
+  - [Working memory](https://www.radc.rush.edu/docs/var/detail.htm?category=Cognition&subcategory=Estimated+slopes&variable=cognwo_random_slope): `cognwo_random_slope`
+  - [Semantic memory](https://www.radc.rush.edu/docs/var/detail.htm?category=Cognition&subcategory=Estimated+slopes&variable=cognse_random_slope): `cognse_random_slope`
+  - [Perceptual orientation](https://www.radc.rush.edu/docs/var/detail.htm?category=Cognition&subcategory=Estimated+slopes&variable=cognpo_random_slope): `cognpo_random_slope`
+  - [Perceptual speed](https://www.radc.rush.edu/docs/var/detail.htm?category=Cognition&subcategory=Estimated+slopes&variable=cognps_random_slope): `cognps_random_slope`
+
 
 ```{r rosmap-cog, echo=FALSE}
 
-cog_vars <- c('cts_mmse30_lv')
+cog_vars <- c('cts_mmse30_bl', "cogn_ep_bl", "cogn_po_bl", "cogn_ps_bl", "cogn_se_bl", "cogn_wo_bl", "cogn_global_bl", 
+  'cts_mmse30_lv', "cogn_ep_lv", "cogn_po_lv", "cogn_ps_lv", "cogn_se_lv", "cogn_wo_lv", "cogn_global_lv",
+  "cognep_random_slope", "cogng_random_slope", "cognpo_random_slope", "cognps_random_slope", "cognse_random_slope", "cognwo_random_slope"
+  )
 
 cog <- rosmap %>% 
-  select('cts_mmse30_lv') %>% 
-  mutate(CDR = cut(cts_mmse30_lv, breaks = c(-Inf, 11, 21, 26, 30, Inf), labels = c(3, 2, 1, 0.5, 0), right = FALSE)) 
+  select(cog_vars) 
 
 cog %>% 
   diagnose() 
@@ -543,7 +709,7 @@ cog_n %>%
 
 ```
 
-```{r rosmap-cog-factor, echo=FALSE}
+```{r rosmap-cog-factor, echo=FALSE, eval=FALSE}
 cog_c <- cog %>% 
   inspect_cat(.)   
 
@@ -563,5 +729,43 @@ cog_c %>%
 ```{r, echo=F}
 cog_n %>% show_plot()
 
-cog_c %>% show_plot()
+# cog_c %>% show_plot()
+```
+
+
+## Blood Measures 
+
++ Inflammatory markers 
+  - [Age-related inflammation](https://www.radc.rush.edu/docs/var/detail.htm?category=Blood+Measures&subcategory=Inflammatory+markers&variable=log_agereinflam): `log_agereinflam` is a composite measure of inflammation based on levels of interleukin-1β, tumor necrosis factor-α, and interleukin-6 measured from blood samples. Only avaliable in MAP. 
+  - [Ratio of good to bad inflammation](https://www.radc.rush.edu/docs/var/detail.htm?category=Blood+Measures&subcategory=Inflammatory+markers&variable=log_hil6_log_hil10): `log_hil6_log_hil10` is based on levels of interleukin-6 (IL-6) and interleukin-10(IL-10) measured from blood samples.
++ Routine Lab tests 
+  - [Platelet (thrombocyte) count](https://www.radc.rush.edu/docs/var/detail.htm?category=Blood+Measures&subcategory=Routine+laboratory+tests&variable=platelet): `platelet`
+  - [Red blood cell (RBC) count](https://www.radc.rush.edu/docs/var/detail.htm?category=Blood+Measures&subcategory=Routine+laboratory+tests&variable=rbc): `rbc`
+  - [Red blood cell distribution width (RDW)](https://www.radc.rush.edu/docs/var/detail.htm?category=Blood+Measures&subcategory=Routine+laboratory+tests&variable=rdw): `rdw` is a measure of the range of variation of red blood cell volume. 
+  - [White blood cell count](https://www.radc.rush.edu/docs/var/detail.htm?category=Blood+Measures&subcategory=Routine+laboratory+tests&variable=wbc): `wbc` 
+
+```{r rosmap-blood, echo=FALSE}
+
+blood_vars <- c('log_agereinflam_bl', "log_hil6_log_hil10_bl", "platelet_bl", "rbc_bl", "rdw_bl", "wbc_bl", 
+                'log_agereinflam_lv', "log_hil6_log_hil10_lv", "platelet_lv", "rbc_lv", "rdw_lv", "wbc_lv")
+
+blood <- rosmap %>% 
+  select(blood_vars) 
+```
+
+```{r rosmap-blood-numeric, echo=FALSE, message=FALSE, tidy=FALSE}
+blood_n <- blood %>% 
+  inspect_num(.) %>% 
+  mutate_if(is.numeric, round, 2) 
+
+blood_n %>% 
+  select(-hist) %>% 
+   DT::datatable(caption = "Variable type: Factor", rownames = FALSE)
+
+```
+
+### Plots 
+
+```{r, echo=F}
+blood_n %>% show_plot()
 ```
