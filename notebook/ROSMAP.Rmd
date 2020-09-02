@@ -36,9 +36,33 @@ rosmap.pheno_long.raw <- readxl::read_xlsx("data/AMPAD_extra/rosmap/dataset_899_
 rosmap.wgsqc <- read_csv("data/AMPAD_extra/rosmap/WGS_sample_QC_info.csv", guess_max = 10000)
 mosdepth <- read_tsv("data/mosdepth/mosdepth_mtDNAcn_All.txt")
 haplogrep <- read_tsv("data/haplogrep/haplogrep_jointAll.txt")
+
+vcf <- read.vcfR("data/AMPAD_extra/rosmap/DEJ_11898_B01_GRM_WGS_2017-05-15_APOE.recalibrated_variants.vcf.gz")
 ```
 
+
 ```{r munge-rosmap, warning=F, message=F, error=F}
+Z <- vcfR2tidy(vcf, format_fields = c("GT"))
+apoe <- Z$gt %>% 
+  filter(POS %in% c(45412079, 45411941)) %>% 
+  mutate(snp = as_factor(POS), 
+         snp = fct_recode(snp, "rs7412" = "45412079", "rs429358" = "45411941")) %>%
+  select(Indiv, snp, gt_GT_alleles) %>% 
+  pivot_wider(values_from = gt_GT_alleles, names_from = snp) %>% 
+    mutate(
+      apoe = case_when(
+          rs429358 == "T/C" & rs7412 == "C/T" ~ 24,
+          rs429358 == "T/T" & rs7412 == "T/T" ~ 22,
+          rs429358 == "T/T" & rs7412 == "C/T" ~ 23,
+          rs429358 == "T/T" & rs7412 == "C/C" ~ 33,
+          rs429358 == "T/C" & rs7412 == "C/C" ~ 34,
+          rs429358 == "C/C" & rs7412 == "C/C" ~ 44
+        )
+    ) %>% 
+  left_join(select(rosmap.wgsqc, projid, WGS_id), by = c('Indiv' = 'WGS_id')) %>% 
+  distinct(projid, .keep_all = TRUE) %>% 
+  select(-Indiv)
+
 ## extract baseline and last vist values and spread
 rosmap.pheno_long <- rosmap.pheno_long.raw %>% 
   group_by(projid) %>%
@@ -65,6 +89,7 @@ rosmap_wgs <- rosmap.wgsqc %>%
 #   print(n = Inf)
 
 rosmap <- rosmap.pheno_bl %>%
+  left_join(apoe, by = "projid") %>%
   left_join(rosmap.pheno_long, by = c("projid", "study", "scaled_to")) %>%
   left_join(rosmap_wgs, by = "projid") %>%
     mutate(race7 = as_factor(race7),
@@ -83,6 +108,7 @@ rosmap <- rosmap.pheno_bl %>%
                        'Brain-region unknown' = 'brain', 
                        'lymphocytes _transformed _with EBV virus'= 'lymphocytes'),
         organ = as_factor(organ),
+        apoe_genotype = ifelse(is.na(apoe_genotype), apoe, apoe_genotype),
         apoe4 = recode(apoe_genotype, '22' = 'e4-', '23' = 'e4-', '33' = 'e4-', '24' = 'e4+', '34' = 'e4+', '44' = 'e4+'),
         tomm40_hap = as_factor(tomm40_hap),
         tomm40_hap = fct_recode(tomm40_hap, 'S/S' = '1', 'S/L' = '2', "S/VL" = "3", "L/L" = "4", "L/VL" = "5", "VL/VL" = "6"),

@@ -14,6 +14,7 @@ library(dlookr)
 library(inspectdf)
 library(skimr)
 library(ggmosaic)
+library(vcfR)
 knitr::opts_knit$set(root.dir = '/sc/arion/projects/LOAD/shea/Projects/mtDNAcn')
 # setwd('/sc/arion/projects/LOAD/shea/Projects/mtDNAcn')
 ```
@@ -46,16 +47,37 @@ mayo_path <- bind_rows(cbe, tcx)
 mosdepth <- read_tsv("data/mosdepth/mosdepth_mtDNAcn_All.txt")
 haplogrep <- read_tsv("data/haplogrep/haplogrep_jointAll.txt")
 
+vcf <- read.vcfR("data/AMPAD_extra/mayo/NIA_JG_1898_samples_GRM_WGS_b37_JointAnalysis01_2017-12-08_APOE.recalibrated_variants.Mayo.vcf.gz")
 ```
 
 ```{r, mayo-clean, echo = FALSE, message=TRUE}
 
+## Read in VCF file to extract APOE SNPs
+Z <- vcfR2tidy(vcf, format_fields = c("GT"))
+apoe <- Z$gt %>% 
+  filter(POS %in% c(45412079, 45411941)) %>% 
+  mutate(snp = as_factor(POS), 
+         snp = fct_recode(snp, "rs7412" = "45412079", "rs429358" = "45411941")) %>%
+  select(Indiv, snp, gt_GT_alleles) %>% 
+  pivot_wider(values_from = gt_GT_alleles, names_from = snp) %>% 
+    mutate(
+      apoe = case_when(
+          rs429358 == "T/C" & rs7412 == "C/T" ~ 24,
+          rs429358 == "T/T" & rs7412 == "T/T" ~ 22,
+          rs429358 == "T/T" & rs7412 == "C/T" ~ 23,
+          rs429358 == "T/T" & rs7412 == "C/C" ~ 33,
+          rs429358 == "T/C" & rs7412 == "C/C" ~ 34,
+          rs429358 == "C/C" & rs7412 == "C/C" ~ 44
+        )
+    )
+
 mayo <- mayo.raw %>%
+  left_join(apoe, by = c('WGS_Participant_ID' = 'Indiv')) %>% 
   left_join(mayo_path, by = c('WGS_Participant_ID' = 'SampleID')) %>%
   left_join(haplogrep, by = c('WGS_Participant_ID' = 'SampleID')) %>%
   left_join(mosdepth, by = c('WGS_Participant_ID' = 'SampleID')) %>%
   mutate(id = paste0('MAYO', WGS_Participant_ID),
-        apoe4 = recode(ApoE, '22' = 'e4-', '23' = 'e4-', '33' = 'e4-', '24' = 'e4+', '34' = 'e4+', '44' = 'e4+'),
+        apoe4 = recode(apoe, '22' = 'e4-', '23' = 'e4-', '33' = 'e4-', '24' = 'e4+', '34' = 'e4+', '44' = 'e4+'),
         aod = str_replace(AgeAtDeath, '90_or_above', '90'),
         aod = as.numeric(aod),
         aod_cat = cut(aod, c(50, 60, 70, 80, 90, Inf), c('50-59', '60-69', '70-79', '80-89', '90+'), right = FALSE),
@@ -73,7 +95,7 @@ mayo <- mayo.raw %>%
           str_detect(Haplogroup, "^L|^HV|^JT") ~ substr(Haplogroup, start = 1, stop = 2),
                      TRUE ~ substr(Haplogroup, start = 1, stop = 1))
         ) %>%
-  select(id, study, sex = Sex, apoe = ApoE, apoe4, race, aod, aod_cat, thal = Thal, braaksc, SourceTissue = WGS_Source_Tissue_Type, dx = Diagnosis, mtcn_avg, Haplogroup, Quality, macro)
+  select(id, study, sex = Sex, apoe, apoe4, race, aod, aod_cat, thal = Thal, braaksc, SourceTissue = WGS_Source_Tissue_Type, dx = Diagnosis, mtcn_avg, Haplogroup, Quality, macro)
 
 # get_dupes(mayo, id)  %>%
 #   print(n = Inf)

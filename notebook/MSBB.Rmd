@@ -51,7 +51,9 @@ msbb <- msbb.raw %>%
   mutate(id = paste0('MSBB', WGS)) %>%
   mutate(APOE_inferred = recode(APOE_inferred, 'e2/e2' = '22', 'e2/e3' = '23', 'e3/e3' = '33', 'e2/e4' = '24', 'e3/e4' = '34', 'e4/e4' = '44'),
         apoe4 = recode(APOE_inferred, '22' = 'e4-', '23' = 'e4-', '33' = 'e4-', '24' = 'e4+', '34' = 'e4+', '44' = 'e4+'),
-        SEX = as.factor(SEX), 
+        SEX = as.factor(SEX),
+        aod_cat = cut(AOD, c(50, 60, 70, 80, 90, Inf), c('50-59', '60-69', '70-79', '80-89', '90+'), right = FALSE),
+        aod_cat = ordered(aod_cat, levels = c('50-59', '60-69', '70-79', '80-89', '90+')), 
         SourceTissue = 'prefrontal cortex',
         APOE_inferred = as.factor(APOE_inferred), 
         apoe4 = as.factor(apoe4), 
@@ -83,7 +85,7 @@ msbb <- msbb.raw %>%
   mutate_at(vars(HippoPlaquesWCoresValue, EntorPlaquesWCoresValue, MidPlaquesWCoresValue, 
                        SupPlaquesWCoresValue, InfPlaquesWCoresValue, OcciPlaquesWCoresValue), 
             ordered) %>%
-  select(id, study, sex = SEX, race = RACE, SourceTissue, PMI, NP.1, cerad, niareagansc, ad_reagan, ceradsc, HippoPlaquesWCoresValue, EntorPlaquesWCoresValue, MidPlaquesWCoresValue, SupPlaquesWCoresValue, InfPlaquesWCoresValue, OcciPlaquesWCoresValue, braaksc = bbscore, braaksc_B, ceradsc_C, apoe = APOE_inferred, apoe4, aod = AOD, cdr = CDR, PlaqueMean, mtcn_avg, z_mtdnacn, Haplogroup, Quality, macro)
+  select(id, study, sex = SEX, race = RACE, SourceTissue, PMI, NP.1, cerad, niareagansc, ad_reagan, ceradsc, HippoPlaquesWCoresValue, EntorPlaquesWCoresValue, MidPlaquesWCoresValue, SupPlaquesWCoresValue, InfPlaquesWCoresValue, OcciPlaquesWCoresValue, braaksc = bbscore, braaksc_B, ceradsc_C, apoe = APOE_inferred, apoe4, aod = AOD, aod_cat, cdr = CDR, PlaqueMean, mtcn_avg, z_mtdnacn, Haplogroup, Quality, macro)
 
 write_rds(msbb, 'output/msbb.rds')
 ```
