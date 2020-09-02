@@ -6,6 +6,26 @@ Updates to project - just like a wet lab Lab Book
 
 ### To Do 
 
+### 2020-09-02
++ Ordinal Logistic Regression 
+  - Looking at running OLR for neuropathology outcomes in ROSMAP in particular. Cannot (well you technicaly can) use a linear regression as the assumption of LM will be violated, in particualr the constant marginal effect where the distances between successive points in the dependent variable are assumed to be identical - clearly not the case with a ordinal variable. [Norris, C., et al. 2006](https://dx.doi.org/10.1016/j.jclinepi.2005.09.007)
+  - Proportional odds assumption: relationship between each pair of outcome groups is the same, such that the coefficients that describe the relationship between, say, the lowest versus all higher categories of the response variable are the same as those that describe the relationship between the next lowest category and all higher categories, etc.
++ References 
+  - Abreu, M., Siqueira, A., Caiaffa, W. (2009). Regressão logística ordinal em estudos epidemiológicos. [Revista de Saúde Pública  43(1), 183-194](https://dx.doi.org/10.1590/s0034-89102009000100025)
+  - Yee, T. (2015). Vector Generalized Linear and Additive Models, With an Implementation in R. [Springer](https://dx.doi.org/10.1007/978-1-4939-2818-7)
+  - Harrell, F. (2015). Regression Modeling Strategies, With Applications to Linear Models, Logistic and Ordinal Regression, and Survival Analysis. [Springer](https://dx.doi.org/10.1007/978-3-319-19425-7)
+  - UCLA statiscal consulting: https://stats.idre.ucla.edu/r/dae/ordinal-logistic-regression/
+- R Packages 
+  - VGAM: Conducting OLR using `vlgm`
+  - MASS: Conducting OLR using `polyr`
+  - Brant: Checks proportional odds assumption when using `polyr`
+  - QMSS: Checks proportional odds assumption when using `vlgm`
+
++ Sample size for logistic regression 
+  - Rule of thumb is a minimum sample size for logistic regression of ~10 events per predictor paramater [Riley, R. et al. 2019](https://dx.doi.org/10.1002/sim.7992)
+  - However, this is context specific, with the appropiate sample size depending not only on the number of events relative to the number of candidate predictor parameters but also on 1) the total number of participants, 2) the outcome proportion (incidence) in the study population and; 3) the expected predictive performance of the model  
+  
+
 ### 2020-08-22
 + Initial visulizations of blood cell counts vs mtDNAcn do not show a strong relationship that would indicate a reason for the observed bimodal distribution in the samples with DNA isolated from blood.
 + Maybe due to a batch effect? May be observable if we had date of visit to see if mtDNAcn distribution changes after a given date.
