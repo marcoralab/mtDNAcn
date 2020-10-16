@@ -1,4 +1,23 @@
+---
+output: html_document
+editor_options: 
+  chunk_output_type: console
+---
 # MAYO
+```{r, warning=F, message=F, error=F, echo=FALSE}
+# library(knitr)
+# library(kableExtra)
+library(tidyverse)
+library(janitor)
+library(gtsummary)
+library(dlookr)
+library(inspectdf)
+library(skimr)
+library(ggmosaic)
+library(vcfR)
+knitr::opts_knit$set(root.dir = '/sc/arion/projects/LOAD/shea/Projects/mtDNAcn')
+# setwd('/sc/arion/projects/LOAD/shea/Projects/mtDNAcn')
+```
 
 Allen et al *Human whole genome genotype and transcriptome data for Alzheimer’s and other neurodegenerative diseases* [Scientific Data 2016](https://www.nature.com/articles/sdata201689)
 
@@ -10,7 +29,7 @@ Mayo Clinic Alzheimer’s Disease Genetics Studies (MCADGS). Data is provided fo
 
 Clinical Code Book: [Synapse](https://adknowledgeportal.synapse.org/Explore/Studies?Study=syn5550404)
 
-```{r mayo-load, echo=FALSE}
+```{r mayo-load, echo=TRUE, message=TRUE, warning=FALSE, error=F}
 ## Mayo
 mayo.raw <- read_tsv('data/AMPAD/mayo/WGS_Metadata.txt') %>%
   mutate(WGS_Participant_ID = as.character(WGS_Participant_ID), study = 'MAYO') 
@@ -25,22 +44,40 @@ tcx  <- read_csv('data/AMPAD_extra/mayo/MayoRNAseq_RNAseq_TCX_covariates.csv')  
   anti_join(cbe, by = 'SampleID') 
 mayo_path <- bind_rows(cbe, tcx)
 
+mosdepth <- read_tsv("data/mosdepth/mosdepth_mtDNAcn_All.txt")
+haplogrep <- read_tsv("data/haplogrep/haplogrep_jointAll.txt")
 
-mosdepth <- read_tsv('data/mosdepth/mosdepth_all.txt')
-haplogrep <- read_tsv('data/haplogrep/haplogrep_all.txt')
-
-
-
+vcf <- read.vcfR("data/AMPAD_extra/mayo/NIA_JG_1898_samples_GRM_WGS_b37_JointAnalysis01_2017-12-08_APOE.recalibrated_variants.Mayo.vcf.gz")
 ```
 
-```{r, mayo-clean, echo = FALSE, message=FALSE}
+```{r, mayo-clean, echo = FALSE, message=TRUE}
+
+## Read in VCF file to extract APOE SNPs
+Z <- vcfR2tidy(vcf, format_fields = c("GT"))
+apoe <- Z$gt %>% 
+  filter(POS %in% c(45412079, 45411941)) %>% 
+  mutate(snp = as_factor(POS), 
+         snp = fct_recode(snp, "rs7412" = "45412079", "rs429358" = "45411941")) %>%
+  select(Indiv, snp, gt_GT_alleles) %>% 
+  pivot_wider(values_from = gt_GT_alleles, names_from = snp) %>% 
+    mutate(
+      apoe = case_when(
+          rs429358 == "T/C" & rs7412 == "C/T" ~ 24,
+          rs429358 == "T/T" & rs7412 == "T/T" ~ 22,
+          rs429358 == "T/T" & rs7412 == "C/T" ~ 23,
+          rs429358 == "T/T" & rs7412 == "C/C" ~ 33,
+          rs429358 == "T/C" & rs7412 == "C/C" ~ 34,
+          rs429358 == "C/C" & rs7412 == "C/C" ~ 44
+        )
+    )
 
 mayo <- mayo.raw %>%
+  left_join(apoe, by = c('WGS_Participant_ID' = 'Indiv')) %>% 
   left_join(mayo_path, by = c('WGS_Participant_ID' = 'SampleID')) %>%
   left_join(haplogrep, by = c('WGS_Participant_ID' = 'SampleID')) %>%
   left_join(mosdepth, by = c('WGS_Participant_ID' = 'SampleID')) %>%
   mutate(id = paste0('MAYO', WGS_Participant_ID),
-        apoe4 = recode(ApoE, '22' = 'e4-', '23' = 'e4-', '33' = 'e4-', '24' = 'e4+', '34' = 'e4+', '44' = 'e4+'),
+        apoe4 = recode(apoe, '22' = 'e4-', '23' = 'e4-', '33' = 'e4-', '24' = 'e4+', '34' = 'e4+', '44' = 'e4+'),
         aod = str_replace(AgeAtDeath, '90_or_above', '90'),
         aod = as.numeric(aod),
         aod_cat = cut(aod, c(50, 60, 70, 80, 90, Inf), c('50-59', '60-69', '70-79', '80-89', '90+'), right = FALSE),
@@ -54,10 +91,159 @@ mayo <- mayo.raw %>%
         braaksc = ordered(floor(Braak), levels = c('0', '1', '2', '3', '4', '5', '6')), 
         thal_A = fct_recode(Thal, A0 = "0", A1 = "1", A1 = "2", A2 = "3", A3 = "4", A3 = "5"),
         braaksc_B = fct_recode(braaksc, B0 = "0", B1 = "1", B1 = "2", B2 = "3", B2 = "4", B3 = "5", B3 = "6"), 
-        z_mtdnacn = scale(mtcn_avg, center = TRUE, scale = TRUE)[,1]
+        macro = case_when(
+          str_detect(Haplogroup, "^L|^HV|^JT") ~ substr(Haplogroup, start = 1, stop = 2),
+                     TRUE ~ substr(Haplogroup, start = 1, stop = 1))
         ) %>%
-  select(id, study, sex = Sex, apoe = ApoE, apoe4, race, aod, aod_cat, thal = Thal, braaksc, SourceTissue = WGS_Source_Tissue_Type, dx.raw = Diagnosis, mtcn_avg, z_mtdnacn, Haplogroup, Quality, macro)
+  select(id, study, sex = Sex, apoe, apoe4, race, aod, aod_cat, thal = Thal, braaksc, SourceTissue = WGS_Source_Tissue_Type, dx = Diagnosis, mtcn_avg, Haplogroup, Quality, macro)
 
-saveRDS(mayo, 'output/mayo.rds')
+# get_dupes(mayo, id)  %>%
+#   print(n = Inf)
+
+write_rds(mayo, 'output/mayo.rds')
+```
+
+## Demographics 
+
+```{r mayo-demo-n, echo=FALSE, message=FALSE, tidy=FALSE}
+demo_n <- mayo %>% 
+  select(aod) %>% 
+  inspect_num(.) 
+
+demo_n %>% 
+  select(-hist) %>% 
+  mutate_if(is.numeric, round, 2) %>%
+  knitr::kable(caption = "Variable type: Numeric") 
+```
+
+```{r mayo-demo-c, echo=FALSE}
+demo_c <- mayo %>% 
+  select(aod_cat, sex, race) %>% 
+  inspect_cat(.)   
+
+demo_c %>% 
+  pull(levels) %>% 
+  bind_rows(.id = "col_name") %>% 
+  rename(level = value) %>% 
+  mutate_if(is.numeric, round, 2) %>% 
+  knitr::kable(caption = "Variable type: Factor") %>%
+  kableExtra::kable_styling(full_width = F)
+```
+
+### Plots 
+
+```{r mayo-plot-demo}
+demo_n %>% show_plot()
+
+demo_c %>% show_plot(high_cardinality = 5)
+```
+
+## Diagnosis and Pathology 
+
+```{r mayo-dx-c, echo=FALSE}
+dx_c <- mayo %>% 
+  select(dx, thal, braaksc) %>% 
+  inspect_cat(.)   
+
+dx_c %>% 
+  pull(levels) %>% 
+  bind_rows(.id = "col_name") %>% 
+  rename(level = value) %>% 
+  mutate_if(is.numeric, round, 2) %>% 
+  knitr::kable(caption = "Variable type: Factor") %>%
+  kableExtra::kable_styling(full_width = F)
+```
+
+### Plots 
+
+```{r mayo-plot-dx}
+dx_c %>% show_plot(high_cardinality = 5)
+
+ggplot(data = mayo) +
+   geom_mosaic(aes(x = product(dx), fill=thal), na.rm=FALSE) +
+  theme_bw()
+   labs(x="Is it rude recline? ", title='f(RudeToRecline)') 
+
+```
+
+### Cross-tabs 
+```{r, echo=F}
+mayo %>% 
+  mutate(thal = factor(thal, ordered = FALSE)) %>%
+ gtsummary::tbl_cross(
+    row = thal, 
+    col = dx, 
+    percent = "cell",
+  ) 
+```
+
+```{r, echo=F}
+mayo %>% 
+  mutate(braaksc = factor(braaksc, ordered = FALSE)) %>%
+ gtsummary::tbl_cross(
+    row = braaksc, 
+    col = dx, 
+    percent = "cell",
+  ) 
+```
+
+
+```{r, echo=F}
+mayo %>% 
+  mutate(braaksc = factor(braaksc, ordered = FALSE), 
+         thal = factor(thal, ordered = FALSE)) %>%
+ gtsummary::tbl_cross(
+    row = braaksc, 
+    col = thal, 
+    percent = "cell",
+  ) 
+```
+
+## Genetics & Mitochondria
+
+```{r mayo-gen-n, echo=FALSE, message=FALSE, tidy=FALSE}
+gen_n <- mayo %>% 
+  select(Quality, mtcn_avg) %>% 
+  inspect_num(.) 
+
+gen_n %>% 
+  select(-hist) %>% 
+  mutate_if(is.numeric, round, 2) %>%
+  knitr::kable(caption = "Variable type: Numeric") 
+```
+
+```{r mayo-gen-c, echo=FALSE}
+gen_c <- mayo %>% 
+  mutate(Haplogroup = as_factor(Haplogroup)) %>%
+  select(apoe, apoe4, SourceTissue, Haplogroup, macro) %>% 
+  mutate_if(is.factor, fct_lump_n, 4) %>%
+  inspect_cat(.)   
+
+gen_c %>% 
+  pull(levels) %>% 
+  bind_rows(.id = "col_name") %>% 
+  rename(level = value) %>% 
+  mutate_if(is.numeric, round, 2) %>% 
+  knitr::kable(caption = "Variable type: Factor") %>%
+  kableExtra::kable_styling(full_width = F)
+```
+
+### Plots 
+
+```{r mayo-plot-gen}
+gen_n %>% show_plot()
+
+gen_c %>% show_plot(high_cardinality = 5)
+```
+
+### diagnosis and mtDNAcn
+
+```{r mayo-dx-mtdnacn}
+ mayo %>%
+    filter(!is.na(mtcn_avg)) %>%
+    ggplot(., aes(x = SourceTissue, y = mtcn_avg, colour = dx)) + 
+      ggbeeswarm::geom_quasirandom(dodge.width=1) + 
+      theme_bw()
+
 ```
 

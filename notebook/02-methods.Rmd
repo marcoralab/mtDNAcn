@@ -42,11 +42,12 @@ Mitochondrial Variants were called per sample using [Freebayes](https://arxiv.or
   - min-alternate-count 4  
   - ploidy 1  
 
+[bcbio variation recall](https://github.com/bcbio/bcbio.variation.recall) was then used to squaring off multiple samples, called independently, by recalling at all identified genomic positions.
+
 Alternative approaches
 
 - [gatk Mutect2](https://github.com/broadinstitute/gatk-docs/blob/master/blog-2012-to-2019/2019-03-05-New!_Mitochondrial_Analysis_with_Mutect2.md?id=23598): mitochondrial calling pipline based on Mutect2 from gatk. Very little documentation
 - [mity](https://www.biorxiv.org/content/10.1101/852210v1): Pipeline for calling mitochhondrial SNVs and INDELs, based on freebayes.
-- [bcbio variation recall](https://github.com/bcbio/bcbio.variation.recall): Squaring off multiple samples, called independently, by recalling at all identified genomic positions. Can combine this with the above freebayes approach 
 - Joint calling with freebayes: Run into memory issues trying to call all samples jointly. Possibly call in batchs (chort). Need to work out genome references between chorts (i.e. MT (hg19) vs chrM (hg38))
 
 
@@ -58,11 +59,10 @@ Weissensteiner, H. et al. (2016). HaploGrep 2: mitochondrial haplogroup classifi
 - assigns haplogroups based on phylotree and uses a generic rule-based system for immediate quality control
 - vcf input
 
-### Phy-Mer
-Navarro-Gomez, D et al (2014). Phy-Mer: a novel alignment-free and reference-independent mitochondrial haplogroup classifier. [Bioinformatics (Oxford, England)  31(8), 1310-2](https://dx.doi.org/10.1093/bioinformatics/btu825)
+Alternative approaches
 
-- novel mitochondrial genome haplogroup-defining algorithm using a k-mer approach by decomposes a mitochondrial sequence into a set of all possible k-mers, which are then compared against each of the k-mer sets of all haplogroups
-- input a NGS data (.bam, .cram)
+- **Phy-Mer**: novel mitochondrial genome haplogroup-defining algorithm using a k-mer approach by decomposes a mitochondrial sequence into a set of all possible k-mers, which are then compared against each of the k-mer sets of all haplogroups. Uses  NGS data (.bam, .cram). Navarro-Gomez, D et al (2014). [Bioinformatics (Oxford, England)  31(8), 1310-2](https://dx.doi.org/10.1093/bioinformatics/btu825). However, Resulted in low quality scores for AMP-AD. 
+ 
 
 ## Estimating mtDNAcn 
 
@@ -71,15 +71,15 @@ Mitochondrial DNA Copy Number estimation
 - mtDNA-CN can be estimated as the ratio of the average mitochodnrial DNA coverage by the average autosomal DNA coverage
   + mtDNA-CN = (mtDNA average coverage / autosomal DNA average coverage) * 2
 
-### fastMitoCalc  
-Qian, Y., et al. (2017). **fastMitoCalc: an ultra-fast program to estimate mitochondrial DNA copy number from whole-genome sequences.** [Bioinformatics 33(9), 1399-1401.](https://dx.doi.org/10.1093/bioinformatics/btw835)
-
-- uses a randomly selected small subset (0.1%) of the nuclear genome to estimate autosomal DNA coverage accurately for estimation of the mtDNA-CN. 
-
 ### Mosedepth 
 Pedersen, B., Quinlan, A. (2017). **Mosdepth: quick coverage calculation for genomes and exomes** [Bioinformatics  34(5), 867-868.](https://dx.doi.org/10.1093/bioinformatics/btx699)
 
 - Mosdepth uses a simple algorithm that is computationally efficient enableing it to quickly calculating genome-wide sequencing coverage. Not specifically designed for estimating mtDNA-CN, but provides coverage estimates of the autosome and mitochondrial genome. 
+
+Alternative approaches
+
+- **fastMitoCalc**: uses a randomly selected small subset (0.1%) of the nuclear genome to estimate autosomal DNA coverage accurately for estimation of the mtDNA-CN. However, a ceiling effect was observed in samples with DNA isolated from brain tissue. Qian, Y., et al. (2017). [Bioinformatics 33(9), 1399-1401.](https://dx.doi.org/10.1093/bioinformatics/btw835)
+
 
 ## Cohorts 
 

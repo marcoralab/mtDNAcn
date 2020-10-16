@@ -6,7 +6,37 @@ Updates to project - just like a wet lab Lab Book
 
 ### To Do 
 
-- Joint calling of mitochondrial varints using bcbio
+### 2020-09-02
++ Ordinal Logistic Regression 
+  - Looking at running OLR for neuropathology outcomes in ROSMAP in particular. Cannot (well you technicaly can) use a linear regression as the assumption of LM will be violated, in particualr the constant marginal effect where the distances between successive points in the dependent variable are assumed to be identical - clearly not the case with a ordinal variable. [Norris, C., et al. 2006](https://dx.doi.org/10.1016/j.jclinepi.2005.09.007)
+  - Proportional odds assumption: relationship between each pair of outcome groups is the same, such that the coefficients that describe the relationship between, say, the lowest versus all higher categories of the response variable are the same as those that describe the relationship between the next lowest category and all higher categories, etc.
++ References 
+  - Abreu, M., Siqueira, A., Caiaffa, W. (2009). Regressão logística ordinal em estudos epidemiológicos. [Revista de Saúde Pública  43(1), 183-194](https://dx.doi.org/10.1590/s0034-89102009000100025)
+  - Yee, T. (2015). Vector Generalized Linear and Additive Models, With an Implementation in R. [Springer](https://dx.doi.org/10.1007/978-1-4939-2818-7)
+  - Harrell, F. (2015). Regression Modeling Strategies, With Applications to Linear Models, Logistic and Ordinal Regression, and Survival Analysis. [Springer](https://dx.doi.org/10.1007/978-3-319-19425-7)
+  - UCLA statiscal consulting: https://stats.idre.ucla.edu/r/dae/ordinal-logistic-regression/
+- R Packages 
+  - VGAM: Conducting OLR using `vlgm`
+  - MASS: Conducting OLR using `polyr`
+  - Brant: Checks proportional odds assumption when using `polyr`
+  - QMSS: Checks proportional odds assumption when using `vlgm`
+
++ Sample size for logistic regression 
+  - Rule of thumb is a minimum sample size for logistic regression of ~10 events per predictor paramater [Riley, R. et al. 2019](https://dx.doi.org/10.1002/sim.7992)
+  - However, this is context specific, with the appropiate sample size depending not only on the number of events relative to the number of candidate predictor parameters but also on 1) the total number of participants, 2) the outcome proportion (incidence) in the study population and; 3) the expected predictive performance of the model  
+  
+
+### 2020-08-22
++ Initial visulizations of blood cell counts vs mtDNAcn do not show a strong relationship that would indicate a reason for the observed bimodal distribution in the samples with DNA isolated from blood.
++ Maybe due to a batch effect? May be observable if we had date of visit to see if mtDNAcn distribution changes after a given date.
+
+### 2020-08-22
+
++ Succesfully used bc.bio to call conduct joint calling of AMP-AD + DIAN samples. At a macro haplogroup level, there is little difference in haplogroup assignments. For haplogroups, ~500 samples have a different haplogroup assignment. 
++ Obtained additional ROSMAP datasets including information on [blood cell counts](https://www.radc.rush.edu/docs/var/overview.htm?category=Blood+Measures&subcategory=Routine+laboratory+tests). Plan on evaluting assocation of mtDNAcn with platlets. 
++ mtDNAcn estimates from whole blood DNA can be confounded by cell type heterogeneity, and by the presence of platelets, as platelets do not have nDNA, but have mtDNA, which artificially inflates mtDNAcn. [Han, L. et al 2019](https://dx.doi.org/10.1016/j.psyneuen.2019.04.004)
++ cell counts for samples with available RNA-sequencing data can be deconvoluted using gene expression measured in whole blood. [Yang, S. et al 2020](https://dx.doi.org/10.1101/2020.07.17.209023)
+  - Aran, D., Hu, Z., Butte, A. (2017). xCell: digitally portraying the tissue cellular heterogeneity landscape. [Genome Biology  18(1), 220](https://dx.doi.org/10.1186/s13059-017-1349-1)
 
 ### 2020-08-07
 
@@ -39,7 +69,7 @@ Updates to project - just like a wet lab Lab Book
   - pipeline is working again
 
 ## Neuropathological Confirmed AD 
-There is consensus to disentangle the clinicopathologic term “Alzheimer’s disease” from AD neuropathologic change. The former refers to clinical signs and symptoms of cognitive and behavioral changes that are typical for patients who have substantial AD neuropathologic change,and is the focus of recent NIA–AA-sponsored consensus re-ports on three defined stages in a clinical continuum that includes preclinical, mild cognitive impairment, anddementia. The latter refers to the presence and extentof neuropathologic changes of AD observed at autopsy, re-gardless of the clinical setting.
+There is consensus to disentangle the clinicopathologic term “Alzheimer’s disease” from AD neuropathologic change. The former refers to clinical signs and symptoms of cognitive and behavioral changes that are typical for patients who have substantial AD neuropathologic change, and is the focus of recent NIA–AA-sponsored consensus reports on three defined stages in a clinical continuum that includes preclinical, mild cognitive impairment, anddementia. The latter refers to the presence and extent of neuropathologic changes of AD observed at autopsy, re-gardless of the clinical setting.
 
 ### CERAD Criteria - 1991
 Protocol provides neuropathologic definitions of such terms as “definite Alzheimer’s disease’’ (AD), “probable AD,” “possible AD,” and “normal brain” to indicate levels of diagnostic certainty (@Mirra479). The CERAD Neuritic Plaque score forms the basis of later neuropathological difinitions. 
