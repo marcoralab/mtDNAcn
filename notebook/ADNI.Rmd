@@ -1,0 +1,31 @@
+---
+output: html_document
+editor_options: 
+  chunk_output_type: console
+---
+# ADNI
+```{r setup-mayo, warning=F, message=F, error=F, echo=FALSE}
+# library(knitr)
+# library(kableExtra)
+library(tidyverse)
+library(janitor)
+library(gtsummary)
+library(dlookr)
+library(inspectdf)
+library(skimr)
+library(ggmosaic)
+knitr::opts_knit$set(root.dir = '/sc/arion/projects/LOAD/shea/Projects/mtDNAcn')
+
+# setwd('/sc/arion/projects/LOAD/shea/Projects/mtDNAcn')
+```
+
+Reference to ADNI 
+
+Short description of ADNI 
+
+```{r adni-load, echo=TRUE, message=TRUE, warning=FALSE, error=F}
+
+
+
+```
+
