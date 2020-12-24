@@ -56,13 +56,14 @@ Alternative approaches
 ### Haplogrep
 Weissensteiner, H. et al. (2016). HaploGrep 2: mitochondrial haplogroup classification in the era of high-throughput sequencing. [Nucleic acids research  44(W1), W58-63](https://dx.doi.org/10.1093/nar/gkw233)
 
-- assigns haplogroups based on phylotree and uses a generic rule-based system for immediate quality control
-- vcf input
++ assigns haplogroups based on phylotree and uses a generic rule-based system for immediate quality control
++ vcf input
 
 Alternative approaches
 
-- **Phy-Mer**: novel mitochondrial genome haplogroup-defining algorithm using a k-mer approach by decomposes a mitochondrial sequence into a set of all possible k-mers, which are then compared against each of the k-mer sets of all haplogroups. Uses  NGS data (.bam, .cram). Navarro-Gomez, D et al (2014). [Bioinformatics (Oxford, England)  31(8), 1310-2](https://dx.doi.org/10.1093/bioinformatics/btu825). However, Resulted in low quality scores for AMP-AD. 
- 
++  **Phy-Mer**: novel mitochondrial genome haplogroup-defining algorithm using a k-mer approach by decomposes a mitochondrial sequence into a set of all possible k-mers, which are then compared against each of the k-mer sets of all haplogroups. Uses  NGS data (.bam, .cram). 
+  - However, Resulted in low quality scores for AMP-AD, but not for DIAN
+  - Navarro-Gomez, D et al (2014). [Bioinformatics (Oxford, England)  31(8), 1310-2](https://dx.doi.org/10.1093/bioinformatics/btu825).  
 
 ## Estimating mtDNAcn 
 
@@ -74,12 +75,58 @@ Mitochondrial DNA Copy Number estimation
 ### Mosedepth 
 Pedersen, B., Quinlan, A. (2017). **Mosdepth: quick coverage calculation for genomes and exomes** [Bioinformatics  34(5), 867-868.](https://dx.doi.org/10.1093/bioinformatics/btx699)
 
-- Mosdepth uses a simple algorithm that is computationally efficient enableing it to quickly calculating genome-wide sequencing coverage. Not specifically designed for estimating mtDNA-CN, but provides coverage estimates of the autosome and mitochondrial genome. 
++  Mosdepth uses a simple algorithm that is computationally efficient enableing it to quickly calculating genome-wide sequencing coverage. Not specifically designed for estimating mtDNA-CN, but provides coverage estimates of the autosome and mitochondrial genome. 
 
 Alternative approaches
 
-- **fastMitoCalc**: uses a randomly selected small subset (0.1%) of the nuclear genome to estimate autosomal DNA coverage accurately for estimation of the mtDNA-CN. However, a ceiling effect was observed in samples with DNA isolated from brain tissue. Qian, Y., et al. (2017). [Bioinformatics 33(9), 1399-1401.](https://dx.doi.org/10.1093/bioinformatics/btw835)
++ **fastMitoCalc**: uses a randomly selected small subset (0.1%) of the nuclear genome to estimate autosomal DNA coverage accurately for estimation of the mtDNA-CN. 
+   - However, a ceiling effect was observed in samples with DNA isolated from brain tissue. 
+   - Qian, Y., et al. (2017). [Bioinformatics 33(9), 1399-1401.](https://dx.doi.org/10.1093/bioinformatics/btw835)
 
+## Cell Type Enrichment 
+
++ mtDNAcn estimates from whole blood DNA can be confounded by cell type heterogeneity, and by the presence of platelets, as platelets do not have nDNA, but have mtDNA, which artificially inflates mtDNAcn. [Han, L. et al 2019](https://dx.doi.org/10.1016/j.psyneuen.2019.04.004)
++ Estimates from brain tissue with clinical disease are also potentially confounded due to cell loss
++ cell counts for samples with available RNA-sequencing data can be deconvoluted using gene expression measured in whole blood. [Yang, S. et al 2020](https://dx.doi.org/10.1101/2020.07.17.209023)
+
+### xCell 
+
+Aran, D., Hu, Z., Butte, A. (2017). **xCell: digitally portraying the tissue cellular heterogeneity landscape**. [Genome Biology  18(1), 220](https://dx.doi.org/10.1186/s13059-017-1349-1)
+
++ [Git Repo](https://github.com/dviraran/xCell)
++ [Webtool](https://xcell.ucsf.edu/)
++ Uses an adapation of ssGSEA to calculated enrichment scores for 64 cell types to identify particular pathways or gene sets that are differentialy expressed in tissue and represent distinct cell types. 
+  - Cell types span multiple adaptive and innate immunity cell, hematopoietic progenitors, epithelial cells, extracellular matrix cells. Includes neurons and astrocytes. 
+  - Uses 489 (three for each cell type, from each data source) signatures learned from six sources to estimate enrichment of cell types 
+  - Raw scores are the average single-sample GSEA of all signatures corresponding to a cell type, which are transformed to linear scores, allowing for comparison of scores across cell types and across samples
+  - Spillover compenstation correction to account for corrleated scores between closely related cell types
++ Calculating scores for a mixture 
+  - Input is a n x m matrix with, rows corresponding to genes (gene symbols) and columns samples
+  - Recomended to use data sets containing the majority of the 10,808 genes used by xCell for scoring 
+  - Missing values are treated as missing genes 
+  - Use as many samples as possible, with highly expected variation in cell type fractions 
+  - xCell uses the expression levels ranking and not the actual values, thus normalization does not have an effect, however normalizing to gene length (RPKM/FPKM/TPM/RSEM) is required  
+    * [Gene Expression Units explained](https://reneshbedre.github.io/blog/expression_units.html)
+    * [Counts to TPM](https://gist.github.com/slowkow/c6ab0348747f86e2748b)
+    * Misuse of RPKM or TPM normalization. Zhao et al 2020. [RNA](https://rnajournal.cshlp.org/content/26/8/903)
+    * [RNA-seq Analysis](https://compgenomr.github.io/book/rnaseqanalysis.html). 
+    * [RNA-seq resources](https://github.com/crazyhottommy/RNA-seq-analysis)
+  - Produces enrichment scores, not percentages, which means that the main usage is for comparing across samples, not across cell types
++ Has several advantages over deconvolution approaches 
+  - Suitiable for cross-platform transcriptomic measurement 
+  - Agnostic to normalization methods, batch effects 
+  - No decline in performance with increase cell types 
+  - Simple and easy to adjust 
+
+Alternative approaches
+
++ **CIBERSORTx**: uses a deconvulution approach to estimate cell-type frequences from bulk gene expression data
+  - Requires a signature matraix, possibly from a reference scRNA-seq dataset. May have one to use. 
+  - Newman, A., et al (2019). [Nature Biotechnology  37(7), 773-782](https://dx.doi.org/10.1038/s41587-019-0114-2)
+  - [Webtool](https://cibersortx.stanford.edu/) 
++ Further reading 
+  - Liu, C., et al (2019). Computational approaches for characterizing the tumor immune microenvironment. [Immunology  158(2), 70-84](https://dx.doi.org/10.1111/imm.13101)
+  - Bortolomeazzi, M., et al (2019). Identification of non-cancer cells from cancer transcriptomic data. [Biochimica et Biophysica Acta (BBA) - Gene Regulatory Mechanisms  1863(6), 194445](https://dx.doi.org/10.1016/j.bbagrm.2019.194445)
 
 ## Cohorts 
 
@@ -87,11 +134,31 @@ Alternative approaches
 
 Whole genome sequencing data was obtained from three cohorts using AMP-AD knowledge portal.  
 
-- ROSMAP
-- Mayo
-- MSBB
+### ROSMAP
+
++ [Study Detailes](https://adknowledgeportal.synapse.org/Explore/Studies/DetailsPage?Study=syn3219045) 
+  - [Whole Genome Sequencing](https://www.synapse.org/#!Synapse:syn3157325)
+  - [Bulk Brain RNA seq](https://www.synapse.org/#!Synapse:syn3388564)
+    * "un-normalized" files indicate the pre-normalization expression data, which is FPKM calls from [RSEM](https://bmcbioinformatics.biomedcentral.com/articles/10.1186/1471-2105-12-323)
+  - [Bulk Blood RNA seq](https://www.synapse.org/#!Synapse:syn22024496)
 
 
+### Mayo
+
+
+### MSBB
+
++ [Study Detailes](https://adknowledgeportal.synapse.org/Explore/Studies/DetailsPage?Study=syn3159438) 
+  - [Whole Genome Sequencing](https://www.synapse.org/#!Synapse:syn10901600)
+  - [RNA seq](https://www.synapse.org/#!Synapse:syn20801188)
+    * The gene level read counts data were normalized as counts per million (CPM) using the trimmed mean of M-values normalization (TMM) method to adjust for sequencing library size difference.
+
+### AMP-AD Cross-Study RNAseq Harmonization
+
+AMP-AD consortium efforts to harmonize RNAseq data 
++ [Study Details](https://www.synapse.org/#!Synapse:syn9702085)
+  - [RNA Seq](https://www.synapse.org/#!Synapse:syn17010685)
+  - [Differential Expression Analysis](https://www.synapse.org/#!Synapse:syn14237651)
 
 
 

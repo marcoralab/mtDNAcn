@@ -1,0 +1,2894 @@
+<!DOCTYPE html>
+<html lang="" xml:lang="">
+<head>
+
+  <meta charset="utf-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <title>6.3 Aim 1a | Assessing the causal association of mtDNAcn with Alzheimer’s disease</title>
+  <meta name="description" content="6.3 Aim 1a | Assessing the causal association of mtDNAcn with Alzheimer’s disease" />
+  <meta name="generator" content="bookdown 0.19 and GitBook 2.6.7" />
+
+  <meta property="og:title" content="6.3 Aim 1a | Assessing the causal association of mtDNAcn with Alzheimer’s disease" />
+  <meta property="og:type" content="book" />
+  
+  
+  <meta property="og:description" content="6.3 Aim 1a | Assessing the causal association of mtDNAcn with Alzheimer’s disease" />
+  
+
+  <meta name="twitter:card" content="summary" />
+  <meta name="twitter:title" content="6.3 Aim 1a | Assessing the causal association of mtDNAcn with Alzheimer’s disease" />
+  
+  <meta name="twitter:description" content="6.3 Aim 1a | Assessing the causal association of mtDNAcn with Alzheimer’s disease" />
+  
+
+<meta name="author" content="Dr. Shea Andrews" />
+
+
+
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black" />
+  
+  
+<link rel="prev" href="6-2-data-wrangling.html"/>
+<link rel="next" href="6-4-aim-1b.html"/>
+<script src="libs/jquery-2.2.3/jquery.min.js"></script>
+<link href="libs/gitbook-2.6.7/css/style.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-table.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-bookdown.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-highlight.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-search.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-fontsettings.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-clipboard.css" rel="stylesheet" />
+
+
+
+
+
+
+
+
+
+
+
+<style type="text/css">
+a.sourceLine { display: inline-block; line-height: 1.25; }
+a.sourceLine { pointer-events: none; color: inherit; text-decoration: inherit; }
+a.sourceLine:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode { white-space: pre; position: relative; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+code.sourceCode { white-space: pre-wrap; }
+a.sourceLine { text-indent: -1em; padding-left: 1em; }
+}
+pre.numberSource a.sourceLine
+  { position: relative; left: -4em; }
+pre.numberSource a.sourceLine::before
+  { content: attr(data-line-number);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; pointer-events: all; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+    color: #aaaaaa;
+  }
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+div.sourceCode
+  {  }
+@media screen {
+a.sourceLine::before { text-decoration: underline; }
+}
+code span.al { color: #ff0000; font-weight: bold; } /* Alert */
+code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
+code span.at { color: #7d9029; } /* Attribute */
+code span.bn { color: #40a070; } /* BaseN */
+code span.bu { } /* BuiltIn */
+code span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
+code span.ch { color: #4070a0; } /* Char */
+code span.cn { color: #880000; } /* Constant */
+code span.co { color: #60a0b0; font-style: italic; } /* Comment */
+code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
+code span.do { color: #ba2121; font-style: italic; } /* Documentation */
+code span.dt { color: #902000; } /* DataType */
+code span.dv { color: #40a070; } /* DecVal */
+code span.er { color: #ff0000; font-weight: bold; } /* Error */
+code span.ex { } /* Extension */
+code span.fl { color: #40a070; } /* Float */
+code span.fu { color: #06287e; } /* Function */
+code span.im { } /* Import */
+code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
+code span.kw { color: #007020; font-weight: bold; } /* Keyword */
+code span.op { color: #666666; } /* Operator */
+code span.ot { color: #007020; } /* Other */
+code span.pp { color: #bc7a00; } /* Preprocessor */
+code span.sc { color: #4070a0; } /* SpecialChar */
+code span.ss { color: #bb6688; } /* SpecialString */
+code span.st { color: #4070a0; } /* String */
+code span.va { color: #19177c; } /* Variable */
+code span.vs { color: #4070a0; } /* VerbatimString */
+code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
+</style>
+
+<link rel="stylesheet" href="style.css" type="text/css" />
+</head>
+
+<body>
+
+
+
+  <div class="book without-animation with-summary font-size-2 font-family-1" data-basepath=".">
+
+    <div class="book-summary">
+      <nav role="navigation">
+
+<ul class="summary">
+<li><a href="./">mtDNAcn in AD</a></li>
+
+<li class="divider"></li>
+<li class="chapter" data-level="" data-path="index.html"><a href="index.html"><i class="fa fa-check"></i>Abstract</a></li>
+<li class="chapter" data-level="1" data-path="1-intro.html"><a href="1-intro.html"><i class="fa fa-check"></i><b>1</b> Introduction</a><ul>
+<li class="chapter" data-level="1.1" data-path="1-1-project-updates.html"><a href="1-1-project-updates.html"><i class="fa fa-check"></i><b>1.1</b> Project Updates</a><ul>
+<li class="chapter" data-level="1.1.1" data-path="1-1-project-updates.html"><a href="1-1-project-updates.html#to-do"><i class="fa fa-check"></i><b>1.1.1</b> To Do</a></li>
+<li class="chapter" data-level="1.1.2" data-path="1-1-project-updates.html"><a href="1-1-project-updates.html#section"><i class="fa fa-check"></i><b>1.1.2</b> 2020-09-02</a></li>
+<li class="chapter" data-level="1.1.3" data-path="1-1-project-updates.html"><a href="1-1-project-updates.html#section-1"><i class="fa fa-check"></i><b>1.1.3</b> 2020-08-22</a></li>
+<li class="chapter" data-level="1.1.4" data-path="1-1-project-updates.html"><a href="1-1-project-updates.html#section-2"><i class="fa fa-check"></i><b>1.1.4</b> 2020-08-22</a></li>
+<li class="chapter" data-level="1.1.5" data-path="1-1-project-updates.html"><a href="1-1-project-updates.html#section-3"><i class="fa fa-check"></i><b>1.1.5</b> 2020-08-07</a></li>
+<li class="chapter" data-level="1.1.6" data-path="1-1-project-updates.html"><a href="1-1-project-updates.html#section-4"><i class="fa fa-check"></i><b>1.1.6</b> 2020-08-06</a></li>
+<li class="chapter" data-level="1.1.7" data-path="1-1-project-updates.html"><a href="1-1-project-updates.html#section-5"><i class="fa fa-check"></i><b>1.1.7</b> 2020-08-05</a></li>
+</ul></li>
+<li class="chapter" data-level="1.2" data-path="1-2-neuropathological-confirmed-ad.html"><a href="1-2-neuropathological-confirmed-ad.html"><i class="fa fa-check"></i><b>1.2</b> Neuropathological Confirmed AD</a><ul>
+<li class="chapter" data-level="1.2.1" data-path="1-2-neuropathological-confirmed-ad.html"><a href="1-2-neuropathological-confirmed-ad.html#cerad-criteria---1991"><i class="fa fa-check"></i><b>1.2.1</b> CERAD Criteria - 1991</a></li>
+<li class="chapter" data-level="1.2.2" data-path="1-2-neuropathological-confirmed-ad.html"><a href="1-2-neuropathological-confirmed-ad.html#nia-reagan-criteria---1997"><i class="fa fa-check"></i><b>1.2.2</b> NIA-Reagan Criteria - 1997</a></li>
+<li class="chapter" data-level="1.2.3" data-path="1-2-neuropathological-confirmed-ad.html"><a href="1-2-neuropathological-confirmed-ad.html#nia-aa-criteria---2012"><i class="fa fa-check"></i><b>1.2.3</b> NIA-AA Criteria - 2012</a></li>
+</ul></li>
+</ul></li>
+<li class="chapter" data-level="2" data-path="2-methods.html"><a href="2-methods.html"><i class="fa fa-check"></i><b>2</b> Methods</a><ul>
+<li class="chapter" data-level="2.1" data-path="2-1-mitochondrial-dna.html"><a href="2-1-mitochondrial-dna.html"><i class="fa fa-check"></i><b>2.1</b> Mitochondrial DNA</a><ul>
+<li class="chapter" data-level="2.1.1" data-path="2-1-mitochondrial-dna.html"><a href="2-1-mitochondrial-dna.html#adni"><i class="fa fa-check"></i><b>2.1.1</b> ADNI</a></li>
+<li class="chapter" data-level="2.1.2" data-path="2-1-mitochondrial-dna.html"><a href="2-1-mitochondrial-dna.html#amp-ad"><i class="fa fa-check"></i><b>2.1.2</b> AMP-AD</a></li>
+<li class="chapter" data-level="2.1.3" data-path="2-1-mitochondrial-dna.html"><a href="2-1-mitochondrial-dna.html#dian"><i class="fa fa-check"></i><b>2.1.3</b> DIAN</a></li>
+<li class="chapter" data-level="2.1.4" data-path="2-1-mitochondrial-dna.html"><a href="2-1-mitochondrial-dna.html#calling-mitochondrial-variants-in-amp-ad-dian"><i class="fa fa-check"></i><b>2.1.4</b> Calling Mitochondrial Variants in AMP-AD &amp; DIAN</a></li>
+</ul></li>
+<li class="chapter" data-level="2.2" data-path="2-2-haplogroup-assignment.html"><a href="2-2-haplogroup-assignment.html"><i class="fa fa-check"></i><b>2.2</b> Haplogroup Assignment</a><ul>
+<li class="chapter" data-level="2.2.1" data-path="2-2-haplogroup-assignment.html"><a href="2-2-haplogroup-assignment.html#haplogrep"><i class="fa fa-check"></i><b>2.2.1</b> Haplogrep</a></li>
+</ul></li>
+<li class="chapter" data-level="2.3" data-path="2-3-estimating-mtdnacn.html"><a href="2-3-estimating-mtdnacn.html"><i class="fa fa-check"></i><b>2.3</b> Estimating mtDNAcn</a><ul>
+<li class="chapter" data-level="2.3.1" data-path="2-3-estimating-mtdnacn.html"><a href="2-3-estimating-mtdnacn.html#mosedepth"><i class="fa fa-check"></i><b>2.3.1</b> Mosedepth</a></li>
+</ul></li>
+<li class="chapter" data-level="2.4" data-path="2-4-cohorts.html"><a href="2-4-cohorts.html"><i class="fa fa-check"></i><b>2.4</b> Cohorts</a></li>
+</ul></li>
+<li class="chapter" data-level="3" data-path="3-rosmap.html"><a href="3-rosmap.html"><i class="fa fa-check"></i><b>3</b> ROSMAP</a><ul>
+<li class="chapter" data-level="3.1" data-path="3-1-demographics.html"><a href="3-1-demographics.html"><i class="fa fa-check"></i><b>3.1</b> Demographics</a><ul>
+<li class="chapter" data-level="3.1.1" data-path="3-1-demographics.html"><a href="3-1-demographics.html#plots"><i class="fa fa-check"></i><b>3.1.1</b> Plots</a></li>
+</ul></li>
+<li class="chapter" data-level="3.2" data-path="3-2-genetics.html"><a href="3-2-genetics.html"><i class="fa fa-check"></i><b>3.2</b> Genetics</a><ul>
+<li class="chapter" data-level="3.2.1" data-path="3-2-genetics.html"><a href="3-2-genetics.html#plots-1"><i class="fa fa-check"></i><b>3.2.1</b> Plots</a></li>
+</ul></li>
+<li class="chapter" data-level="3.3" data-path="3-3-mitochondria.html"><a href="3-3-mitochondria.html"><i class="fa fa-check"></i><b>3.3</b> Mitochondria</a><ul>
+<li class="chapter" data-level="3.3.1" data-path="3-3-mitochondria.html"><a href="3-3-mitochondria.html#plots-2"><i class="fa fa-check"></i><b>3.3.1</b> Plots</a></li>
+<li class="chapter" data-level="3.3.2" data-path="3-3-mitochondria.html"><a href="3-3-mitochondria.html#diagnosis-and-mtdnacn"><i class="fa fa-check"></i><b>3.3.2</b> diagnosis and mtDNAcn</a></li>
+<li class="chapter" data-level="3.3.3" data-path="3-3-mitochondria.html"><a href="3-3-mitochondria.html#blood-cell-counts-and-mtdnacn"><i class="fa fa-check"></i><b>3.3.3</b> Blood cell counts and mtDNAcn</a></li>
+</ul></li>
+<li class="chapter" data-level="3.4" data-path="3-4-clinical-diagnosis.html"><a href="3-4-clinical-diagnosis.html"><i class="fa fa-check"></i><b>3.4</b> Clinical Diagnosis</a><ul>
+<li class="chapter" data-level="3.4.1" data-path="3-4-clinical-diagnosis.html"><a href="3-4-clinical-diagnosis.html#plots-3"><i class="fa fa-check"></i><b>3.4.1</b> Plots</a></li>
+<li class="chapter" data-level="3.4.2" data-path="3-4-clinical-diagnosis.html"><a href="3-4-clinical-diagnosis.html#cross-tabs"><i class="fa fa-check"></i><b>3.4.2</b> Cross-tabs</a></li>
+</ul></li>
+<li class="chapter" data-level="3.5" data-path="3-5-pathology.html"><a href="3-5-pathology.html"><i class="fa fa-check"></i><b>3.5</b> Pathology</a><ul>
+<li class="chapter" data-level="3.5.1" data-path="3-5-pathology.html"><a href="3-5-pathology.html#plots-4"><i class="fa fa-check"></i><b>3.5.1</b> Plots</a></li>
+<li class="chapter" data-level="3.5.2" data-path="3-5-pathology.html"><a href="3-5-pathology.html#cross-tabs-1"><i class="fa fa-check"></i><b>3.5.2</b> Cross-Tabs</a></li>
+</ul></li>
+<li class="chapter" data-level="3.6" data-path="3-6-cognition.html"><a href="3-6-cognition.html"><i class="fa fa-check"></i><b>3.6</b> Cognition</a><ul>
+<li class="chapter" data-level="3.6.1" data-path="3-6-cognition.html"><a href="3-6-cognition.html#plots-5"><i class="fa fa-check"></i><b>3.6.1</b> Plots</a></li>
+</ul></li>
+<li class="chapter" data-level="3.7" data-path="3-7-blood-measures.html"><a href="3-7-blood-measures.html"><i class="fa fa-check"></i><b>3.7</b> Blood Measures</a><ul>
+<li class="chapter" data-level="3.7.1" data-path="3-7-blood-measures.html"><a href="3-7-blood-measures.html#plots-6"><i class="fa fa-check"></i><b>3.7.1</b> Plots</a></li>
+</ul></li>
+</ul></li>
+<li class="chapter" data-level="4" data-path="4-msbb.html"><a href="4-msbb.html"><i class="fa fa-check"></i><b>4</b> MSBB</a><ul>
+<li class="chapter" data-level="4.1" data-path="4-1-pathology-1.html"><a href="4-1-pathology-1.html"><i class="fa fa-check"></i><b>4.1</b> Pathology</a><ul>
+<li class="chapter" data-level="4.1.1" data-path="4-1-pathology-1.html"><a href="4-1-pathology-1.html#cross-tabs-2"><i class="fa fa-check"></i><b>4.1.1</b> Cross-tabs</a></li>
+<li class="chapter" data-level="4.1.2" data-path="4-1-pathology-1.html"><a href="4-1-pathology-1.html#plots-7"><i class="fa fa-check"></i><b>4.1.2</b> Plots</a></li>
+</ul></li>
+<li class="chapter" data-level="4.2" data-path="4-2-other-variables.html"><a href="4-2-other-variables.html"><i class="fa fa-check"></i><b>4.2</b> Other Variables</a></li>
+</ul></li>
+<li class="chapter" data-level="5" data-path="5-mayo.html"><a href="5-mayo.html"><i class="fa fa-check"></i><b>5</b> MAYO</a><ul>
+<li class="chapter" data-level="5.1" data-path="5-1-demographics-1.html"><a href="5-1-demographics-1.html"><i class="fa fa-check"></i><b>5.1</b> Demographics</a><ul>
+<li class="chapter" data-level="5.1.1" data-path="5-1-demographics-1.html"><a href="5-1-demographics-1.html#plots-8"><i class="fa fa-check"></i><b>5.1.1</b> Plots</a></li>
+</ul></li>
+<li class="chapter" data-level="5.2" data-path="5-2-diagnosis-and-pathology.html"><a href="5-2-diagnosis-and-pathology.html"><i class="fa fa-check"></i><b>5.2</b> Diagnosis and Pathology</a><ul>
+<li class="chapter" data-level="5.2.1" data-path="5-2-diagnosis-and-pathology.html"><a href="5-2-diagnosis-and-pathology.html#plots-9"><i class="fa fa-check"></i><b>5.2.1</b> Plots</a></li>
+<li class="chapter" data-level="5.2.2" data-path="5-2-diagnosis-and-pathology.html"><a href="5-2-diagnosis-and-pathology.html#cross-tabs-3"><i class="fa fa-check"></i><b>5.2.2</b> Cross-tabs</a></li>
+</ul></li>
+<li class="chapter" data-level="5.3" data-path="5-3-genetics-mitochondria.html"><a href="5-3-genetics-mitochondria.html"><i class="fa fa-check"></i><b>5.3</b> Genetics &amp; Mitochondria</a><ul>
+<li class="chapter" data-level="5.3.1" data-path="5-3-genetics-mitochondria.html"><a href="5-3-genetics-mitochondria.html#plots-10"><i class="fa fa-check"></i><b>5.3.1</b> Plots</a></li>
+<li class="chapter" data-level="5.3.2" data-path="5-3-genetics-mitochondria.html"><a href="5-3-genetics-mitochondria.html#diagnosis-and-mtdnacn-1"><i class="fa fa-check"></i><b>5.3.2</b> diagnosis and mtDNAcn</a></li>
+</ul></li>
+</ul></li>
+<li class="chapter" data-level="6" data-path="6-analysis.html"><a href="6-analysis.html"><i class="fa fa-check"></i><b>6</b> Analysis</a><ul>
+<li class="chapter" data-level="6.1" data-path="6-1-statistical-analysis-plan.html"><a href="6-1-statistical-analysis-plan.html"><i class="fa fa-check"></i><b>6.1</b> Statistical Analysis Plan</a></li>
+<li class="chapter" data-level="6.2" data-path="6-2-data-wrangling.html"><a href="6-2-data-wrangling.html"><i class="fa fa-check"></i><b>6.2</b> Data Wrangling</a><ul>
+<li class="chapter" data-level="6.2.1" data-path="6-2-data-wrangling.html"><a href="6-2-data-wrangling.html#rosmap-1"><i class="fa fa-check"></i><b>6.2.1</b> ROSMAP</a></li>
+<li class="chapter" data-level="6.2.2" data-path="6-2-data-wrangling.html"><a href="6-2-data-wrangling.html#msbb-1"><i class="fa fa-check"></i><b>6.2.2</b> MSBB</a></li>
+<li class="chapter" data-level="6.2.3" data-path="6-2-data-wrangling.html"><a href="6-2-data-wrangling.html#mayo-1"><i class="fa fa-check"></i><b>6.2.3</b> Mayo</a></li>
+<li class="chapter" data-level="6.2.4" data-path="6-2-data-wrangling.html"><a href="6-2-data-wrangling.html#joint"><i class="fa fa-check"></i><b>6.2.4</b> Joint</a></li>
+</ul></li>
+<li class="chapter" data-level="6.3" data-path="6-3-aim-1a.html"><a href="6-3-aim-1a.html"><i class="fa fa-check"></i><b>6.3</b> Aim 1a</a></li>
+<li class="chapter" data-level="6.4" data-path="6-4-aim-1b.html"><a href="6-4-aim-1b.html"><i class="fa fa-check"></i><b>6.4</b> Aim 1b</a></li>
+<li class="chapter" data-level="6.5" data-path="6-5-section-6.html"><a href="6-5-section-6.html"><i class="fa fa-check"></i><b>6.5</b> </a></li>
+<li class="chapter" data-level="6.6" data-path="6-6-mtdnacn.html"><a href="6-6-mtdnacn.html"><i class="fa fa-check"></i><b>6.6</b> mtDNAcn</a><ul>
+<li class="chapter" data-level="6.6.1" data-path="6-6-mtdnacn.html"><a href="6-6-mtdnacn.html#rosmap-2"><i class="fa fa-check"></i><b>6.6.1</b> ROSMAP</a></li>
+<li class="chapter" data-level="6.6.2" data-path="6-6-mtdnacn.html"><a href="6-6-mtdnacn.html#haplogroups"><i class="fa fa-check"></i><b>6.6.2</b> haplogroups</a></li>
+</ul></li>
+<li class="chapter" data-level="6.7" data-path="6-7-msbb-2.html"><a href="6-7-msbb-2.html"><i class="fa fa-check"></i><b>6.7</b> MSBB</a><ul>
+<li class="chapter" data-level="6.7.1" data-path="6-7-msbb-2.html"><a href="6-7-msbb-2.html#data-wrangling-1"><i class="fa fa-check"></i><b>6.7.1</b> Data Wrangling</a></li>
+<li class="chapter" data-level="6.7.2" data-path="6-7-msbb-2.html"><a href="6-7-msbb-2.html#nia-reagan"><i class="fa fa-check"></i><b>6.7.2</b> NIA-Reagan</a></li>
+<li class="chapter" data-level="6.7.3" data-path="6-7-msbb-2.html"><a href="6-7-msbb-2.html#cerad"><i class="fa fa-check"></i><b>6.7.3</b> CERAD</a></li>
+</ul></li>
+</ul></li>
+<li class="chapter" data-level="7" data-path="7-aaic-abstract.html"><a href="7-aaic-abstract.html"><i class="fa fa-check"></i><b>7</b> AAIC Abstract</a></li>
+<li class="chapter" data-level="8" data-path="8-final-words.html"><a href="8-final-words.html"><i class="fa fa-check"></i><b>8</b> Final Words</a></li>
+<li class="chapter" data-level="" data-path="references.html"><a href="references.html"><i class="fa fa-check"></i>References</a></li>
+<li class="divider"></li>
+<li><a href="https://github.com/rstudio/bookdown" target="blank">Published with bookdown</a></li>
+
+</ul>
+
+      </nav>
+    </div>
+
+    <div class="book-body">
+      <div class="body-inner">
+        <div class="book-header" role="navigation">
+          <h1>
+            <i class="fa fa-circle-o-notch fa-spin"></i><a href="./">Assessing the causal association of mtDNAcn with Alzheimer’s disease</a>
+          </h1>
+        </div>
+
+        <div class="page-wrapper" tabindex="-1" role="main">
+          <div class="page-inner">
+
+            <section class="normal" id="section-">
+<div id="aim-1a" class="section level2">
+<h2><span class="header-section-number">6.3</span> Aim 1a</h2>
+<p>Investigate the assocation of haplogroups with AD neuropathologic change (binary outcome), using logistic regression.</p>
+<div class="sourceCode" id="cb9"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb9-1" data-line-number="1"><span class="kw">tbl_merge</span>(</a>
+<a class="sourceLine" id="cb9-2" data-line-number="2">  <span class="kw">list</span>(t1, t2, t3),</a>
+<a class="sourceLine" id="cb9-3" data-line-number="3">  <span class="dt">tab_spanner =</span> <span class="kw">c</span>(<span class="st">&quot;**ROSMAP**&quot;</span>, <span class="st">&quot;**MSBB**&quot;</span>, <span class="st">&quot;**Mayo**&quot;</span>)</a>
+<a class="sourceLine" id="cb9-4" data-line-number="4">) <span class="op">%&gt;%</span><span class="st"> </span></a>
+<a class="sourceLine" id="cb9-5" data-line-number="5"><span class="st">  </span><span class="kw">as_gt</span>() <span class="op">%&gt;%</span></a>
+<a class="sourceLine" id="cb9-6" data-line-number="6"><span class="st">  </span><span class="kw">tab_header</span>(</a>
+<a class="sourceLine" id="cb9-7" data-line-number="7">    <span class="dt">title =</span> <span class="st">&quot;Descriptive Statistics for AMP-AD ADNC&quot;</span>,</a>
+<a class="sourceLine" id="cb9-8" data-line-number="8">  )</a></code></pre></div>
+<style>html {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Helvetica Neue', 'Fira Sans', 'Droid Sans', Arial, sans-serif;
+}
+
+#qgerdeepzz .gt_table {
+  display: table;
+  border-collapse: collapse;
+  margin-left: auto;
+  margin-right: auto;
+  color: #333333;
+  font-size: small;
+  background-color: #FFFFFF;
+  width: auto;
+  border-top-style: solid;
+  border-top-width: 2px;
+  border-top-color: #A8A8A8;
+  border-right-style: none;
+  border-right-width: 2px;
+  border-right-color: #D3D3D3;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #A8A8A8;
+  border-left-style: none;
+  border-left-width: 2px;
+  border-left-color: #D3D3D3;
+}
+
+#qgerdeepzz .gt_heading {
+  background-color: #FFFFFF;
+  text-align: center;
+  border-bottom-color: #FFFFFF;
+  border-left-style: none;
+  border-left-width: 1px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 1px;
+  border-right-color: #D3D3D3;
+}
+
+#qgerdeepzz .gt_title {
+  color: #333333;
+  font-size: 125%;
+  font-weight: initial;
+  padding-top: 4px;
+  padding-bottom: 4px;
+  border-bottom-color: #FFFFFF;
+  border-bottom-width: 0;
+}
+
+#qgerdeepzz .gt_subtitle {
+  color: #333333;
+  font-size: 85%;
+  font-weight: initial;
+  padding-top: 0;
+  padding-bottom: 4px;
+  border-top-color: #FFFFFF;
+  border-top-width: 0;
+}
+
+#qgerdeepzz .gt_bottom_border {
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+}
+
+#qgerdeepzz .gt_col_headings {
+  border-top-style: solid;
+  border-top-width: 2px;
+  border-top-color: #D3D3D3;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  border-left-style: none;
+  border-left-width: 1px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 1px;
+  border-right-color: #D3D3D3;
+}
+
+#qgerdeepzz .gt_col_heading {
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: normal;
+  text-transform: inherit;
+  border-left-style: none;
+  border-left-width: 1px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 1px;
+  border-right-color: #D3D3D3;
+  vertical-align: bottom;
+  padding-top: 5px;
+  padding-bottom: 6px;
+  padding-left: 5px;
+  padding-right: 5px;
+  overflow-x: hidden;
+}
+
+#qgerdeepzz .gt_column_spanner_outer {
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: normal;
+  text-transform: inherit;
+  padding-top: 0;
+  padding-bottom: 0;
+  padding-left: 4px;
+  padding-right: 4px;
+}
+
+#qgerdeepzz .gt_column_spanner_outer:first-child {
+  padding-left: 0;
+}
+
+#qgerdeepzz .gt_column_spanner_outer:last-child {
+  padding-right: 0;
+}
+
+#qgerdeepzz .gt_column_spanner {
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  vertical-align: bottom;
+  padding-top: 5px;
+  padding-bottom: 6px;
+  overflow-x: hidden;
+  display: inline-block;
+  width: 100%;
+}
+
+#qgerdeepzz .gt_group_heading {
+  padding: 1px;
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: initial;
+  text-transform: inherit;
+  border-top-style: solid;
+  border-top-width: 2px;
+  border-top-color: #D3D3D3;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  border-left-style: none;
+  border-left-width: 1px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 1px;
+  border-right-color: #D3D3D3;
+  vertical-align: middle;
+}
+
+#qgerdeepzz .gt_empty_group_heading {
+  padding: 0.5px;
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: initial;
+  border-top-style: solid;
+  border-top-width: 2px;
+  border-top-color: #D3D3D3;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  vertical-align: middle;
+}
+
+#qgerdeepzz .gt_striped {
+  background-color: rgba(128, 128, 128, 0.05);
+}
+
+#qgerdeepzz .gt_from_md > :first-child {
+  margin-top: 0;
+}
+
+#qgerdeepzz .gt_from_md > :last-child {
+  margin-bottom: 0;
+}
+
+#qgerdeepzz .gt_row {
+  padding-top: 1px;
+  padding-bottom: 1px;
+  padding-left: 5px;
+  padding-right: 5px;
+  margin: 10px;
+  border-top-style: solid;
+  border-top-width: 1px;
+  border-top-color: #D3D3D3;
+  border-left-style: none;
+  border-left-width: 1px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 1px;
+  border-right-color: #D3D3D3;
+  vertical-align: middle;
+  overflow-x: hidden;
+}
+
+#qgerdeepzz .gt_stub {
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: initial;
+  text-transform: inherit;
+  border-right-style: solid;
+  border-right-width: 2px;
+  border-right-color: #D3D3D3;
+  padding-left: 12px;
+}
+
+#qgerdeepzz .gt_summary_row {
+  color: #333333;
+  background-color: #FFFFFF;
+  text-transform: inherit;
+  padding-top: 1px;
+  padding-bottom: 1px;
+  padding-left: 5px;
+  padding-right: 5px;
+}
+
+#qgerdeepzz .gt_first_summary_row {
+  padding-top: 1px;
+  padding-bottom: 1px;
+  padding-left: 5px;
+  padding-right: 5px;
+  border-top-style: solid;
+  border-top-width: 2px;
+  border-top-color: #D3D3D3;
+}
+
+#qgerdeepzz .gt_grand_summary_row {
+  color: #333333;
+  background-color: #FFFFFF;
+  text-transform: inherit;
+  padding-top: 1px;
+  padding-bottom: 1px;
+  padding-left: 5px;
+  padding-right: 5px;
+}
+
+#qgerdeepzz .gt_first_grand_summary_row {
+  padding-top: 1px;
+  padding-bottom: 1px;
+  padding-left: 5px;
+  padding-right: 5px;
+  border-top-style: double;
+  border-top-width: 6px;
+  border-top-color: #D3D3D3;
+}
+
+#qgerdeepzz .gt_table_body {
+  border-top-style: solid;
+  border-top-width: 2px;
+  border-top-color: #D3D3D3;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+}
+
+#qgerdeepzz .gt_footnotes {
+  color: #333333;
+  background-color: #FFFFFF;
+  border-bottom-style: none;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  border-left-style: none;
+  border-left-width: 2px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 2px;
+  border-right-color: #D3D3D3;
+}
+
+#qgerdeepzz .gt_footnote {
+  margin: 0px;
+  font-size: 90%;
+  padding: 1px;
+}
+
+#qgerdeepzz .gt_sourcenotes {
+  color: #333333;
+  background-color: #FFFFFF;
+  border-bottom-style: none;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  border-left-style: none;
+  border-left-width: 2px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 2px;
+  border-right-color: #D3D3D3;
+}
+
+#qgerdeepzz .gt_sourcenote {
+  font-size: 90%;
+  padding: 1px;
+}
+
+#qgerdeepzz .gt_left {
+  text-align: left;
+}
+
+#qgerdeepzz .gt_center {
+  text-align: center;
+}
+
+#qgerdeepzz .gt_right {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+#qgerdeepzz .gt_font_normal {
+  font-weight: normal;
+}
+
+#qgerdeepzz .gt_font_bold {
+  font-weight: bold;
+}
+
+#qgerdeepzz .gt_font_italic {
+  font-style: italic;
+}
+
+#qgerdeepzz .gt_super {
+  font-size: 65%;
+}
+
+#qgerdeepzz .gt_footnote_marks {
+  font-style: italic;
+  font-size: 65%;
+}
+</style>
+<div id="qgerdeepzz" style="overflow-x:auto;overflow-y:auto;width:auto;height:auto;"><table class="gt_table">
+  <thead class="gt_header">
+    <tr>
+      <th colspan="7" class="gt_heading gt_title gt_font_normal" style>Descriptive Statistics for AMP-AD ADNC</th>
+    </tr>
+    <tr>
+      <th colspan="7" class="gt_heading gt_subtitle gt_font_normal gt_bottom_border" style></th>
+    </tr>
+  </thead>
+  <thead class="gt_col_headings">
+    <tr>
+      <th class="gt_col_heading gt_center gt_columns_bottom_border" rowspan="2" colspan="1"><strong>Characteristic</strong></th>
+      <th class="gt_center gt_columns_top_border gt_column_spanner_outer" rowspan="1" colspan="2">
+        <span class="gt_column_spanner"><strong>ROSMAP</strong></span>
+      </th>
+      <th class="gt_center gt_columns_top_border gt_column_spanner_outer" rowspan="1" colspan="2">
+        <span class="gt_column_spanner"><strong>MSBB</strong></span>
+      </th>
+      <th class="gt_center gt_columns_top_border gt_column_spanner_outer" rowspan="1" colspan="2">
+        <span class="gt_column_spanner"><strong>Mayo</strong></span>
+      </th>
+    </tr>
+    <tr>
+      <th class="gt_col_heading gt_columns_bottom_border gt_center" rowspan="1" colspan="1"><strong>0</strong>, N = 395<sup class="gt_footnote_marks">1</sup></th>
+      <th class="gt_col_heading gt_columns_bottom_border gt_center" rowspan="1" colspan="1"><strong>1</strong>, N = 693<sup class="gt_footnote_marks">1</sup></th>
+      <th class="gt_col_heading gt_columns_bottom_border gt_center" rowspan="1" colspan="1"><strong>CTRL</strong>, N = 72<sup class="gt_footnote_marks">1</sup></th>
+      <th class="gt_col_heading gt_columns_bottom_border gt_center" rowspan="1" colspan="1"><strong>AD</strong>, N = 148<sup class="gt_footnote_marks">1</sup></th>
+      <th class="gt_col_heading gt_columns_bottom_border gt_center" rowspan="1" colspan="1"><strong>AD</strong>, N = 88<sup class="gt_footnote_marks">2</sup></th>
+      <th class="gt_col_heading gt_columns_bottom_border gt_center" rowspan="1" colspan="1"><strong>CTRL</strong>, N = 168<sup class="gt_footnote_marks">2</sup></th>
+    </tr>
+  </thead>
+  <tbody class="gt_table_body">
+    <tr>
+      <td class="gt_row gt_left">aod</td>
+      <td class="gt_row gt_center">87 (7)</td>
+      <td class="gt_row gt_center">90 (6)</td>
+      <td class="gt_row gt_center">86 (10)</td>
+      <td class="gt_row gt_center">86 (9)</td>
+      <td class="gt_row gt_center"></td>
+      <td class="gt_row gt_center"></td>
+    </tr>
+    <tr>
+      <td class="gt_row gt_left">aod_cat</td>
+      <td class="gt_row gt_center"></td>
+      <td class="gt_row gt_center"></td>
+      <td class="gt_row gt_center"></td>
+      <td class="gt_row gt_center"></td>
+      <td class="gt_row gt_center"></td>
+      <td class="gt_row gt_center"></td>
+    </tr>
+    <tr>
+      <td class="gt_row gt_left" style="text-align: left; text-indent: 10px;">60-69</td>
+      <td class="gt_row gt_center">2 (0.5%)</td>
+      <td class="gt_row gt_center">0 (0%)</td>
+      <td class="gt_row gt_center">4 (5.6%)</td>
+      <td class="gt_row gt_center">9 (6.1%)</td>
+      <td class="gt_row gt_center">10 (11%)</td>
+      <td class="gt_row gt_center">8 (4.8%)</td>
+    </tr>
+    <tr>
+      <td class="gt_row gt_left" style="text-align: left; text-indent: 10px;">70-79</td>
+      <td class="gt_row gt_center">60 (15%)</td>
+      <td class="gt_row gt_center">37 (5.3%)</td>
+      <td class="gt_row gt_center">17 (24%)</td>
+      <td class="gt_row gt_center">20 (14%)</td>
+      <td class="gt_row gt_center">15 (17%)</td>
+      <td class="gt_row gt_center">28 (17%)</td>
+    </tr>
+    <tr>
+      <td class="gt_row gt_left" style="text-align: left; text-indent: 10px;">80-89</td>
+      <td class="gt_row gt_center">194 (49%)</td>
+      <td class="gt_row gt_center">305 (44%)</td>
+      <td class="gt_row gt_center">20 (28%)</td>
+      <td class="gt_row gt_center">64 (43%)</td>
+      <td class="gt_row gt_center">39 (44%)</td>
+      <td class="gt_row gt_center">76 (45%)</td>
+    </tr>
+    <tr>
+      <td class="gt_row gt_left" style="text-align: left; text-indent: 10px;">90+</td>
+      <td class="gt_row gt_center">139 (35%)</td>
+      <td class="gt_row gt_center">351 (51%)</td>
+      <td class="gt_row gt_center">31 (43%)</td>
+      <td class="gt_row gt_center">55 (37%)</td>
+      <td class="gt_row gt_center">24 (27%)</td>
+      <td class="gt_row gt_center">53 (32%)</td>
+    </tr>
+    <tr>
+      <td class="gt_row gt_left" style="text-align: left; text-indent: 10px;">50-59</td>
+      <td class="gt_row gt_center"></td>
+      <td class="gt_row gt_center"></td>
+      <td class="gt_row gt_center"></td>
+      <td class="gt_row gt_center"></td>
+      <td class="gt_row gt_center">0 (0%)</td>
+      <td class="gt_row gt_center">3 (1.8%)</td>
+    </tr>
+    <tr>
+      <td class="gt_row gt_left">apoe4</td>
+      <td class="gt_row gt_center"></td>
+      <td class="gt_row gt_center"></td>
+      <td class="gt_row gt_center"></td>
+      <td class="gt_row gt_center"></td>
+      <td class="gt_row gt_center"></td>
+      <td class="gt_row gt_center"></td>
+    </tr>
+    <tr>
+      <td class="gt_row gt_left" style="text-align: left; text-indent: 10px;">e4-</td>
+      <td class="gt_row gt_center">342 (87%)</td>
+      <td class="gt_row gt_center">461 (67%)</td>
+      <td class="gt_row gt_center">56 (78%)</td>
+      <td class="gt_row gt_center">81 (55%)</td>
+      <td class="gt_row gt_center">43 (49%)</td>
+      <td class="gt_row gt_center">131 (78%)</td>
+    </tr>
+    <tr>
+      <td class="gt_row gt_left" style="text-align: left; text-indent: 10px;">e4+</td>
+      <td class="gt_row gt_center">53 (13%)</td>
+      <td class="gt_row gt_center">232 (33%)</td>
+      <td class="gt_row gt_center">16 (22%)</td>
+      <td class="gt_row gt_center">67 (45%)</td>
+      <td class="gt_row gt_center">45 (51%)</td>
+      <td class="gt_row gt_center">37 (22%)</td>
+    </tr>
+    <tr>
+      <td class="gt_row gt_left">sex</td>
+      <td class="gt_row gt_center"></td>
+      <td class="gt_row gt_center"></td>
+      <td class="gt_row gt_center"></td>
+      <td class="gt_row gt_center"></td>
+      <td class="gt_row gt_center"></td>
+      <td class="gt_row gt_center"></td>
+    </tr>
+    <tr>
+      <td class="gt_row gt_left" style="text-align: left; text-indent: 10px;">F</td>
+      <td class="gt_row gt_center">237 (60%)</td>
+      <td class="gt_row gt_center">475 (69%)</td>
+      <td class="gt_row gt_center">52 (72%)</td>
+      <td class="gt_row gt_center">99 (67%)</td>
+      <td class="gt_row gt_center">55 (62%)</td>
+      <td class="gt_row gt_center">87 (52%)</td>
+    </tr>
+    <tr>
+      <td class="gt_row gt_left" style="text-align: left; text-indent: 10px;">M</td>
+      <td class="gt_row gt_center">158 (40%)</td>
+      <td class="gt_row gt_center">218 (31%)</td>
+      <td class="gt_row gt_center">20 (28%)</td>
+      <td class="gt_row gt_center">49 (33%)</td>
+      <td class="gt_row gt_center">33 (38%)</td>
+      <td class="gt_row gt_center">81 (48%)</td>
+    </tr>
+    <tr>
+      <td class="gt_row gt_left">macro</td>
+      <td class="gt_row gt_center"></td>
+      <td class="gt_row gt_center"></td>
+      <td class="gt_row gt_center"></td>
+      <td class="gt_row gt_center"></td>
+      <td class="gt_row gt_center"></td>
+      <td class="gt_row gt_center"></td>
+    </tr>
+    <tr>
+      <td class="gt_row gt_left" style="text-align: left; text-indent: 10px;">H</td>
+      <td class="gt_row gt_center">179 (45%)</td>
+      <td class="gt_row gt_center">305 (44%)</td>
+      <td class="gt_row gt_center">31 (43%)</td>
+      <td class="gt_row gt_center">52 (35%)</td>
+      <td class="gt_row gt_center">44 (50%)</td>
+      <td class="gt_row gt_center">86 (51%)</td>
+    </tr>
+    <tr>
+      <td class="gt_row gt_left" style="text-align: left; text-indent: 10px;">I</td>
+      <td class="gt_row gt_center">15 (3.8%)</td>
+      <td class="gt_row gt_center">22 (3.2%)</td>
+      <td class="gt_row gt_center">0 (0%)</td>
+      <td class="gt_row gt_center">2 (1.4%)</td>
+      <td class="gt_row gt_center">2 (2.3%)</td>
+      <td class="gt_row gt_center">6 (3.6%)</td>
+    </tr>
+    <tr>
+      <td class="gt_row gt_left" style="text-align: left; text-indent: 10px;">J</td>
+      <td class="gt_row gt_center">33 (8.4%)</td>
+      <td class="gt_row gt_center">70 (10%)</td>
+      <td class="gt_row gt_center">10 (14%)</td>
+      <td class="gt_row gt_center">12 (8.1%)</td>
+      <td class="gt_row gt_center">12 (14%)</td>
+      <td class="gt_row gt_center">13 (7.7%)</td>
+    </tr>
+    <tr>
+      <td class="gt_row gt_left" style="text-align: left; text-indent: 10px;">K</td>
+      <td class="gt_row gt_center">24 (6.1%)</td>
+      <td class="gt_row gt_center">53 (7.6%)</td>
+      <td class="gt_row gt_center">16 (22%)</td>
+      <td class="gt_row gt_center">38 (26%)</td>
+      <td class="gt_row gt_center">8 (9.1%)</td>
+      <td class="gt_row gt_center">8 (4.8%)</td>
+    </tr>
+    <tr>
+      <td class="gt_row gt_left" style="text-align: left; text-indent: 10px;">T</td>
+      <td class="gt_row gt_center">38 (9.6%)</td>
+      <td class="gt_row gt_center">71 (10%)</td>
+      <td class="gt_row gt_center">4 (5.6%)</td>
+      <td class="gt_row gt_center">12 (8.1%)</td>
+      <td class="gt_row gt_center">10 (11%)</td>
+      <td class="gt_row gt_center">21 (12%)</td>
+    </tr>
+    <tr>
+      <td class="gt_row gt_left" style="text-align: left; text-indent: 10px;">U</td>
+      <td class="gt_row gt_center">74 (19%)</td>
+      <td class="gt_row gt_center">112 (16%)</td>
+      <td class="gt_row gt_center">5 (6.9%)</td>
+      <td class="gt_row gt_center">18 (12%)</td>
+      <td class="gt_row gt_center">8 (9.1%)</td>
+      <td class="gt_row gt_center">25 (15%)</td>
+    </tr>
+    <tr>
+      <td class="gt_row gt_left" style="text-align: left; text-indent: 10px;">V</td>
+      <td class="gt_row gt_center">16 (4.1%)</td>
+      <td class="gt_row gt_center">38 (5.5%)</td>
+      <td class="gt_row gt_center">4 (5.6%)</td>
+      <td class="gt_row gt_center">9 (6.1%)</td>
+      <td class="gt_row gt_center">1 (1.1%)</td>
+      <td class="gt_row gt_center">5 (3.0%)</td>
+    </tr>
+    <tr>
+      <td class="gt_row gt_left" style="text-align: left; text-indent: 10px;">W</td>
+      <td class="gt_row gt_center">7 (1.8%)</td>
+      <td class="gt_row gt_center">11 (1.6%)</td>
+      <td class="gt_row gt_center">0 (0%)</td>
+      <td class="gt_row gt_center">3 (2.0%)</td>
+      <td class="gt_row gt_center">2 (2.3%)</td>
+      <td class="gt_row gt_center">2 (1.2%)</td>
+    </tr>
+    <tr>
+      <td class="gt_row gt_left" style="text-align: left; text-indent: 10px;">X</td>
+      <td class="gt_row gt_center">9 (2.3%)</td>
+      <td class="gt_row gt_center">11 (1.6%)</td>
+      <td class="gt_row gt_center">2 (2.8%)</td>
+      <td class="gt_row gt_center">2 (1.4%)</td>
+      <td class="gt_row gt_center">1 (1.1%)</td>
+      <td class="gt_row gt_center">2 (1.2%)</td>
+    </tr>
+  </tbody>
+  
+  <tfoot>
+    <tr class="gt_footnotes">
+      <td colspan="7">
+        <p class="gt_footnote">
+          <sup class="gt_footnote_marks">
+            <em>1</em>
+          </sup>
+           
+          Statistics presented: mean (SD); n (%)
+          <br />
+        </p>
+        <p class="gt_footnote">
+          <sup class="gt_footnote_marks">
+            <em>2</em>
+          </sup>
+           
+          Statistics presented: n (%)
+          <br />
+        </p>
+      </td>
+    </tr>
+  </tfoot>
+</table></div>
+<div class="sourceCode" id="cb10"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb10-1" data-line-number="1">res1a_rosmap &lt;-<span class="st"> </span><span class="kw">select</span>(rosmap_df, <span class="op">-</span>macro_lmp) <span class="op">%&gt;%</span><span class="st"> </span></a>
+<a class="sourceLine" id="cb10-2" data-line-number="2"><span class="st">  </span><span class="kw">rename</span>(<span class="dt">macro_lmp =</span> macro) <span class="op">%&gt;%</span><span class="st"> </span></a>
+<a class="sourceLine" id="cb10-3" data-line-number="3"><span class="st">  </span><span class="kw">glm</span>(dx <span class="op">~</span><span class="st"> </span>macro_lmp <span class="op">+</span><span class="st"> </span>apoe4 <span class="op">+</span><span class="st"> </span>sex <span class="op">+</span><span class="st"> </span>aod , </a>
+<a class="sourceLine" id="cb10-4" data-line-number="4">    <span class="dt">family =</span> <span class="st">&quot;binomial&quot;</span>, <span class="dt">data =</span> .) </a>
+<a class="sourceLine" id="cb10-5" data-line-number="5"></a>
+<a class="sourceLine" id="cb10-6" data-line-number="6">res1a_msbb &lt;-<span class="st"> </span><span class="kw">glm</span>(dx <span class="op">~</span><span class="st"> </span>macro_lmp <span class="op">+</span><span class="st"> </span>apoe4 <span class="op">+</span><span class="st"> </span>sex <span class="op">+</span><span class="st"> </span>aod , </a>
+<a class="sourceLine" id="cb10-7" data-line-number="7">    <span class="dt">family =</span> <span class="st">&quot;binomial&quot;</span>, <span class="dt">data =</span> msbb_df) </a>
+<a class="sourceLine" id="cb10-8" data-line-number="8"></a>
+<a class="sourceLine" id="cb10-9" data-line-number="9">res1a_mayo &lt;-<span class="st"> </span><span class="kw">glm</span>(dx <span class="op">~</span><span class="st"> </span>macro_lmp <span class="op">+</span><span class="st"> </span>apoe4 <span class="op">+</span><span class="st"> </span>sex <span class="op">+</span><span class="st"> </span>aod_cat , </a>
+<a class="sourceLine" id="cb10-10" data-line-number="10">    <span class="dt">family =</span> <span class="st">&quot;binomial&quot;</span>, <span class="dt">data =</span> mayo_df) </a>
+<a class="sourceLine" id="cb10-11" data-line-number="11"></a>
+<a class="sourceLine" id="cb10-12" data-line-number="12">res1a_joint &lt;-<span class="st"> </span><span class="kw">select</span>(ampad, <span class="op">-</span>macro_lmp) <span class="op">%&gt;%</span><span class="st"> </span></a>
+<a class="sourceLine" id="cb10-13" data-line-number="13"><span class="st">  </span><span class="kw">rename</span>(<span class="dt">macro_lmp =</span> macro) <span class="op">%&gt;%</span><span class="st"> </span></a>
+<a class="sourceLine" id="cb10-14" data-line-number="14"><span class="st">  </span><span class="kw">glm</span>(dx <span class="op">~</span><span class="st"> </span>macro_lmp <span class="op">+</span><span class="st"> </span>apoe4 <span class="op">+</span><span class="st"> </span>aod_cat <span class="op">+</span><span class="st"> </span>sex <span class="op">+</span><span class="st"> </span>study, </a>
+<a class="sourceLine" id="cb10-15" data-line-number="15">    <span class="dt">family =</span> <span class="st">&quot;binomial&quot;</span>, <span class="dt">data =</span> .) </a></code></pre></div>
+<div class="sourceCode" id="cb11"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb11-1" data-line-number="1">tab1a_rosmap &lt;-<span class="st"> </span>res1a_rosmap <span class="op">%&gt;%</span></a>
+<a class="sourceLine" id="cb11-2" data-line-number="2"><span class="st">  </span><span class="kw">tbl_regression</span>(<span class="dt">exponentiate =</span> <span class="ot">TRUE</span>) </a>
+<a class="sourceLine" id="cb11-3" data-line-number="3"></a>
+<a class="sourceLine" id="cb11-4" data-line-number="4">tab1a_msbb &lt;-<span class="st"> </span>res1a_msbb <span class="op">%&gt;%</span></a>
+<a class="sourceLine" id="cb11-5" data-line-number="5"><span class="st">  </span><span class="kw">tbl_regression</span>(<span class="dt">exponentiate =</span> <span class="ot">TRUE</span>) </a>
+<a class="sourceLine" id="cb11-6" data-line-number="6"></a>
+<a class="sourceLine" id="cb11-7" data-line-number="7">tab1a_mayo &lt;-<span class="st"> </span>res1a_mayo <span class="op">%&gt;%</span></a>
+<a class="sourceLine" id="cb11-8" data-line-number="8"><span class="st">  </span><span class="kw">tbl_regression</span>(<span class="dt">exponentiate =</span> <span class="ot">TRUE</span>) </a>
+<a class="sourceLine" id="cb11-9" data-line-number="9"></a>
+<a class="sourceLine" id="cb11-10" data-line-number="10">tab1a_joint &lt;-<span class="st"> </span>res1a_joint <span class="op">%&gt;%</span></a>
+<a class="sourceLine" id="cb11-11" data-line-number="11"><span class="st">  </span><span class="kw">tbl_regression</span>(<span class="dt">exponentiate =</span> <span class="ot">TRUE</span>) </a>
+<a class="sourceLine" id="cb11-12" data-line-number="12"></a>
+<a class="sourceLine" id="cb11-13" data-line-number="13"></a>
+<a class="sourceLine" id="cb11-14" data-line-number="14"><span class="kw">tbl_merge</span>(</a>
+<a class="sourceLine" id="cb11-15" data-line-number="15">  <span class="kw">list</span>(tab1a_rosmap, tab1a_msbb, tab1a_mayo, tab1a_joint),</a>
+<a class="sourceLine" id="cb11-16" data-line-number="16">  <span class="dt">tab_spanner =</span> <span class="kw">c</span>(<span class="st">&quot;**ROSMAP**&quot;</span>, <span class="st">&quot;**MSBB**&quot;</span>, <span class="st">&quot;**Mayo**&quot;</span>, <span class="st">&quot;**Joint**&quot;</span>)</a>
+<a class="sourceLine" id="cb11-17" data-line-number="17">) <span class="op">%&gt;%</span><span class="st"> </span></a>
+<a class="sourceLine" id="cb11-18" data-line-number="18"><span class="st">  </span><span class="kw">as_gt</span>() <span class="op">%&gt;%</span></a>
+<a class="sourceLine" id="cb11-19" data-line-number="19"><span class="st">  </span><span class="kw">tab_header</span>(</a>
+<a class="sourceLine" id="cb11-20" data-line-number="20">    <span class="dt">title =</span> <span class="st">&quot;Association of mtHgs with Neuropathologicly confirmed AD&quot;</span>,</a>
+<a class="sourceLine" id="cb11-21" data-line-number="21">  )</a></code></pre></div>
+<style>html {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Helvetica Neue', 'Fira Sans', 'Droid Sans', Arial, sans-serif;
+}
+
+#ozrtdnbtvt .gt_table {
+  display: table;
+  border-collapse: collapse;
+  margin-left: auto;
+  margin-right: auto;
+  color: #333333;
+  font-size: small;
+  background-color: #FFFFFF;
+  width: auto;
+  border-top-style: solid;
+  border-top-width: 2px;
+  border-top-color: #A8A8A8;
+  border-right-style: none;
+  border-right-width: 2px;
+  border-right-color: #D3D3D3;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #A8A8A8;
+  border-left-style: none;
+  border-left-width: 2px;
+  border-left-color: #D3D3D3;
+}
+
+#ozrtdnbtvt .gt_heading {
+  background-color: #FFFFFF;
+  text-align: center;
+  border-bottom-color: #FFFFFF;
+  border-left-style: none;
+  border-left-width: 1px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 1px;
+  border-right-color: #D3D3D3;
+}
+
+#ozrtdnbtvt .gt_title {
+  color: #333333;
+  font-size: 125%;
+  font-weight: initial;
+  padding-top: 4px;
+  padding-bottom: 4px;
+  border-bottom-color: #FFFFFF;
+  border-bottom-width: 0;
+}
+
+#ozrtdnbtvt .gt_subtitle {
+  color: #333333;
+  font-size: 85%;
+  font-weight: initial;
+  padding-top: 0;
+  padding-bottom: 4px;
+  border-top-color: #FFFFFF;
+  border-top-width: 0;
+}
+
+#ozrtdnbtvt .gt_bottom_border {
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+}
+
+#ozrtdnbtvt .gt_col_headings {
+  border-top-style: solid;
+  border-top-width: 2px;
+  border-top-color: #D3D3D3;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  border-left-style: none;
+  border-left-width: 1px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 1px;
+  border-right-color: #D3D3D3;
+}
+
+#ozrtdnbtvt .gt_col_heading {
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: normal;
+  text-transform: inherit;
+  border-left-style: none;
+  border-left-width: 1px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 1px;
+  border-right-color: #D3D3D3;
+  vertical-align: bottom;
+  padding-top: 5px;
+  padding-bottom: 6px;
+  padding-left: 5px;
+  padding-right: 5px;
+  overflow-x: hidden;
+}
+
+#ozrtdnbtvt .gt_column_spanner_outer {
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: normal;
+  text-transform: inherit;
+  padding-top: 0;
+  padding-bottom: 0;
+  padding-left: 4px;
+  padding-right: 4px;
+}
+
+#ozrtdnbtvt .gt_column_spanner_outer:first-child {
+  padding-left: 0;
+}
+
+#ozrtdnbtvt .gt_column_spanner_outer:last-child {
+  padding-right: 0;
+}
+
+#ozrtdnbtvt .gt_column_spanner {
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  vertical-align: bottom;
+  padding-top: 5px;
+  padding-bottom: 6px;
+  overflow-x: hidden;
+  display: inline-block;
+  width: 100%;
+}
+
+#ozrtdnbtvt .gt_group_heading {
+  padding: 1px;
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: initial;
+  text-transform: inherit;
+  border-top-style: solid;
+  border-top-width: 2px;
+  border-top-color: #D3D3D3;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  border-left-style: none;
+  border-left-width: 1px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 1px;
+  border-right-color: #D3D3D3;
+  vertical-align: middle;
+}
+
+#ozrtdnbtvt .gt_empty_group_heading {
+  padding: 0.5px;
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: initial;
+  border-top-style: solid;
+  border-top-width: 2px;
+  border-top-color: #D3D3D3;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  vertical-align: middle;
+}
+
+#ozrtdnbtvt .gt_striped {
+  background-color: rgba(128, 128, 128, 0.05);
+}
+
+#ozrtdnbtvt .gt_from_md > :first-child {
+  margin-top: 0;
+}
+
+#ozrtdnbtvt .gt_from_md > :last-child {
+  margin-bottom: 0;
+}
+
+#ozrtdnbtvt .gt_row {
+  padding-top: 1px;
+  padding-bottom: 1px;
+  padding-left: 5px;
+  padding-right: 5px;
+  margin: 10px;
+  border-top-style: solid;
+  border-top-width: 1px;
+  border-top-color: #D3D3D3;
+  border-left-style: none;
+  border-left-width: 1px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 1px;
+  border-right-color: #D3D3D3;
+  vertical-align: middle;
+  overflow-x: hidden;
+}
+
+#ozrtdnbtvt .gt_stub {
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: initial;
+  text-transform: inherit;
+  border-right-style: solid;
+  border-right-width: 2px;
+  border-right-color: #D3D3D3;
+  padding-left: 12px;
+}
+
+#ozrtdnbtvt .gt_summary_row {
+  color: #333333;
+  background-color: #FFFFFF;
+  text-transform: inherit;
+  padding-top: 1px;
+  padding-bottom: 1px;
+  padding-left: 5px;
+  padding-right: 5px;
+}
+
+#ozrtdnbtvt .gt_first_summary_row {
+  padding-top: 1px;
+  padding-bottom: 1px;
+  padding-left: 5px;
+  padding-right: 5px;
+  border-top-style: solid;
+  border-top-width: 2px;
+  border-top-color: #D3D3D3;
+}
+
+#ozrtdnbtvt .gt_grand_summary_row {
+  color: #333333;
+  background-color: #FFFFFF;
+  text-transform: inherit;
+  padding-top: 1px;
+  padding-bottom: 1px;
+  padding-left: 5px;
+  padding-right: 5px;
+}
+
+#ozrtdnbtvt .gt_first_grand_summary_row {
+  padding-top: 1px;
+  padding-bottom: 1px;
+  padding-left: 5px;
+  padding-right: 5px;
+  border-top-style: double;
+  border-top-width: 6px;
+  border-top-color: #D3D3D3;
+}
+
+#ozrtdnbtvt .gt_table_body {
+  border-top-style: solid;
+  border-top-width: 2px;
+  border-top-color: #D3D3D3;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+}
+
+#ozrtdnbtvt .gt_footnotes {
+  color: #333333;
+  background-color: #FFFFFF;
+  border-bottom-style: none;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  border-left-style: none;
+  border-left-width: 2px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 2px;
+  border-right-color: #D3D3D3;
+}
+
+#ozrtdnbtvt .gt_footnote {
+  margin: 0px;
+  font-size: 90%;
+  padding: 1px;
+}
+
+#ozrtdnbtvt .gt_sourcenotes {
+  color: #333333;
+  background-color: #FFFFFF;
+  border-bottom-style: none;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  border-left-style: none;
+  border-left-width: 2px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 2px;
+  border-right-color: #D3D3D3;
+}
+
+#ozrtdnbtvt .gt_sourcenote {
+  font-size: 90%;
+  padding: 1px;
+}
+
+#ozrtdnbtvt .gt_left {
+  text-align: left;
+}
+
+#ozrtdnbtvt .gt_center {
+  text-align: center;
+}
+
+#ozrtdnbtvt .gt_right {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+#ozrtdnbtvt .gt_font_normal {
+  font-weight: normal;
+}
+
+#ozrtdnbtvt .gt_font_bold {
+  font-weight: bold;
+}
+
+#ozrtdnbtvt .gt_font_italic {
+  font-style: italic;
+}
+
+#ozrtdnbtvt .gt_super {
+  font-size: 65%;
+}
+
+#ozrtdnbtvt .gt_footnote_marks {
+  font-style: italic;
+  font-size: 65%;
+}
+</style>
+<div id="ozrtdnbtvt" style="overflow-x:auto;overflow-y:auto;width:auto;height:auto;"><table class="gt_table">
+  <thead class="gt_header">
+    <tr>
+      <th colspan="13" class="gt_heading gt_title gt_font_normal" style>Association of mtHgs with Neuropathologicly confirmed AD</th>
+    </tr>
+    <tr>
+      <th colspan="13" class="gt_heading gt_subtitle gt_font_normal gt_bottom_border" style></th>
+    </tr>
+  </thead>
+  <thead class="gt_col_headings">
+    <tr>
+      <th class="gt_col_heading gt_center gt_columns_bottom_border" rowspan="2" colspan="1"><strong>Characteristic</strong></th>
+      <th class="gt_center gt_columns_top_border gt_column_spanner_outer" rowspan="1" colspan="3">
+        <span class="gt_column_spanner"><strong>ROSMAP</strong></span>
+      </th>
+      <th class="gt_center gt_columns_top_border gt_column_spanner_outer" rowspan="1" colspan="3">
+        <span class="gt_column_spanner"><strong>MSBB</strong></span>
+      </th>
+      <th class="gt_center gt_columns_top_border gt_column_spanner_outer" rowspan="1" colspan="3">
+        <span class="gt_column_spanner"><strong>Mayo</strong></span>
+      </th>
+      <th class="gt_center gt_columns_top_border gt_column_spanner_outer" rowspan="1" colspan="3">
+        <span class="gt_column_spanner"><strong>Joint</strong></span>
+      </th>
+    </tr>
+    <tr>
+      <th class="gt_col_heading gt_columns_bottom_border gt_center" rowspan="1" colspan="1"><strong>OR</strong><sup class="gt_footnote_marks">1</sup></th>
+      <th class="gt_col_heading gt_columns_bottom_border gt_center" rowspan="1" colspan="1"><strong>95% CI</strong><sup class="gt_footnote_marks">1</sup></th>
+      <th class="gt_col_heading gt_columns_bottom_border gt_center" rowspan="1" colspan="1"><strong>p-value</strong></th>
+      <th class="gt_col_heading gt_columns_bottom_border gt_center" rowspan="1" colspan="1"><strong>OR</strong><sup class="gt_footnote_marks">1</sup></th>
+      <th class="gt_col_heading gt_columns_bottom_border gt_center" rowspan="1" colspan="1"><strong>95% CI</strong><sup class="gt_footnote_marks">1</sup></th>
+      <th class="gt_col_heading gt_columns_bottom_border gt_center" rowspan="1" colspan="1"><strong>p-value</strong></th>
+      <th class="gt_col_heading gt_columns_bottom_border gt_center" rowspan="1" colspan="1"><strong>OR</strong><sup class="gt_footnote_marks">1</sup></th>
+      <th class="gt_col_heading gt_columns_bottom_border gt_center" rowspan="1" colspan="1"><strong>95% CI</strong><sup class="gt_footnote_marks">1</sup></th>
+      <th class="gt_col_heading gt_columns_bottom_border gt_center" rowspan="1" colspan="1"><strong>p-value</strong></th>
+      <th class="gt_col_heading gt_columns_bottom_border gt_center" rowspan="1" colspan="1"><strong>OR</strong><sup class="gt_footnote_marks">1</sup></th>
+      <th class="gt_col_heading gt_columns_bottom_border gt_center" rowspan="1" colspan="1"><strong>95% CI</strong><sup class="gt_footnote_marks">1</sup></th>
+      <th class="gt_col_heading gt_columns_bottom_border gt_center" rowspan="1" colspan="1"><strong>p-value</strong></th>
+    </tr>
+  </thead>
+  <tbody class="gt_table_body">
+    <tr>
+      <td class="gt_row gt_left">macro_lmp</td>
+      <td class="gt_row gt_center"></td>
+      <td class="gt_row gt_center"></td>
+      <td class="gt_row gt_center"></td>
+      <td class="gt_row gt_center"></td>
+      <td class="gt_row gt_center"></td>
+      <td class="gt_row gt_center"></td>
+      <td class="gt_row gt_center"></td>
+      <td class="gt_row gt_center"></td>
+      <td class="gt_row gt_center"></td>
+      <td class="gt_row gt_center"></td>
+      <td class="gt_row gt_center"></td>
+      <td class="gt_row gt_center"></td>
+    </tr>
+    <tr>
+      <td class="gt_row gt_left" style="text-align: left; text-indent: 10px;">H</td>
+      <td class="gt_row gt_center">&mdash;</td>
+      <td class="gt_row gt_center">&mdash;</td>
+      <td class="gt_row gt_center"></td>
+      <td class="gt_row gt_center">&mdash;</td>
+      <td class="gt_row gt_center">&mdash;</td>
+      <td class="gt_row gt_center"></td>
+      <td class="gt_row gt_center">&mdash;</td>
+      <td class="gt_row gt_center">&mdash;</td>
+      <td class="gt_row gt_center"></td>
+      <td class="gt_row gt_center">&mdash;</td>
+      <td class="gt_row gt_center">&mdash;</td>
+      <td class="gt_row gt_center"></td>
+    </tr>
+    <tr>
+      <td class="gt_row gt_left" style="text-align: left; text-indent: 10px;">I</td>
+      <td class="gt_row gt_center">0.83</td>
+      <td class="gt_row gt_center">0.41, 1.75</td>
+      <td class="gt_row gt_center">0.6</td>
+      <td class="gt_row gt_center"></td>
+      <td class="gt_row gt_center"></td>
+      <td class="gt_row gt_center"></td>
+      <td class="gt_row gt_center"></td>
+      <td class="gt_row gt_center"></td>
+      <td class="gt_row gt_center"></td>
+      <td class="gt_row gt_center">0.87</td>
+      <td class="gt_row gt_center">0.46, 1.66</td>
+      <td class="gt_row gt_center">0.7</td>
+    </tr>
+    <tr>
+      <td class="gt_row gt_left" style="text-align: left; text-indent: 10px;">J</td>
+      <td class="gt_row gt_center">1.31</td>
+      <td class="gt_row gt_center">0.82, 2.14</td>
+      <td class="gt_row gt_center">0.3</td>
+      <td class="gt_row gt_center">0.95</td>
+      <td class="gt_row gt_center">0.35, 2.61</td>
+      <td class="gt_row gt_center">>0.9</td>
+      <td class="gt_row gt_center">0.67</td>
+      <td class="gt_row gt_center">0.26, 1.71</td>
+      <td class="gt_row gt_center">0.4</td>
+      <td class="gt_row gt_center">1.30</td>
+      <td class="gt_row gt_center">0.89, 1.92</td>
+      <td class="gt_row gt_center">0.2</td>
+    </tr>
+    <tr>
+      <td class="gt_row gt_left" style="text-align: left; text-indent: 10px;">K</td>
+      <td class="gt_row gt_center">1.25</td>
+      <td class="gt_row gt_center">0.74, 2.18</td>
+      <td class="gt_row gt_center">0.4</td>
+      <td class="gt_row gt_center">1.30</td>
+      <td class="gt_row gt_center">0.61, 2.82</td>
+      <td class="gt_row gt_center">0.5</td>
+      <td class="gt_row gt_center">0.37</td>
+      <td class="gt_row gt_center">0.12, 1.12</td>
+      <td class="gt_row gt_center">0.075</td>
+      <td class="gt_row gt_center">1.33</td>
+      <td class="gt_row gt_center">0.88, 2.02</td>
+      <td class="gt_row gt_center">0.2</td>
+    </tr>
+    <tr>
+      <td class="gt_row gt_left" style="text-align: left; text-indent: 10px;">T</td>
+      <td class="gt_row gt_center">1.08</td>
+      <td class="gt_row gt_center">0.69, 1.73</td>
+      <td class="gt_row gt_center">0.7</td>
+      <td class="gt_row gt_center">2.28</td>
+      <td class="gt_row gt_center">0.70, 8.92</td>
+      <td class="gt_row gt_center">0.2</td>
+      <td class="gt_row gt_center">1.25</td>
+      <td class="gt_row gt_center">0.51, 3.19</td>
+      <td class="gt_row gt_center">0.6</td>
+      <td class="gt_row gt_center">1.12</td>
+      <td class="gt_row gt_center">0.77, 1.64</td>
+      <td class="gt_row gt_center">0.6</td>
+    </tr>
+    <tr>
+      <td class="gt_row gt_left" style="text-align: left; text-indent: 10px;">U</td>
+      <td class="gt_row gt_center">0.87</td>
+      <td class="gt_row gt_center">0.60, 1.26</td>
+      <td class="gt_row gt_center">0.5</td>
+      <td class="gt_row gt_center">2.05</td>
+      <td class="gt_row gt_center">0.71, 6.90</td>
+      <td class="gt_row gt_center">0.2</td>
+      <td class="gt_row gt_center">1.95</td>
+      <td class="gt_row gt_center">0.79, 5.26</td>
+      <td class="gt_row gt_center">0.2</td>
+      <td class="gt_row gt_center">0.91</td>
+      <td class="gt_row gt_center">0.66, 1.25</td>
+      <td class="gt_row gt_center">0.6</td>
+    </tr>
+    <tr>
+      <td class="gt_row gt_left" style="text-align: left; text-indent: 10px;">V</td>
+      <td class="gt_row gt_center">1.22</td>
+      <td class="gt_row gt_center">0.65, 2.36</td>
+      <td class="gt_row gt_center">0.5</td>
+      <td class="gt_row gt_center">1.59</td>
+      <td class="gt_row gt_center">0.46, 6.42</td>
+      <td class="gt_row gt_center">0.5</td>
+      <td class="gt_row gt_center">4.42</td>
+      <td class="gt_row gt_center">0.58, 92.0</td>
+      <td class="gt_row gt_center">0.2</td>
+      <td class="gt_row gt_center">1.15</td>
+      <td class="gt_row gt_center">0.68, 1.99</td>
+      <td class="gt_row gt_center">0.6</td>
+    </tr>
+    <tr>
+      <td class="gt_row gt_left" style="text-align: left; text-indent: 10px;">W</td>
+      <td class="gt_row gt_center">1.05</td>
+      <td class="gt_row gt_center">0.39, 3.02</td>
+      <td class="gt_row gt_center">>0.9</td>
+      <td class="gt_row gt_center"></td>
+      <td class="gt_row gt_center"></td>
+      <td class="gt_row gt_center"></td>
+      <td class="gt_row gt_center"></td>
+      <td class="gt_row gt_center"></td>
+      <td class="gt_row gt_center"></td>
+      <td class="gt_row gt_center">1.39</td>
+      <td class="gt_row gt_center">0.58, 3.51</td>
+      <td class="gt_row gt_center">0.5</td>
+    </tr>
+    <tr>
+      <td class="gt_row gt_left" style="text-align: left; text-indent: 10px;">X</td>
+      <td class="gt_row gt_center">0.73</td>
+      <td class="gt_row gt_center">0.28, 1.91</td>
+      <td class="gt_row gt_center">0.5</td>
+      <td class="gt_row gt_center"></td>
+      <td class="gt_row gt_center"></td>
+      <td class="gt_row gt_center"></td>
+      <td class="gt_row gt_center"></td>
+      <td class="gt_row gt_center"></td>
+      <td class="gt_row gt_center"></td>
+      <td class="gt_row gt_center">0.71</td>
+      <td class="gt_row gt_center">0.31, 1.62</td>
+      <td class="gt_row gt_center">0.4</td>
+    </tr>
+    <tr>
+      <td class="gt_row gt_left" style="text-align: left; text-indent: 10px;">IWX</td>
+      <td class="gt_row gt_center"></td>
+      <td class="gt_row gt_center"></td>
+      <td class="gt_row gt_center"></td>
+      <td class="gt_row gt_center">2.10</td>
+      <td class="gt_row gt_center">0.45, 15.1</td>
+      <td class="gt_row gt_center">0.4</td>
+      <td class="gt_row gt_center">0.81</td>
+      <td class="gt_row gt_center">0.25, 2.92</td>
+      <td class="gt_row gt_center">0.7</td>
+      <td class="gt_row gt_center"></td>
+      <td class="gt_row gt_center"></td>
+      <td class="gt_row gt_center"></td>
+    </tr>
+    <tr>
+      <td class="gt_row gt_left">apoe4</td>
+      <td class="gt_row gt_center"></td>
+      <td class="gt_row gt_center"></td>
+      <td class="gt_row gt_center"></td>
+      <td class="gt_row gt_center"></td>
+      <td class="gt_row gt_center"></td>
+      <td class="gt_row gt_center"></td>
+      <td class="gt_row gt_center"></td>
+      <td class="gt_row gt_center"></td>
+      <td class="gt_row gt_center"></td>
+      <td class="gt_row gt_center"></td>
+      <td class="gt_row gt_center"></td>
+      <td class="gt_row gt_center"></td>
+    </tr>
+    <tr>
+      <td class="gt_row gt_left" style="text-align: left; text-indent: 10px;">e4-</td>
+      <td class="gt_row gt_center">&mdash;</td>
+      <td class="gt_row gt_center">&mdash;</td>
+      <td class="gt_row gt_center"></td>
+      <td class="gt_row gt_center">&mdash;</td>
+      <td class="gt_row gt_center">&mdash;</td>
+      <td class="gt_row gt_center"></td>
+      <td class="gt_row gt_center">&mdash;</td>
+      <td class="gt_row gt_center">&mdash;</td>
+      <td class="gt_row gt_center"></td>
+      <td class="gt_row gt_center">&mdash;</td>
+      <td class="gt_row gt_center">&mdash;</td>
+      <td class="gt_row gt_center"></td>
+    </tr>
+    <tr>
+      <td class="gt_row gt_left" style="text-align: left; text-indent: 10px;">e4+</td>
+      <td class="gt_row gt_center">3.81</td>
+      <td class="gt_row gt_center">2.72, 5.41</td>
+      <td class="gt_row gt_center"><0.001</td>
+      <td class="gt_row gt_center">3.02</td>
+      <td class="gt_row gt_center">1.57, 6.06</td>
+      <td class="gt_row gt_center">0.001</td>
+      <td class="gt_row gt_center">0.23</td>
+      <td class="gt_row gt_center">0.12, 0.42</td>
+      <td class="gt_row gt_center"><0.001</td>
+      <td class="gt_row gt_center">3.61</td>
+      <td class="gt_row gt_center">2.77, 4.74</td>
+      <td class="gt_row gt_center"><0.001</td>
+    </tr>
+    <tr>
+      <td class="gt_row gt_left">sex</td>
+      <td class="gt_row gt_center"></td>
+      <td class="gt_row gt_center"></td>
+      <td class="gt_row gt_center"></td>
+      <td class="gt_row gt_center"></td>
+      <td class="gt_row gt_center"></td>
+      <td class="gt_row gt_center"></td>
+      <td class="gt_row gt_center"></td>
+      <td class="gt_row gt_center"></td>
+      <td class="gt_row gt_center"></td>
+      <td class="gt_row gt_center"></td>
+      <td class="gt_row gt_center"></td>
+      <td class="gt_row gt_center"></td>
+    </tr>
+    <tr>
+      <td class="gt_row gt_left" style="text-align: left; text-indent: 10px;">F</td>
+      <td class="gt_row gt_center">&mdash;</td>
+      <td class="gt_row gt_center">&mdash;</td>
+      <td class="gt_row gt_center"></td>
+      <td class="gt_row gt_center">&mdash;</td>
+      <td class="gt_row gt_center">&mdash;</td>
+      <td class="gt_row gt_center"></td>
+      <td class="gt_row gt_center">&mdash;</td>
+      <td class="gt_row gt_center">&mdash;</td>
+      <td class="gt_row gt_center"></td>
+      <td class="gt_row gt_center">&mdash;</td>
+      <td class="gt_row gt_center">&mdash;</td>
+      <td class="gt_row gt_center"></td>
+    </tr>
+    <tr>
+      <td class="gt_row gt_left" style="text-align: left; text-indent: 10px;">M</td>
+      <td class="gt_row gt_center">0.77</td>
+      <td class="gt_row gt_center">0.59, 1.02</td>
+      <td class="gt_row gt_center">0.068</td>
+      <td class="gt_row gt_center">1.38</td>
+      <td class="gt_row gt_center">0.69, 2.84</td>
+      <td class="gt_row gt_center">0.4</td>
+      <td class="gt_row gt_center">1.61</td>
+      <td class="gt_row gt_center">0.91, 2.89</td>
+      <td class="gt_row gt_center">0.11</td>
+      <td class="gt_row gt_center">0.80</td>
+      <td class="gt_row gt_center">0.64, 1.01</td>
+      <td class="gt_row gt_center">0.057</td>
+    </tr>
+    <tr>
+      <td class="gt_row gt_left">aod</td>
+      <td class="gt_row gt_center">1.08</td>
+      <td class="gt_row gt_center">1.06, 1.10</td>
+      <td class="gt_row gt_center"><0.001</td>
+      <td class="gt_row gt_center">1.01</td>
+      <td class="gt_row gt_center">0.98, 1.05</td>
+      <td class="gt_row gt_center">0.4</td>
+      <td class="gt_row gt_center"></td>
+      <td class="gt_row gt_center"></td>
+      <td class="gt_row gt_center"></td>
+      <td class="gt_row gt_center"></td>
+      <td class="gt_row gt_center"></td>
+      <td class="gt_row gt_center"></td>
+    </tr>
+    <tr>
+      <td class="gt_row gt_left">aod_cat.L</td>
+      <td class="gt_row gt_center"></td>
+      <td class="gt_row gt_center"></td>
+      <td class="gt_row gt_center"></td>
+      <td class="gt_row gt_center"></td>
+      <td class="gt_row gt_center"></td>
+      <td class="gt_row gt_center"></td>
+      <td class="gt_row gt_center">1.57</td>
+      <td class="gt_row gt_center">0.74, 3.37</td>
+      <td class="gt_row gt_center">0.2</td>
+      <td class="gt_row gt_center">1.16</td>
+      <td class="gt_row gt_center">0.69, 1.95</td>
+      <td class="gt_row gt_center">0.6</td>
+    </tr>
+    <tr>
+      <td class="gt_row gt_left">aod_cat.Q</td>
+      <td class="gt_row gt_center"></td>
+      <td class="gt_row gt_center"></td>
+      <td class="gt_row gt_center"></td>
+      <td class="gt_row gt_center"></td>
+      <td class="gt_row gt_center"></td>
+      <td class="gt_row gt_center"></td>
+      <td class="gt_row gt_center">0.69</td>
+      <td class="gt_row gt_center">0.35, 1.36</td>
+      <td class="gt_row gt_center">0.3</td>
+      <td class="gt_row gt_center">2.10</td>
+      <td class="gt_row gt_center">1.38, 3.19</td>
+      <td class="gt_row gt_center"><0.001</td>
+    </tr>
+    <tr>
+      <td class="gt_row gt_left">aod_cat.C</td>
+      <td class="gt_row gt_center"></td>
+      <td class="gt_row gt_center"></td>
+      <td class="gt_row gt_center"></td>
+      <td class="gt_row gt_center"></td>
+      <td class="gt_row gt_center"></td>
+      <td class="gt_row gt_center"></td>
+      <td class="gt_row gt_center">1.23</td>
+      <td class="gt_row gt_center">0.68, 2.27</td>
+      <td class="gt_row gt_center">0.5</td>
+      <td class="gt_row gt_center">0.62</td>
+      <td class="gt_row gt_center">0.46, 0.83</td>
+      <td class="gt_row gt_center">0.001</td>
+    </tr>
+    <tr>
+      <td class="gt_row gt_left">study</td>
+      <td class="gt_row gt_center"></td>
+      <td class="gt_row gt_center"></td>
+      <td class="gt_row gt_center"></td>
+      <td class="gt_row gt_center"></td>
+      <td class="gt_row gt_center"></td>
+      <td class="gt_row gt_center"></td>
+      <td class="gt_row gt_center"></td>
+      <td class="gt_row gt_center"></td>
+      <td class="gt_row gt_center"></td>
+      <td class="gt_row gt_center"></td>
+      <td class="gt_row gt_center"></td>
+      <td class="gt_row gt_center"></td>
+    </tr>
+    <tr>
+      <td class="gt_row gt_left" style="text-align: left; text-indent: 10px;">MAP</td>
+      <td class="gt_row gt_center"></td>
+      <td class="gt_row gt_center"></td>
+      <td class="gt_row gt_center"></td>
+      <td class="gt_row gt_center"></td>
+      <td class="gt_row gt_center"></td>
+      <td class="gt_row gt_center"></td>
+      <td class="gt_row gt_center"></td>
+      <td class="gt_row gt_center"></td>
+      <td class="gt_row gt_center"></td>
+      <td class="gt_row gt_center">&mdash;</td>
+      <td class="gt_row gt_center">&mdash;</td>
+      <td class="gt_row gt_center"></td>
+    </tr>
+    <tr>
+      <td class="gt_row gt_left" style="text-align: left; text-indent: 10px;">MAYO</td>
+      <td class="gt_row gt_center"></td>
+      <td class="gt_row gt_center"></td>
+      <td class="gt_row gt_center"></td>
+      <td class="gt_row gt_center"></td>
+      <td class="gt_row gt_center"></td>
+      <td class="gt_row gt_center"></td>
+      <td class="gt_row gt_center"></td>
+      <td class="gt_row gt_center"></td>
+      <td class="gt_row gt_center"></td>
+      <td class="gt_row gt_center">0.27</td>
+      <td class="gt_row gt_center">0.19, 0.38</td>
+      <td class="gt_row gt_center"><0.001</td>
+    </tr>
+    <tr>
+      <td class="gt_row gt_left" style="text-align: left; text-indent: 10px;">MSBB</td>
+      <td class="gt_row gt_center"></td>
+      <td class="gt_row gt_center"></td>
+      <td class="gt_row gt_center"></td>
+      <td class="gt_row gt_center"></td>
+      <td class="gt_row gt_center"></td>
+      <td class="gt_row gt_center"></td>
+      <td class="gt_row gt_center"></td>
+      <td class="gt_row gt_center"></td>
+      <td class="gt_row gt_center"></td>
+      <td class="gt_row gt_center">1.04</td>
+      <td class="gt_row gt_center">0.73, 1.50</td>
+      <td class="gt_row gt_center">0.8</td>
+    </tr>
+    <tr>
+      <td class="gt_row gt_left" style="text-align: left; text-indent: 10px;">ROS</td>
+      <td class="gt_row gt_center"></td>
+      <td class="gt_row gt_center"></td>
+      <td class="gt_row gt_center"></td>
+      <td class="gt_row gt_center"></td>
+      <td class="gt_row gt_center"></td>
+      <td class="gt_row gt_center"></td>
+      <td class="gt_row gt_center"></td>
+      <td class="gt_row gt_center"></td>
+      <td class="gt_row gt_center"></td>
+      <td class="gt_row gt_center">1.03</td>
+      <td class="gt_row gt_center">0.79, 1.33</td>
+      <td class="gt_row gt_center">0.9</td>
+    </tr>
+  </tbody>
+  
+  <tfoot>
+    <tr class="gt_footnotes">
+      <td colspan="13">
+        <p class="gt_footnote">
+          <sup class="gt_footnote_marks">
+            <em>1</em>
+          </sup>
+           
+          OR = Odds Ratio, CI = Confidence Interval
+          <br />
+        </p>
+      </td>
+    </tr>
+  </tfoot>
+</table></div>
+<p>Investigate the assocation of haplogroups with AD neuropathologic change (NIA-Regan Diagnosis), using ordinal logistic regression in ROSMAP + MSBB. Collapse “No AD” and “Low Liklihood of AD” due to small cell sizes in “No AD”</p>
+<div class="sourceCode" id="cb12"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb12-1" data-line-number="1">ampad <span class="op">%&gt;%</span><span class="st"> </span></a>
+<a class="sourceLine" id="cb12-2" data-line-number="2"><span class="st">  </span><span class="kw">filter</span>(<span class="op">!</span><span class="kw">is.na</span>(niareagansc)) <span class="op">%&gt;%</span></a>
+<a class="sourceLine" id="cb12-3" data-line-number="3"><span class="st">  </span><span class="kw">filter</span>(study <span class="op">!=</span><span class="st"> &quot;MAYO&quot;</span>) <span class="op">%&gt;%</span><span class="st"> </span></a>
+<a class="sourceLine" id="cb12-4" data-line-number="4"><span class="st">  </span><span class="kw">select</span>(niareagansc, macro, aod, aod_cat, apoe4, sex, study) <span class="op">%&gt;%</span></a>
+<a class="sourceLine" id="cb12-5" data-line-number="5"><span class="st">  </span><span class="kw">mutate</span>(<span class="dt">aod_cat =</span> <span class="kw">factor</span>(aod_cat, <span class="dt">ordered =</span> <span class="ot">FALSE</span>), </a>
+<a class="sourceLine" id="cb12-6" data-line-number="6">         <span class="dt">niareagansc =</span> <span class="kw">fct_recode</span>(niareagansc, <span class="st">&quot;NoAD&quot;</span> =<span class="st"> &quot;4&quot;</span>, <span class="st">&quot;Low&quot;</span> =<span class="st"> &quot;3&quot;</span>, <span class="st">&quot;Intermediate&quot;</span> =<span class="st"> &quot;2&quot;</span>, <span class="st">&quot;High&quot;</span> =<span class="st"> &quot;1&quot;</span>)) <span class="op">%&gt;%</span><span class="st"> </span></a>
+<a class="sourceLine" id="cb12-7" data-line-number="7"><span class="st">  </span><span class="kw">tbl_summary</span>(., <span class="dt">by =</span> niareagansc,</a>
+<a class="sourceLine" id="cb12-8" data-line-number="8">              <span class="dt">statistic =</span> <span class="kw">list</span>(<span class="kw">all_continuous</span>() <span class="op">~</span><span class="st"> &quot;{mean} ({sd})&quot;</span>, </a>
+<a class="sourceLine" id="cb12-9" data-line-number="9">                               <span class="kw">all_categorical</span>() <span class="op">~</span><span class="st"> &quot;{n} ({p}%)&quot;</span>)) <span class="op">%&gt;%</span></a>
+<a class="sourceLine" id="cb12-10" data-line-number="10"><span class="st">  </span><span class="kw">add_overall</span>() </a></code></pre></div>
+<style>html {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Helvetica Neue', 'Fira Sans', 'Droid Sans', Arial, sans-serif;
+}
+
+#idkrincjtr .gt_table {
+  display: table;
+  border-collapse: collapse;
+  margin-left: auto;
+  margin-right: auto;
+  color: #333333;
+  font-size: small;
+  background-color: #FFFFFF;
+  width: auto;
+  border-top-style: solid;
+  border-top-width: 2px;
+  border-top-color: #A8A8A8;
+  border-right-style: none;
+  border-right-width: 2px;
+  border-right-color: #D3D3D3;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #A8A8A8;
+  border-left-style: none;
+  border-left-width: 2px;
+  border-left-color: #D3D3D3;
+}
+
+#idkrincjtr .gt_heading {
+  background-color: #FFFFFF;
+  text-align: center;
+  border-bottom-color: #FFFFFF;
+  border-left-style: none;
+  border-left-width: 1px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 1px;
+  border-right-color: #D3D3D3;
+}
+
+#idkrincjtr .gt_title {
+  color: #333333;
+  font-size: 125%;
+  font-weight: initial;
+  padding-top: 4px;
+  padding-bottom: 4px;
+  border-bottom-color: #FFFFFF;
+  border-bottom-width: 0;
+}
+
+#idkrincjtr .gt_subtitle {
+  color: #333333;
+  font-size: 85%;
+  font-weight: initial;
+  padding-top: 0;
+  padding-bottom: 4px;
+  border-top-color: #FFFFFF;
+  border-top-width: 0;
+}
+
+#idkrincjtr .gt_bottom_border {
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+}
+
+#idkrincjtr .gt_col_headings {
+  border-top-style: solid;
+  border-top-width: 2px;
+  border-top-color: #D3D3D3;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  border-left-style: none;
+  border-left-width: 1px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 1px;
+  border-right-color: #D3D3D3;
+}
+
+#idkrincjtr .gt_col_heading {
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: normal;
+  text-transform: inherit;
+  border-left-style: none;
+  border-left-width: 1px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 1px;
+  border-right-color: #D3D3D3;
+  vertical-align: bottom;
+  padding-top: 5px;
+  padding-bottom: 6px;
+  padding-left: 5px;
+  padding-right: 5px;
+  overflow-x: hidden;
+}
+
+#idkrincjtr .gt_column_spanner_outer {
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: normal;
+  text-transform: inherit;
+  padding-top: 0;
+  padding-bottom: 0;
+  padding-left: 4px;
+  padding-right: 4px;
+}
+
+#idkrincjtr .gt_column_spanner_outer:first-child {
+  padding-left: 0;
+}
+
+#idkrincjtr .gt_column_spanner_outer:last-child {
+  padding-right: 0;
+}
+
+#idkrincjtr .gt_column_spanner {
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  vertical-align: bottom;
+  padding-top: 5px;
+  padding-bottom: 6px;
+  overflow-x: hidden;
+  display: inline-block;
+  width: 100%;
+}
+
+#idkrincjtr .gt_group_heading {
+  padding: 1px;
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: initial;
+  text-transform: inherit;
+  border-top-style: solid;
+  border-top-width: 2px;
+  border-top-color: #D3D3D3;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  border-left-style: none;
+  border-left-width: 1px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 1px;
+  border-right-color: #D3D3D3;
+  vertical-align: middle;
+}
+
+#idkrincjtr .gt_empty_group_heading {
+  padding: 0.5px;
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: initial;
+  border-top-style: solid;
+  border-top-width: 2px;
+  border-top-color: #D3D3D3;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  vertical-align: middle;
+}
+
+#idkrincjtr .gt_striped {
+  background-color: rgba(128, 128, 128, 0.05);
+}
+
+#idkrincjtr .gt_from_md > :first-child {
+  margin-top: 0;
+}
+
+#idkrincjtr .gt_from_md > :last-child {
+  margin-bottom: 0;
+}
+
+#idkrincjtr .gt_row {
+  padding-top: 1px;
+  padding-bottom: 1px;
+  padding-left: 5px;
+  padding-right: 5px;
+  margin: 10px;
+  border-top-style: solid;
+  border-top-width: 1px;
+  border-top-color: #D3D3D3;
+  border-left-style: none;
+  border-left-width: 1px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 1px;
+  border-right-color: #D3D3D3;
+  vertical-align: middle;
+  overflow-x: hidden;
+}
+
+#idkrincjtr .gt_stub {
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: initial;
+  text-transform: inherit;
+  border-right-style: solid;
+  border-right-width: 2px;
+  border-right-color: #D3D3D3;
+  padding-left: 12px;
+}
+
+#idkrincjtr .gt_summary_row {
+  color: #333333;
+  background-color: #FFFFFF;
+  text-transform: inherit;
+  padding-top: 1px;
+  padding-bottom: 1px;
+  padding-left: 5px;
+  padding-right: 5px;
+}
+
+#idkrincjtr .gt_first_summary_row {
+  padding-top: 1px;
+  padding-bottom: 1px;
+  padding-left: 5px;
+  padding-right: 5px;
+  border-top-style: solid;
+  border-top-width: 2px;
+  border-top-color: #D3D3D3;
+}
+
+#idkrincjtr .gt_grand_summary_row {
+  color: #333333;
+  background-color: #FFFFFF;
+  text-transform: inherit;
+  padding-top: 1px;
+  padding-bottom: 1px;
+  padding-left: 5px;
+  padding-right: 5px;
+}
+
+#idkrincjtr .gt_first_grand_summary_row {
+  padding-top: 1px;
+  padding-bottom: 1px;
+  padding-left: 5px;
+  padding-right: 5px;
+  border-top-style: double;
+  border-top-width: 6px;
+  border-top-color: #D3D3D3;
+}
+
+#idkrincjtr .gt_table_body {
+  border-top-style: solid;
+  border-top-width: 2px;
+  border-top-color: #D3D3D3;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+}
+
+#idkrincjtr .gt_footnotes {
+  color: #333333;
+  background-color: #FFFFFF;
+  border-bottom-style: none;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  border-left-style: none;
+  border-left-width: 2px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 2px;
+  border-right-color: #D3D3D3;
+}
+
+#idkrincjtr .gt_footnote {
+  margin: 0px;
+  font-size: 90%;
+  padding: 1px;
+}
+
+#idkrincjtr .gt_sourcenotes {
+  color: #333333;
+  background-color: #FFFFFF;
+  border-bottom-style: none;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  border-left-style: none;
+  border-left-width: 2px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 2px;
+  border-right-color: #D3D3D3;
+}
+
+#idkrincjtr .gt_sourcenote {
+  font-size: 90%;
+  padding: 1px;
+}
+
+#idkrincjtr .gt_left {
+  text-align: left;
+}
+
+#idkrincjtr .gt_center {
+  text-align: center;
+}
+
+#idkrincjtr .gt_right {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+#idkrincjtr .gt_font_normal {
+  font-weight: normal;
+}
+
+#idkrincjtr .gt_font_bold {
+  font-weight: bold;
+}
+
+#idkrincjtr .gt_font_italic {
+  font-style: italic;
+}
+
+#idkrincjtr .gt_super {
+  font-size: 65%;
+}
+
+#idkrincjtr .gt_footnote_marks {
+  font-style: italic;
+  font-size: 65%;
+}
+</style>
+<div id="idkrincjtr" style="overflow-x:auto;overflow-y:auto;width:auto;height:auto;"><table class="gt_table">
+  
+  <thead class="gt_col_headings">
+    <tr>
+      <th class="gt_col_heading gt_columns_bottom_border gt_left" rowspan="1" colspan="1"><strong>Characteristic</strong></th>
+      <th class="gt_col_heading gt_columns_bottom_border gt_center" rowspan="1" colspan="1"><strong>Overall</strong>, N = 1308</th>
+      <th class="gt_col_heading gt_columns_bottom_border gt_center" rowspan="1" colspan="1"><strong>NoAD</strong>, N = 12<sup class="gt_footnote_marks">1</sup></th>
+      <th class="gt_col_heading gt_columns_bottom_border gt_center" rowspan="1" colspan="1"><strong>Low</strong>, N = 455<sup class="gt_footnote_marks">1</sup></th>
+      <th class="gt_col_heading gt_columns_bottom_border gt_center" rowspan="1" colspan="1"><strong>Intermediate</strong>, N = 562<sup class="gt_footnote_marks">1</sup></th>
+      <th class="gt_col_heading gt_columns_bottom_border gt_center" rowspan="1" colspan="1"><strong>High</strong>, N = 279<sup class="gt_footnote_marks">1</sup></th>
+    </tr>
+  </thead>
+  <tbody class="gt_table_body">
+    <tr>
+      <td class="gt_row gt_left">macro</td>
+      <td class="gt_row gt_center"></td>
+      <td class="gt_row gt_center"></td>
+      <td class="gt_row gt_center"></td>
+      <td class="gt_row gt_center"></td>
+      <td class="gt_row gt_center"></td>
+    </tr>
+    <tr>
+      <td class="gt_row gt_left" style="text-align: left; text-indent: 10px;">H</td>
+      <td class="gt_row gt_center">567 (43%)</td>
+      <td class="gt_row gt_center">5 (42%)</td>
+      <td class="gt_row gt_center">205 (45%)</td>
+      <td class="gt_row gt_center">251 (45%)</td>
+      <td class="gt_row gt_center">106 (38%)</td>
+    </tr>
+    <tr>
+      <td class="gt_row gt_left" style="text-align: left; text-indent: 10px;">I</td>
+      <td class="gt_row gt_center">39 (3.0%)</td>
+      <td class="gt_row gt_center">0 (0%)</td>
+      <td class="gt_row gt_center">15 (3.3%)</td>
+      <td class="gt_row gt_center">18 (3.2%)</td>
+      <td class="gt_row gt_center">6 (2.2%)</td>
+    </tr>
+    <tr>
+      <td class="gt_row gt_left" style="text-align: left; text-indent: 10px;">J</td>
+      <td class="gt_row gt_center">125 (9.6%)</td>
+      <td class="gt_row gt_center">2 (17%)</td>
+      <td class="gt_row gt_center">41 (9.0%)</td>
+      <td class="gt_row gt_center">55 (9.8%)</td>
+      <td class="gt_row gt_center">27 (9.7%)</td>
+    </tr>
+    <tr>
+      <td class="gt_row gt_left" style="text-align: left; text-indent: 10px;">K</td>
+      <td class="gt_row gt_center">131 (10%)</td>
+      <td class="gt_row gt_center">0 (0%)</td>
+      <td class="gt_row gt_center">40 (8.8%)</td>
+      <td class="gt_row gt_center">53 (9.4%)</td>
+      <td class="gt_row gt_center">38 (14%)</td>
+    </tr>
+    <tr>
+      <td class="gt_row gt_left" style="text-align: left; text-indent: 10px;">T</td>
+      <td class="gt_row gt_center">125 (9.6%)</td>
+      <td class="gt_row gt_center">2 (17%)</td>
+      <td class="gt_row gt_center">40 (8.8%)</td>
+      <td class="gt_row gt_center">52 (9.3%)</td>
+      <td class="gt_row gt_center">31 (11%)</td>
+    </tr>
+    <tr>
+      <td class="gt_row gt_left" style="text-align: left; text-indent: 10px;">U</td>
+      <td class="gt_row gt_center">209 (16%)</td>
+      <td class="gt_row gt_center">2 (17%)</td>
+      <td class="gt_row gt_center">77 (17%)</td>
+      <td class="gt_row gt_center">87 (15%)</td>
+      <td class="gt_row gt_center">43 (15%)</td>
+    </tr>
+    <tr>
+      <td class="gt_row gt_left" style="text-align: left; text-indent: 10px;">V</td>
+      <td class="gt_row gt_center">67 (5.1%)</td>
+      <td class="gt_row gt_center">0 (0%)</td>
+      <td class="gt_row gt_center">20 (4.4%)</td>
+      <td class="gt_row gt_center">29 (5.2%)</td>
+      <td class="gt_row gt_center">18 (6.5%)</td>
+    </tr>
+    <tr>
+      <td class="gt_row gt_left" style="text-align: left; text-indent: 10px;">W</td>
+      <td class="gt_row gt_center">21 (1.6%)</td>
+      <td class="gt_row gt_center">0 (0%)</td>
+      <td class="gt_row gt_center">7 (1.5%)</td>
+      <td class="gt_row gt_center">8 (1.4%)</td>
+      <td class="gt_row gt_center">6 (2.2%)</td>
+    </tr>
+    <tr>
+      <td class="gt_row gt_left" style="text-align: left; text-indent: 10px;">X</td>
+      <td class="gt_row gt_center">24 (1.8%)</td>
+      <td class="gt_row gt_center">1 (8.3%)</td>
+      <td class="gt_row gt_center">10 (2.2%)</td>
+      <td class="gt_row gt_center">9 (1.6%)</td>
+      <td class="gt_row gt_center">4 (1.4%)</td>
+    </tr>
+    <tr>
+      <td class="gt_row gt_left">aod</td>
+      <td class="gt_row gt_center">88 (7)</td>
+      <td class="gt_row gt_center">77 (8)</td>
+      <td class="gt_row gt_center">87 (8)</td>
+      <td class="gt_row gt_center">90 (6)</td>
+      <td class="gt_row gt_center">88 (8)</td>
+    </tr>
+    <tr>
+      <td class="gt_row gt_left">aod_cat</td>
+      <td class="gt_row gt_center"></td>
+      <td class="gt_row gt_center"></td>
+      <td class="gt_row gt_center"></td>
+      <td class="gt_row gt_center"></td>
+      <td class="gt_row gt_center"></td>
+    </tr>
+    <tr>
+      <td class="gt_row gt_left" style="text-align: left; text-indent: 10px;">50-69</td>
+      <td class="gt_row gt_center">15 (1.1%)</td>
+      <td class="gt_row gt_center">1 (8.3%)</td>
+      <td class="gt_row gt_center">5 (1.1%)</td>
+      <td class="gt_row gt_center">1 (0.2%)</td>
+      <td class="gt_row gt_center">8 (2.9%)</td>
+    </tr>
+    <tr>
+      <td class="gt_row gt_left" style="text-align: left; text-indent: 10px;">70-79</td>
+      <td class="gt_row gt_center">134 (10%)</td>
+      <td class="gt_row gt_center">7 (58%)</td>
+      <td class="gt_row gt_center">70 (15%)</td>
+      <td class="gt_row gt_center">31 (5.5%)</td>
+      <td class="gt_row gt_center">26 (9.3%)</td>
+    </tr>
+    <tr>
+      <td class="gt_row gt_left" style="text-align: left; text-indent: 10px;">80-89</td>
+      <td class="gt_row gt_center">583 (45%)</td>
+      <td class="gt_row gt_center">3 (25%)</td>
+      <td class="gt_row gt_center">211 (46%)</td>
+      <td class="gt_row gt_center">247 (44%)</td>
+      <td class="gt_row gt_center">122 (44%)</td>
+    </tr>
+    <tr>
+      <td class="gt_row gt_left" style="text-align: left; text-indent: 10px;">90+</td>
+      <td class="gt_row gt_center">576 (44%)</td>
+      <td class="gt_row gt_center">1 (8.3%)</td>
+      <td class="gt_row gt_center">169 (37%)</td>
+      <td class="gt_row gt_center">283 (50%)</td>
+      <td class="gt_row gt_center">123 (44%)</td>
+    </tr>
+    <tr>
+      <td class="gt_row gt_left">apoe4</td>
+      <td class="gt_row gt_center"></td>
+      <td class="gt_row gt_center"></td>
+      <td class="gt_row gt_center"></td>
+      <td class="gt_row gt_center"></td>
+      <td class="gt_row gt_center"></td>
+    </tr>
+    <tr>
+      <td class="gt_row gt_left" style="text-align: left; text-indent: 10px;">e4-</td>
+      <td class="gt_row gt_center">940 (72%)</td>
+      <td class="gt_row gt_center">12 (100%)</td>
+      <td class="gt_row gt_center">386 (85%)</td>
+      <td class="gt_row gt_center">400 (71%)</td>
+      <td class="gt_row gt_center">142 (51%)</td>
+    </tr>
+    <tr>
+      <td class="gt_row gt_left" style="text-align: left; text-indent: 10px;">e4+</td>
+      <td class="gt_row gt_center">368 (28%)</td>
+      <td class="gt_row gt_center">0 (0%)</td>
+      <td class="gt_row gt_center">69 (15%)</td>
+      <td class="gt_row gt_center">162 (29%)</td>
+      <td class="gt_row gt_center">137 (49%)</td>
+    </tr>
+    <tr>
+      <td class="gt_row gt_left">sex</td>
+      <td class="gt_row gt_center"></td>
+      <td class="gt_row gt_center"></td>
+      <td class="gt_row gt_center"></td>
+      <td class="gt_row gt_center"></td>
+      <td class="gt_row gt_center"></td>
+    </tr>
+    <tr>
+      <td class="gt_row gt_left" style="text-align: left; text-indent: 10px;">F</td>
+      <td class="gt_row gt_center">863 (66%)</td>
+      <td class="gt_row gt_center">5 (42%)</td>
+      <td class="gt_row gt_center">284 (62%)</td>
+      <td class="gt_row gt_center">372 (66%)</td>
+      <td class="gt_row gt_center">202 (72%)</td>
+    </tr>
+    <tr>
+      <td class="gt_row gt_left" style="text-align: left; text-indent: 10px;">M</td>
+      <td class="gt_row gt_center">445 (34%)</td>
+      <td class="gt_row gt_center">7 (58%)</td>
+      <td class="gt_row gt_center">171 (38%)</td>
+      <td class="gt_row gt_center">190 (34%)</td>
+      <td class="gt_row gt_center">77 (28%)</td>
+    </tr>
+    <tr>
+      <td class="gt_row gt_left">study</td>
+      <td class="gt_row gt_center"></td>
+      <td class="gt_row gt_center"></td>
+      <td class="gt_row gt_center"></td>
+      <td class="gt_row gt_center"></td>
+      <td class="gt_row gt_center"></td>
+    </tr>
+    <tr>
+      <td class="gt_row gt_left" style="text-align: left; text-indent: 10px;">MAP</td>
+      <td class="gt_row gt_center">546 (42%)</td>
+      <td class="gt_row gt_center">5 (42%)</td>
+      <td class="gt_row gt_center">193 (42%)</td>
+      <td class="gt_row gt_center">246 (44%)</td>
+      <td class="gt_row gt_center">102 (37%)</td>
+    </tr>
+    <tr>
+      <td class="gt_row gt_left" style="text-align: left; text-indent: 10px;">MSBB</td>
+      <td class="gt_row gt_center">220 (17%)</td>
+      <td class="gt_row gt_center">3 (25%)</td>
+      <td class="gt_row gt_center">69 (15%)</td>
+      <td class="gt_row gt_center">78 (14%)</td>
+      <td class="gt_row gt_center">70 (25%)</td>
+    </tr>
+    <tr>
+      <td class="gt_row gt_left" style="text-align: left; text-indent: 10px;">ROS</td>
+      <td class="gt_row gt_center">542 (41%)</td>
+      <td class="gt_row gt_center">4 (33%)</td>
+      <td class="gt_row gt_center">193 (42%)</td>
+      <td class="gt_row gt_center">238 (42%)</td>
+      <td class="gt_row gt_center">107 (38%)</td>
+    </tr>
+  </tbody>
+  
+  <tfoot>
+    <tr class="gt_footnotes">
+      <td colspan="6">
+        <p class="gt_footnote">
+          <sup class="gt_footnote_marks">
+            <em>1</em>
+          </sup>
+           
+          Statistics presented: n (%); mean (SD)
+          <br />
+        </p>
+      </td>
+    </tr>
+  </tfoot>
+</table></div>
+<div class="sourceCode" id="cb13"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb13-1" data-line-number="1">niareagansc_df &lt;-<span class="st"> </span>ampad <span class="op">%&gt;%</span><span class="st"> </span></a>
+<a class="sourceLine" id="cb13-2" data-line-number="2"><span class="st">  </span><span class="kw">filter</span>(<span class="op">!</span><span class="kw">is.na</span>(niareagansc)) <span class="op">%&gt;%</span></a>
+<a class="sourceLine" id="cb13-3" data-line-number="3"><span class="st">  </span><span class="kw">filter</span>(study <span class="op">!=</span><span class="st"> &quot;MAYO&quot;</span>) <span class="op">%&gt;%</span><span class="st"> </span></a>
+<a class="sourceLine" id="cb13-4" data-line-number="4"><span class="st">  </span><span class="kw">mutate</span>(<span class="dt">niareagansc =</span> <span class="kw">fct_recode</span>(niareagansc, <span class="st">&quot;3&quot;</span> =<span class="st"> &quot;4&quot;</span>), </a>
+<a class="sourceLine" id="cb13-5" data-line-number="5">         <span class="dt">study =</span> <span class="kw">fct_recode</span>(study, <span class="st">&quot;ROSMAP&quot;</span> =<span class="st"> &quot;MAP&quot;</span>, <span class="st">&quot;ROSMAP&quot;</span> =<span class="st"> &quot;ROS&quot;</span>), </a>
+<a class="sourceLine" id="cb13-6" data-line-number="6">         <span class="dt">study =</span> <span class="kw">fct_relevel</span>(study, <span class="st">&quot;ROSMAP&quot;</span>)) </a></code></pre></div>
+<div class="sourceCode" id="cb14"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb14-1" data-line-number="1">res1a_olr &lt;-<span class="st"> </span><span class="kw">vglm</span>(niareagansc <span class="op">~</span><span class="st"> </span>macro <span class="op">+</span><span class="st"> </span>apoe4 <span class="op">+</span><span class="st"> </span>sex <span class="op">+</span><span class="st"> </span>aod <span class="op">+</span><span class="st"> </span>study, </a>
+<a class="sourceLine" id="cb14-2" data-line-number="2">                  <span class="dt">family=</span><span class="kw">propodds</span>(), <span class="dt">data =</span> niareagansc_df)</a>
+<a class="sourceLine" id="cb14-3" data-line-number="3">res1a_olr_np &lt;-<span class="st"> </span><span class="kw">vglm</span>(niareagansc <span class="op">~</span><span class="st"> </span>macro <span class="op">+</span><span class="st"> </span>apoe4 <span class="op">+</span><span class="st"> </span>sex <span class="op">+</span><span class="st"> </span>aod <span class="op">+</span><span class="st"> </span>study, </a>
+<a class="sourceLine" id="cb14-4" data-line-number="4">                     <span class="dt">family=</span><span class="kw">cumulative</span>(), <span class="dt">data =</span> niareagansc_df)</a></code></pre></div>
+<pre><code>## Warning in Deviance.categorical.data.vgam(mu = mu, y = y, w = w, residuals =
+## residuals, : fitted values close to 0 or 1</code></pre>
+<pre><code>## Warning in slot(family, &quot;validparams&quot;)(eta, y = y, extra = extra): It seems
+## that the nonparallelism assumption has resulted in intersecting linear/additive
+## predictors. Try propodds() or fitting a partial nonproportional odds model or
+## choosing some other link function, etc.</code></pre>
+<pre><code>## Warning in Deviance.categorical.data.vgam(mu = mu, y = y, w = w, residuals =
+## residuals, : fitted values close to 0 or 1</code></pre>
+<pre><code>## Warning in slot(family, &quot;validparams&quot;)(eta, y, extra = extra): It seems that
+## the nonparallelism assumption has resulted in intersecting linear/additive
+## predictors. Try propodds() or fitting a partial nonproportional odds model or
+## choosing some other link function, etc.</code></pre>
+<pre><code>## Warning in Deviance.categorical.data.vgam(mu = mu, y = y, w = w, residuals =
+## residuals, : fitted values close to 0 or 1</code></pre>
+<pre><code>## Warning in slot(family, &quot;validparams&quot;)(eta, y = y, extra = extra): It seems
+## that the nonparallelism assumption has resulted in intersecting linear/additive
+## predictors. Try propodds() or fitting a partial nonproportional odds model or
+## choosing some other link function, etc.</code></pre>
+<pre><code>## Warning in Deviance.categorical.data.vgam(mu = mu, y = y, w = w, residuals =
+## residuals, : fitted values close to 0 or 1</code></pre>
+<pre><code>## Warning in slot(family, &quot;validparams&quot;)(eta, y, extra = extra): It seems that
+## the nonparallelism assumption has resulted in intersecting linear/additive
+## predictors. Try propodds() or fitting a partial nonproportional odds model or
+## choosing some other link function, etc.</code></pre>
+<pre><code>## Warning in Deviance.categorical.data.vgam(mu = mu, y = y, w = w, residuals =
+## residuals, : fitted values close to 0 or 1</code></pre>
+<pre><code>## Warning in slot(family, &quot;validparams&quot;)(eta, y, extra = extra): It seems that
+## the nonparallelism assumption has resulted in intersecting linear/additive
+## predictors. Try propodds() or fitting a partial nonproportional odds model or
+## choosing some other link function, etc.</code></pre>
+<pre><code>## Warning in Deviance.categorical.data.vgam(mu = mu, y = y, w = w, residuals =
+## residuals, : fitted values close to 0 or 1</code></pre>
+<pre><code>## Warning in slot(family, &quot;validparams&quot;)(eta, y = y, extra = extra): It seems
+## that the nonparallelism assumption has resulted in intersecting linear/additive
+## predictors. Try propodds() or fitting a partial nonproportional odds model or
+## choosing some other link function, etc.</code></pre>
+<pre><code>## Warning in Deviance.categorical.data.vgam(mu = mu, y = y, w = w, residuals =
+## residuals, : fitted values close to 0 or 1</code></pre>
+<pre><code>## Warning in slot(family, &quot;validparams&quot;)(eta, y, extra = extra): It seems that
+## the nonparallelism assumption has resulted in intersecting linear/additive
+## predictors. Try propodds() or fitting a partial nonproportional odds model or
+## choosing some other link function, etc.</code></pre>
+<pre><code>## Warning in Deviance.categorical.data.vgam(mu = mu, y = y, w = w, residuals =
+## residuals, : fitted values close to 0 or 1</code></pre>
+<pre><code>## Warning in slot(family, &quot;validparams&quot;)(eta, y, extra = extra): It seems that
+## the nonparallelism assumption has resulted in intersecting linear/additive
+## predictors. Try propodds() or fitting a partial nonproportional odds model or
+## choosing some other link function, etc.</code></pre>
+<pre><code>## Warning in Deviance.categorical.data.vgam(mu = mu, y = y, w = w, residuals =
+## residuals, : fitted values close to 0 or 1</code></pre>
+<pre><code>## Warning in slot(family, &quot;validparams&quot;)(eta, y = y, extra = extra): It seems
+## that the nonparallelism assumption has resulted in intersecting linear/additive
+## predictors. Try propodds() or fitting a partial nonproportional odds model or
+## choosing some other link function, etc.</code></pre>
+<pre><code>## Warning in Deviance.categorical.data.vgam(mu = mu, y = y, w = w, residuals =
+## residuals, : fitted values close to 0 or 1</code></pre>
+<pre><code>## Warning in slot(family, &quot;validparams&quot;)(eta, y, extra = extra): It seems that
+## the nonparallelism assumption has resulted in intersecting linear/additive
+## predictors. Try propodds() or fitting a partial nonproportional odds model or
+## choosing some other link function, etc.</code></pre>
+<pre><code>## Warning in Deviance.categorical.data.vgam(mu = mu, y = y, w = w, residuals =
+## residuals, : fitted values close to 0 or 1</code></pre>
+<pre><code>## Warning in slot(family, &quot;validparams&quot;)(eta, y, extra = extra): It seems that
+## the nonparallelism assumption has resulted in intersecting linear/additive
+## predictors. Try propodds() or fitting a partial nonproportional odds model or
+## choosing some other link function, etc.</code></pre>
+<pre><code>## Warning in Deviance.categorical.data.vgam(mu = mu, y = y, w = w, residuals =
+## residuals, : fitted values close to 0 or 1</code></pre>
+<pre><code>## Warning in slot(family, &quot;validparams&quot;)(eta, y = y, extra = extra): It seems
+## that the nonparallelism assumption has resulted in intersecting linear/additive
+## predictors. Try propodds() or fitting a partial nonproportional odds model or
+## choosing some other link function, etc.</code></pre>
+<pre><code>## Warning in Deviance.categorical.data.vgam(mu = mu, y = y, w = w, residuals =
+## residuals, : fitted values close to 0 or 1</code></pre>
+<pre><code>## Warning in slot(family, &quot;validparams&quot;)(eta, y, extra = extra): It seems that
+## the nonparallelism assumption has resulted in intersecting linear/additive
+## predictors. Try propodds() or fitting a partial nonproportional odds model or
+## choosing some other link function, etc.</code></pre>
+<pre><code>## Warning in Deviance.categorical.data.vgam(mu = mu, y = y, w = w, residuals =
+## residuals, : fitted values close to 0 or 1</code></pre>
+<pre><code>## Warning in slot(family, &quot;validparams&quot;)(eta, y, extra = extra): It seems that
+## the nonparallelism assumption has resulted in intersecting linear/additive
+## predictors. Try propodds() or fitting a partial nonproportional odds model or
+## choosing some other link function, etc.</code></pre>
+<pre><code>## Warning in Deviance.categorical.data.vgam(mu = mu, y = y, w = w, residuals =
+## residuals, : fitted values close to 0 or 1</code></pre>
+<pre><code>## Warning in slot(family, &quot;validparams&quot;)(eta, y = y, extra = extra): It seems
+## that the nonparallelism assumption has resulted in intersecting linear/additive
+## predictors. Try propodds() or fitting a partial nonproportional odds model or
+## choosing some other link function, etc.</code></pre>
+<pre><code>## Warning in Deviance.categorical.data.vgam(mu = mu, y = y, w = w, residuals =
+## residuals, : fitted values close to 0 or 1</code></pre>
+<pre><code>## Warning in slot(family, &quot;validparams&quot;)(eta, y, extra = extra): It seems that
+## the nonparallelism assumption has resulted in intersecting linear/additive
+## predictors. Try propodds() or fitting a partial nonproportional odds model or
+## choosing some other link function, etc.</code></pre>
+<pre><code>## Warning in Deviance.categorical.data.vgam(mu = mu, y = y, w = w, residuals =
+## residuals, : fitted values close to 0 or 1</code></pre>
+<pre><code>## Warning in slot(family, &quot;validparams&quot;)(eta, y, extra = extra): It seems that
+## the nonparallelism assumption has resulted in intersecting linear/additive
+## predictors. Try propodds() or fitting a partial nonproportional odds model or
+## choosing some other link function, etc.</code></pre>
+<pre><code>## Warning in Deviance.categorical.data.vgam(mu = mu, y = y, w = w, residuals =
+## residuals, : fitted values close to 0 or 1</code></pre>
+<pre><code>## Warning in slot(family, &quot;validparams&quot;)(eta, y = y, extra = extra): It seems
+## that the nonparallelism assumption has resulted in intersecting linear/additive
+## predictors. Try propodds() or fitting a partial nonproportional odds model or
+## choosing some other link function, etc.</code></pre>
+<pre><code>## Warning in Deviance.categorical.data.vgam(mu = mu, y = y, w = w, residuals =
+## residuals, : fitted values close to 0 or 1</code></pre>
+<pre><code>## Warning in slot(family, &quot;validparams&quot;)(eta, y, extra = extra): It seems that
+## the nonparallelism assumption has resulted in intersecting linear/additive
+## predictors. Try propodds() or fitting a partial nonproportional odds model or
+## choosing some other link function, etc.</code></pre>
+<pre><code>## Warning in Deviance.categorical.data.vgam(mu = mu, y = y, w = w, residuals =
+## residuals, : fitted values close to 0 or 1</code></pre>
+<pre><code>## Warning in slot(family, &quot;validparams&quot;)(eta, y, extra = extra): It seems that
+## the nonparallelism assumption has resulted in intersecting linear/additive
+## predictors. Try propodds() or fitting a partial nonproportional odds model or
+## choosing some other link function, etc.</code></pre>
+<pre><code>## Warning in Deviance.categorical.data.vgam(mu = mu, y = y, w = w, residuals =
+## residuals, : fitted values close to 0 or 1</code></pre>
+<pre><code>## Warning in slot(family, &quot;validparams&quot;)(eta, y = y, extra = extra): It seems
+## that the nonparallelism assumption has resulted in intersecting linear/additive
+## predictors. Try propodds() or fitting a partial nonproportional odds model or
+## choosing some other link function, etc.</code></pre>
+<pre><code>## Warning in Deviance.categorical.data.vgam(mu = mu, y = y, w = w, residuals =
+## residuals, : fitted values close to 0 or 1</code></pre>
+<pre><code>## Warning in slot(family, &quot;validparams&quot;)(eta, y, extra = extra): It seems that
+## the nonparallelism assumption has resulted in intersecting linear/additive
+## predictors. Try propodds() or fitting a partial nonproportional odds model or
+## choosing some other link function, etc.</code></pre>
+<pre><code>## Warning in Deviance.categorical.data.vgam(mu = mu, y = y, w = w, residuals =
+## residuals, : fitted values close to 0 or 1</code></pre>
+<pre><code>## Warning in slot(family, &quot;validparams&quot;)(eta, y, extra = extra): It seems that
+## the nonparallelism assumption has resulted in intersecting linear/additive
+## predictors. Try propodds() or fitting a partial nonproportional odds model or
+## choosing some other link function, etc.</code></pre>
+<pre><code>## Warning in Deviance.categorical.data.vgam(mu = mu, y = y, w = w, residuals =
+## residuals, : fitted values close to 0 or 1</code></pre>
+<pre><code>## Warning in slot(family, &quot;validparams&quot;)(eta, y = y, extra = extra): It seems
+## that the nonparallelism assumption has resulted in intersecting linear/additive
+## predictors. Try propodds() or fitting a partial nonproportional odds model or
+## choosing some other link function, etc.</code></pre>
+<pre><code>## Warning in Deviance.categorical.data.vgam(mu = mu, y = y, w = w, residuals =
+## residuals, : fitted values close to 0 or 1</code></pre>
+<pre><code>## Warning in slot(family, &quot;validparams&quot;)(eta, y, extra = extra): It seems that
+## the nonparallelism assumption has resulted in intersecting linear/additive
+## predictors. Try propodds() or fitting a partial nonproportional odds model or
+## choosing some other link function, etc.</code></pre>
+<pre><code>## Warning in Deviance.categorical.data.vgam(mu = mu, y = y, w = w, residuals =
+## residuals, : fitted values close to 0 or 1</code></pre>
+<pre><code>## Warning in slot(family, &quot;validparams&quot;)(eta, y, extra = extra): It seems that
+## the nonparallelism assumption has resulted in intersecting linear/additive
+## predictors. Try propodds() or fitting a partial nonproportional odds model or
+## choosing some other link function, etc.</code></pre>
+<pre><code>## Warning in Deviance.categorical.data.vgam(mu = mu, y = y, w = w, residuals =
+## residuals, : fitted values close to 0 or 1</code></pre>
+<pre><code>## Warning in slot(family, &quot;validparams&quot;)(eta, y = y, extra = extra): It seems
+## that the nonparallelism assumption has resulted in intersecting linear/additive
+## predictors. Try propodds() or fitting a partial nonproportional odds model or
+## choosing some other link function, etc.</code></pre>
+<pre><code>## Warning in Deviance.categorical.data.vgam(mu = mu, y = y, w = w, residuals =
+## residuals, : fitted values close to 0 or 1</code></pre>
+<pre><code>## Warning in slot(family, &quot;validparams&quot;)(eta, y, extra = extra): It seems that
+## the nonparallelism assumption has resulted in intersecting linear/additive
+## predictors. Try propodds() or fitting a partial nonproportional odds model or
+## choosing some other link function, etc.</code></pre>
+<pre><code>## Warning in Deviance.categorical.data.vgam(mu = mu, y = y, w = w, residuals =
+## residuals, : fitted values close to 0 or 1</code></pre>
+<pre><code>## Warning in slot(family, &quot;validparams&quot;)(eta, y, extra = extra): It seems that
+## the nonparallelism assumption has resulted in intersecting linear/additive
+## predictors. Try propodds() or fitting a partial nonproportional odds model or
+## choosing some other link function, etc.</code></pre>
+<pre><code>## Warning in Deviance.categorical.data.vgam(mu = mu, y = y, w = w, residuals =
+## residuals, : fitted values close to 0 or 1</code></pre>
+<pre><code>## Warning in slot(family, &quot;validparams&quot;)(eta, y = y, extra = extra): It seems
+## that the nonparallelism assumption has resulted in intersecting linear/additive
+## predictors. Try propodds() or fitting a partial nonproportional odds model or
+## choosing some other link function, etc.</code></pre>
+<pre><code>## Warning in Deviance.categorical.data.vgam(mu = mu, y = y, w = w, residuals =
+## residuals, : fitted values close to 0 or 1</code></pre>
+<pre><code>## Warning in slot(family, &quot;validparams&quot;)(eta, y, extra = extra): It seems that
+## the nonparallelism assumption has resulted in intersecting linear/additive
+## predictors. Try propodds() or fitting a partial nonproportional odds model or
+## choosing some other link function, etc.</code></pre>
+<pre><code>## Warning in Deviance.categorical.data.vgam(mu = mu, y = y, w = w, residuals =
+## residuals, : fitted values close to 0 or 1</code></pre>
+<pre><code>## Warning in slot(family, &quot;validparams&quot;)(eta, y, extra = extra): It seems that
+## the nonparallelism assumption has resulted in intersecting linear/additive
+## predictors. Try propodds() or fitting a partial nonproportional odds model or
+## choosing some other link function, etc.</code></pre>
+<pre><code>## Warning in Deviance.categorical.data.vgam(mu = mu, y = y, w = w, residuals =
+## residuals, : fitted values close to 0 or 1</code></pre>
+<pre><code>## Warning in slot(family, &quot;validparams&quot;)(eta, y = y, extra = extra): It seems
+## that the nonparallelism assumption has resulted in intersecting linear/additive
+## predictors. Try propodds() or fitting a partial nonproportional odds model or
+## choosing some other link function, etc.</code></pre>
+<pre><code>## Warning in Deviance.categorical.data.vgam(mu = mu, y = y, w = w, residuals =
+## residuals, : fitted values close to 0 or 1</code></pre>
+<pre><code>## Warning in slot(family, &quot;validparams&quot;)(eta, y, extra = extra): It seems that
+## the nonparallelism assumption has resulted in intersecting linear/additive
+## predictors. Try propodds() or fitting a partial nonproportional odds model or
+## choosing some other link function, etc.</code></pre>
+<pre><code>## Warning in Deviance.categorical.data.vgam(mu = mu, y = y, w = w, residuals =
+## residuals, : fitted values close to 0 or 1</code></pre>
+<pre><code>## Warning in slot(family, &quot;validparams&quot;)(eta, y, extra = extra): It seems that
+## the nonparallelism assumption has resulted in intersecting linear/additive
+## predictors. Try propodds() or fitting a partial nonproportional odds model or
+## choosing some other link function, etc.</code></pre>
+<pre><code>## Warning in Deviance.categorical.data.vgam(mu = mu, y = y, w = w, residuals =
+## residuals, : fitted values close to 0 or 1</code></pre>
+<pre><code>## Warning in slot(family, &quot;validparams&quot;)(eta, y = y, extra = extra): It seems
+## that the nonparallelism assumption has resulted in intersecting linear/additive
+## predictors. Try propodds() or fitting a partial nonproportional odds model or
+## choosing some other link function, etc.</code></pre>
+<pre><code>## Warning in Deviance.categorical.data.vgam(mu = mu, y = y, w = w, residuals =
+## residuals, : fitted values close to 0 or 1</code></pre>
+<pre><code>## Warning in slot(family, &quot;validparams&quot;)(eta, y, extra = extra): It seems that
+## the nonparallelism assumption has resulted in intersecting linear/additive
+## predictors. Try propodds() or fitting a partial nonproportional odds model or
+## choosing some other link function, etc.</code></pre>
+<pre><code>## Warning in Deviance.categorical.data.vgam(mu = mu, y = y, w = w, residuals =
+## residuals, : fitted values close to 0 or 1</code></pre>
+<pre><code>## Warning in slot(family, &quot;validparams&quot;)(eta, y, extra = extra): It seems that
+## the nonparallelism assumption has resulted in intersecting linear/additive
+## predictors. Try propodds() or fitting a partial nonproportional odds model or
+## choosing some other link function, etc.</code></pre>
+<pre><code>## Warning in Deviance.categorical.data.vgam(mu = mu, y = y, w = w, residuals =
+## residuals, : fitted values close to 0 or 1</code></pre>
+<pre><code>## Warning in slot(family, &quot;validparams&quot;)(eta, y = y, extra = extra): It seems
+## that the nonparallelism assumption has resulted in intersecting linear/additive
+## predictors. Try propodds() or fitting a partial nonproportional odds model or
+## choosing some other link function, etc.</code></pre>
+<pre><code>## Warning in Deviance.categorical.data.vgam(mu = mu, y = y, w = w, residuals =
+## residuals, : fitted values close to 0 or 1</code></pre>
+<pre><code>## Warning in slot(family, &quot;validparams&quot;)(eta, y, extra = extra): It seems that
+## the nonparallelism assumption has resulted in intersecting linear/additive
+## predictors. Try propodds() or fitting a partial nonproportional odds model or
+## choosing some other link function, etc.</code></pre>
+<pre><code>## Warning in Deviance.categorical.data.vgam(mu = mu, y = y, w = w, residuals =
+## residuals, : fitted values close to 0 or 1</code></pre>
+<pre><code>## Warning in slot(family, &quot;validparams&quot;)(eta, y, extra = extra): It seems that
+## the nonparallelism assumption has resulted in intersecting linear/additive
+## predictors. Try propodds() or fitting a partial nonproportional odds model or
+## choosing some other link function, etc.</code></pre>
+<pre><code>## Warning in Deviance.categorical.data.vgam(mu = mu, y = y, w = w, residuals =
+## residuals, : fitted values close to 0 or 1</code></pre>
+<pre><code>## Warning in slot(family, &quot;validparams&quot;)(eta, y = y, extra = extra): It seems
+## that the nonparallelism assumption has resulted in intersecting linear/additive
+## predictors. Try propodds() or fitting a partial nonproportional odds model or
+## choosing some other link function, etc.</code></pre>
+<pre><code>## Warning in Deviance.categorical.data.vgam(mu = mu, y = y, w = w, residuals =
+## residuals, : fitted values close to 0 or 1</code></pre>
+<pre><code>## Warning in slot(family, &quot;validparams&quot;)(eta, y, extra = extra): It seems that
+## the nonparallelism assumption has resulted in intersecting linear/additive
+## predictors. Try propodds() or fitting a partial nonproportional odds model or
+## choosing some other link function, etc.</code></pre>
+<pre><code>## Warning in Deviance.categorical.data.vgam(mu = mu, y = y, w = w, residuals =
+## residuals, : fitted values close to 0 or 1</code></pre>
+<pre><code>## Warning in slot(family, &quot;validparams&quot;)(eta, y, extra = extra): It seems that
+## the nonparallelism assumption has resulted in intersecting linear/additive
+## predictors. Try propodds() or fitting a partial nonproportional odds model or
+## choosing some other link function, etc.</code></pre>
+<pre><code>## Warning in Deviance.categorical.data.vgam(mu = mu, y = y, w = w, residuals =
+## residuals, : fitted values close to 0 or 1</code></pre>
+<pre><code>## Warning in slot(family, &quot;validparams&quot;)(eta, y = y, extra = extra): It seems
+## that the nonparallelism assumption has resulted in intersecting linear/additive
+## predictors. Try propodds() or fitting a partial nonproportional odds model or
+## choosing some other link function, etc.</code></pre>
+<pre><code>## Warning in Deviance.categorical.data.vgam(mu = mu, y = y, w = w, residuals =
+## residuals, : fitted values close to 0 or 1</code></pre>
+<pre><code>## Warning in slot(family, &quot;validparams&quot;)(eta, y, extra = extra): It seems that
+## the nonparallelism assumption has resulted in intersecting linear/additive
+## predictors. Try propodds() or fitting a partial nonproportional odds model or
+## choosing some other link function, etc.</code></pre>
+<pre><code>## Warning in Deviance.categorical.data.vgam(mu = mu, y = y, w = w, residuals =
+## residuals, : fitted values close to 0 or 1</code></pre>
+<pre><code>## Warning in slot(family, &quot;validparams&quot;)(eta, y, extra = extra): It seems that
+## the nonparallelism assumption has resulted in intersecting linear/additive
+## predictors. Try propodds() or fitting a partial nonproportional odds model or
+## choosing some other link function, etc.</code></pre>
+<pre><code>## Warning in Deviance.categorical.data.vgam(mu = mu, y = y, w = w, residuals =
+## residuals, : fitted values close to 0 or 1</code></pre>
+<pre><code>## Warning in slot(family, &quot;validparams&quot;)(eta, y = y, extra = extra): It seems
+## that the nonparallelism assumption has resulted in intersecting linear/additive
+## predictors. Try propodds() or fitting a partial nonproportional odds model or
+## choosing some other link function, etc.</code></pre>
+<pre><code>## Warning in Deviance.categorical.data.vgam(mu = mu, y = y, w = w, residuals =
+## residuals, : fitted values close to 0 or 1</code></pre>
+<pre><code>## Warning in slot(family, &quot;validparams&quot;)(eta, y, extra = extra): It seems that
+## the nonparallelism assumption has resulted in intersecting linear/additive
+## predictors. Try propodds() or fitting a partial nonproportional odds model or
+## choosing some other link function, etc.</code></pre>
+<pre><code>## Warning in Deviance.categorical.data.vgam(mu = mu, y = y, w = w, residuals =
+## residuals, : fitted values close to 0 or 1</code></pre>
+<pre><code>## Warning in slot(family, &quot;validparams&quot;)(eta, y, extra = extra): It seems that
+## the nonparallelism assumption has resulted in intersecting linear/additive
+## predictors. Try propodds() or fitting a partial nonproportional odds model or
+## choosing some other link function, etc.</code></pre>
+<pre><code>## Warning in Deviance.categorical.data.vgam(mu = mu, y = y, w = w, residuals =
+## residuals, : fitted values close to 0 or 1</code></pre>
+<pre><code>## Warning in slot(family, &quot;validparams&quot;)(eta, y = y, extra = extra): It seems
+## that the nonparallelism assumption has resulted in intersecting linear/additive
+## predictors. Try propodds() or fitting a partial nonproportional odds model or
+## choosing some other link function, etc.</code></pre>
+<pre><code>## Warning in Deviance.categorical.data.vgam(mu = mu, y = y, w = w, residuals =
+## residuals, : fitted values close to 0 or 1</code></pre>
+<pre><code>## Warning in slot(family, &quot;validparams&quot;)(eta, y, extra = extra): It seems that
+## the nonparallelism assumption has resulted in intersecting linear/additive
+## predictors. Try propodds() or fitting a partial nonproportional odds model or
+## choosing some other link function, etc.</code></pre>
+<pre><code>## Warning in Deviance.categorical.data.vgam(mu = mu, y = y, w = w, residuals =
+## residuals, : fitted values close to 0 or 1</code></pre>
+<pre><code>## Warning in slot(family, &quot;validparams&quot;)(eta, y, extra = extra): It seems that
+## the nonparallelism assumption has resulted in intersecting linear/additive
+## predictors. Try propodds() or fitting a partial nonproportional odds model or
+## choosing some other link function, etc.</code></pre>
+<pre><code>## Warning in Deviance.categorical.data.vgam(mu = mu, y = y, w = w, residuals =
+## residuals, : fitted values close to 0 or 1</code></pre>
+<pre><code>## Warning in slot(family, &quot;validparams&quot;)(eta, y = y, extra = extra): It seems
+## that the nonparallelism assumption has resulted in intersecting linear/additive
+## predictors. Try propodds() or fitting a partial nonproportional odds model or
+## choosing some other link function, etc.</code></pre>
+<pre><code>## Warning in Deviance.categorical.data.vgam(mu = mu, y = y, w = w, residuals =
+## residuals, : fitted values close to 0 or 1</code></pre>
+<pre><code>## Warning in slot(family, &quot;validparams&quot;)(eta, y, extra = extra): It seems that
+## the nonparallelism assumption has resulted in intersecting linear/additive
+## predictors. Try propodds() or fitting a partial nonproportional odds model or
+## choosing some other link function, etc.</code></pre>
+<pre><code>## Warning in Deviance.categorical.data.vgam(mu = mu, y = y, w = w, residuals =
+## residuals, : fitted values close to 0 or 1</code></pre>
+<pre><code>## Warning in slot(family, &quot;validparams&quot;)(eta, y, extra = extra): It seems that
+## the nonparallelism assumption has resulted in intersecting linear/additive
+## predictors. Try propodds() or fitting a partial nonproportional odds model or
+## choosing some other link function, etc.</code></pre>
+<pre><code>## Warning in Deviance.categorical.data.vgam(mu = mu, y = y, w = w, residuals =
+## residuals, : fitted values close to 0 or 1</code></pre>
+<pre><code>## Warning in slot(family, &quot;validparams&quot;)(eta, y = y, extra = extra): It seems
+## that the nonparallelism assumption has resulted in intersecting linear/additive
+## predictors. Try propodds() or fitting a partial nonproportional odds model or
+## choosing some other link function, etc.</code></pre>
+<pre><code>## Warning in Deviance.categorical.data.vgam(mu = mu, y = y, w = w, residuals =
+## residuals, : fitted values close to 0 or 1</code></pre>
+<pre><code>## Warning in slot(family, &quot;validparams&quot;)(eta, y, extra = extra): It seems that
+## the nonparallelism assumption has resulted in intersecting linear/additive
+## predictors. Try propodds() or fitting a partial nonproportional odds model or
+## choosing some other link function, etc.</code></pre>
+<pre><code>## Warning in Deviance.categorical.data.vgam(mu = mu, y = y, w = w, residuals =
+## residuals, : fitted values close to 0 or 1</code></pre>
+<pre><code>## Warning in slot(family, &quot;validparams&quot;)(eta, y, extra = extra): It seems that
+## the nonparallelism assumption has resulted in intersecting linear/additive
+## predictors. Try propodds() or fitting a partial nonproportional odds model or
+## choosing some other link function, etc.</code></pre>
+<pre><code>## Warning in Deviance.categorical.data.vgam(mu = mu, y = y, w = w, residuals =
+## residuals, : fitted values close to 0 or 1</code></pre>
+<pre><code>## Warning in slot(family, &quot;validparams&quot;)(eta, y = y, extra = extra): It seems
+## that the nonparallelism assumption has resulted in intersecting linear/additive
+## predictors. Try propodds() or fitting a partial nonproportional odds model or
+## choosing some other link function, etc.</code></pre>
+<pre><code>## Warning in Deviance.categorical.data.vgam(mu = mu, y = y, w = w, residuals =
+## residuals, : fitted values close to 0 or 1</code></pre>
+<pre><code>## Warning in slot(family, &quot;validparams&quot;)(eta, y, extra = extra): It seems that
+## the nonparallelism assumption has resulted in intersecting linear/additive
+## predictors. Try propodds() or fitting a partial nonproportional odds model or
+## choosing some other link function, etc.</code></pre>
+<pre><code>## Warning in Deviance.categorical.data.vgam(mu = mu, y = y, w = w, residuals =
+## residuals, : fitted values close to 0 or 1</code></pre>
+<pre><code>## Warning in slot(family, &quot;validparams&quot;)(eta, y, extra = extra): It seems that
+## the nonparallelism assumption has resulted in intersecting linear/additive
+## predictors. Try propodds() or fitting a partial nonproportional odds model or
+## choosing some other link function, etc.</code></pre>
+<pre><code>## Warning in Deviance.categorical.data.vgam(mu = mu, y = y, w = w, residuals =
+## residuals, : fitted values close to 0 or 1</code></pre>
+<pre><code>## Warning in slot(family, &quot;validparams&quot;)(eta, y = y, extra = extra): It seems
+## that the nonparallelism assumption has resulted in intersecting linear/additive
+## predictors. Try propodds() or fitting a partial nonproportional odds model or
+## choosing some other link function, etc.</code></pre>
+<pre><code>## Warning in Deviance.categorical.data.vgam(mu = mu, y = y, w = w, residuals =
+## residuals, : fitted values close to 0 or 1</code></pre>
+<pre><code>## Warning in slot(family, &quot;validparams&quot;)(eta, y, extra = extra): It seems that
+## the nonparallelism assumption has resulted in intersecting linear/additive
+## predictors. Try propodds() or fitting a partial nonproportional odds model or
+## choosing some other link function, etc.</code></pre>
+<pre><code>## Warning in Deviance.categorical.data.vgam(mu = mu, y = y, w = w, residuals =
+## residuals, : fitted values close to 0 or 1</code></pre>
+<pre><code>## Warning in slot(family, &quot;validparams&quot;)(eta, y, extra = extra): It seems that
+## the nonparallelism assumption has resulted in intersecting linear/additive
+## predictors. Try propodds() or fitting a partial nonproportional odds model or
+## choosing some other link function, etc.</code></pre>
+<pre><code>## Warning in Deviance.categorical.data.vgam(mu = mu, y = y, w = w, residuals =
+## residuals, : fitted values close to 0 or 1</code></pre>
+<pre><code>## Warning in slot(family, &quot;validparams&quot;)(eta, y = y, extra = extra): It seems
+## that the nonparallelism assumption has resulted in intersecting linear/additive
+## predictors. Try propodds() or fitting a partial nonproportional odds model or
+## choosing some other link function, etc.</code></pre>
+<pre><code>## Warning in Deviance.categorical.data.vgam(mu = mu, y = y, w = w, residuals =
+## residuals, : fitted values close to 0 or 1</code></pre>
+<pre><code>## Warning in slot(family, &quot;validparams&quot;)(eta, y, extra = extra): It seems that
+## the nonparallelism assumption has resulted in intersecting linear/additive
+## predictors. Try propodds() or fitting a partial nonproportional odds model or
+## choosing some other link function, etc.</code></pre>
+<pre><code>## Warning in Deviance.categorical.data.vgam(mu = mu, y = y, w = w, residuals =
+## residuals, : fitted values close to 0 or 1</code></pre>
+<pre><code>## Warning in slot(family, &quot;validparams&quot;)(eta, y, extra = extra): It seems that
+## the nonparallelism assumption has resulted in intersecting linear/additive
+## predictors. Try propodds() or fitting a partial nonproportional odds model or
+## choosing some other link function, etc.</code></pre>
+<pre><code>## Warning in Deviance.categorical.data.vgam(mu = mu, y = y, w = w, residuals =
+## residuals, : fitted values close to 0 or 1</code></pre>
+<pre><code>## Warning in slot(family, &quot;validparams&quot;)(eta, y = y, extra = extra): It seems
+## that the nonparallelism assumption has resulted in intersecting linear/additive
+## predictors. Try propodds() or fitting a partial nonproportional odds model or
+## choosing some other link function, etc.</code></pre>
+<pre><code>## Warning in Deviance.categorical.data.vgam(mu = mu, y = y, w = w, residuals =
+## residuals, : fitted values close to 0 or 1</code></pre>
+<pre><code>## Warning in slot(family, &quot;validparams&quot;)(eta, y, extra = extra): It seems that
+## the nonparallelism assumption has resulted in intersecting linear/additive
+## predictors. Try propodds() or fitting a partial nonproportional odds model or
+## choosing some other link function, etc.</code></pre>
+<pre><code>## Warning in Deviance.categorical.data.vgam(mu = mu, y = y, w = w, residuals =
+## residuals, : fitted values close to 0 or 1</code></pre>
+<pre><code>## Warning in slot(family, &quot;validparams&quot;)(eta, y, extra = extra): It seems that
+## the nonparallelism assumption has resulted in intersecting linear/additive
+## predictors. Try propodds() or fitting a partial nonproportional odds model or
+## choosing some other link function, etc.</code></pre>
+<pre><code>## Warning in Deviance.categorical.data.vgam(mu = mu, y = y, w = w, residuals =
+## residuals, : fitted values close to 0 or 1</code></pre>
+<pre><code>## Warning in slot(family, &quot;validparams&quot;)(eta, y = y, extra = extra): It seems
+## that the nonparallelism assumption has resulted in intersecting linear/additive
+## predictors. Try propodds() or fitting a partial nonproportional odds model or
+## choosing some other link function, etc.</code></pre>
+<pre><code>## Warning in Deviance.categorical.data.vgam(mu = mu, y = y, w = w, residuals =
+## residuals, : fitted values close to 0 or 1</code></pre>
+<pre><code>## Warning in slot(family, &quot;validparams&quot;)(eta, y, extra = extra): It seems that
+## the nonparallelism assumption has resulted in intersecting linear/additive
+## predictors. Try propodds() or fitting a partial nonproportional odds model or
+## choosing some other link function, etc.</code></pre>
+<pre><code>## Warning in Deviance.categorical.data.vgam(mu = mu, y = y, w = w, residuals =
+## residuals, : fitted values close to 0 or 1</code></pre>
+<pre><code>## Warning in slot(family, &quot;validparams&quot;)(eta, y, extra = extra): It seems that
+## the nonparallelism assumption has resulted in intersecting linear/additive
+## predictors. Try propodds() or fitting a partial nonproportional odds model or
+## choosing some other link function, etc.</code></pre>
+<pre><code>## Warning in Deviance.categorical.data.vgam(mu = mu, y = y, w = w, residuals =
+## residuals, : fitted values close to 0 or 1</code></pre>
+<pre><code>## Warning in slot(family, &quot;validparams&quot;)(eta, y = y, extra = extra): It seems
+## that the nonparallelism assumption has resulted in intersecting linear/additive
+## predictors. Try propodds() or fitting a partial nonproportional odds model or
+## choosing some other link function, etc.</code></pre>
+<pre><code>## Warning in Deviance.categorical.data.vgam(mu = mu, y = y, w = w, residuals =
+## residuals, : fitted values close to 0 or 1</code></pre>
+<pre><code>## Warning in slot(family, &quot;validparams&quot;)(eta, y, extra = extra): It seems that
+## the nonparallelism assumption has resulted in intersecting linear/additive
+## predictors. Try propodds() or fitting a partial nonproportional odds model or
+## choosing some other link function, etc.</code></pre>
+<pre><code>## Warning in Deviance.categorical.data.vgam(mu = mu, y = y, w = w, residuals =
+## residuals, : fitted values close to 0 or 1</code></pre>
+<pre><code>## Warning in slot(family, &quot;validparams&quot;)(eta, y, extra = extra): It seems that
+## the nonparallelism assumption has resulted in intersecting linear/additive
+## predictors. Try propodds() or fitting a partial nonproportional odds model or
+## choosing some other link function, etc.</code></pre>
+<pre><code>## Warning in Deviance.categorical.data.vgam(mu = mu, y = y, w = w, residuals =
+## residuals, : fitted values close to 0 or 1</code></pre>
+<pre><code>## Warning in slot(family, &quot;validparams&quot;)(eta, y = y, extra = extra): It seems
+## that the nonparallelism assumption has resulted in intersecting linear/additive
+## predictors. Try propodds() or fitting a partial nonproportional odds model or
+## choosing some other link function, etc.</code></pre>
+<pre><code>## Warning in Deviance.categorical.data.vgam(mu = mu, y = y, w = w, residuals =
+## residuals, : fitted values close to 0 or 1</code></pre>
+<pre><code>## Warning in slot(family, &quot;validparams&quot;)(eta, y, extra = extra): It seems that
+## the nonparallelism assumption has resulted in intersecting linear/additive
+## predictors. Try propodds() or fitting a partial nonproportional odds model or
+## choosing some other link function, etc.</code></pre>
+<pre><code>## Warning in Deviance.categorical.data.vgam(mu = mu, y = y, w = w, residuals =
+## residuals, : fitted values close to 0 or 1</code></pre>
+<pre><code>## Warning in slot(family, &quot;validparams&quot;)(eta, y, extra = extra): It seems that
+## the nonparallelism assumption has resulted in intersecting linear/additive
+## predictors. Try propodds() or fitting a partial nonproportional odds model or
+## choosing some other link function, etc.</code></pre>
+<pre><code>## Warning in Deviance.categorical.data.vgam(mu = mu, y = y, w = w, residuals =
+## residuals, : fitted values close to 0 or 1</code></pre>
+<pre><code>## Warning in slot(family, &quot;validparams&quot;)(eta, y = y, extra = extra): It seems
+## that the nonparallelism assumption has resulted in intersecting linear/additive
+## predictors. Try propodds() or fitting a partial nonproportional odds model or
+## choosing some other link function, etc.</code></pre>
+<pre><code>## Warning in Deviance.categorical.data.vgam(mu = mu, y = y, w = w, residuals =
+## residuals, : fitted values close to 0 or 1</code></pre>
+<pre><code>## Warning in slot(family, &quot;validparams&quot;)(eta, y, extra = extra): It seems that
+## the nonparallelism assumption has resulted in intersecting linear/additive
+## predictors. Try propodds() or fitting a partial nonproportional odds model or
+## choosing some other link function, etc.</code></pre>
+<pre><code>## Warning in Deviance.categorical.data.vgam(mu = mu, y = y, w = w, residuals =
+## residuals, : fitted values close to 0 or 1</code></pre>
+<pre><code>## Warning in slot(family, &quot;validparams&quot;)(eta, y, extra = extra): It seems that
+## the nonparallelism assumption has resulted in intersecting linear/additive
+## predictors. Try propodds() or fitting a partial nonproportional odds model or
+## choosing some other link function, etc.</code></pre>
+<pre><code>## Warning in vglm.fitter(x = x, y = y, w = w, offset = offset, Xm2 = Xm2, : some
+## quantities such as z, residuals, SEs may be inaccurate due to convergence at a
+## half-step</code></pre>
+<pre><code>## Warning in vglm.fitter(x = x, y = y, w = w, offset = offset, Xm2 = Xm2, :
+## convergence not obtained in 30 IRLS iterations</code></pre>
+<div class="sourceCode" id="cb183"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb183-1" data-line-number="1"><span class="kw">lrtest</span>(res1a_olr_np, res1a_olr)</a></code></pre></div>
+<pre><code>## Likelihood ratio test
+## 
+## Model 1: niareagansc ~ macro + apoe4 + sex + aod + study
+## Model 2: niareagansc ~ macro + apoe4 + sex + aod + study
+##    #Df  LogLik Df  Chisq Pr(&gt;Chisq)    
+## 1 2590 -1293.4                         
+## 2 2602 -1318.0 12 49.333  1.829e-06 ***
+## ---
+## Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1</code></pre>
+<div class="sourceCode" id="cb185"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb185-1" data-line-number="1"><span class="kw">summary</span>(res1a_olr)</a></code></pre></div>
+<pre><code>## 
+## Call:
+## vglm(formula = niareagansc ~ macro + apoe4 + sex + aod + study, 
+##     family = propodds(), data = niareagansc_df)
+## 
+## Pearson residuals:
+##                       Min      1Q  Median      3Q   Max
+## logitlink(P[Y&gt;=2]) -3.082 -1.0301  0.3492  0.8718 1.562
+## logitlink(P[Y&gt;=3]) -1.290 -0.5945 -0.2827 -0.2114 3.617
+## 
+## Coefficients: 
+##                Estimate Std. Error z value Pr(&gt;|z|)    
+## (Intercept):1 -2.517623   0.699601  -3.599  0.00032 ***
+## (Intercept):2 -4.580350   0.708350  -6.466 1.00e-10 ***
+## macroI        -0.075219   0.315314  -0.239  0.81145    
+## macroJ         0.198967   0.186890   1.065  0.28705    
+## macroK         0.229008   0.187403   1.222  0.22170    
+## macroT         0.292631   0.186683   1.568  0.11699    
+## macroU         0.053614   0.153526   0.349  0.72693    
+## macroV         0.322741   0.243745   1.324  0.18547    
+## macroW         0.429564   0.419134   1.025  0.30542    
+## macroX        -0.307687   0.402021  -0.765  0.44406    
+## apoe4e4+       1.234383   0.121528  10.157  &lt; 2e-16 ***
+## sexM          -0.239220   0.114111  -2.096  0.03605 *  
+## aod            0.031171   0.007659   4.070 4.71e-05 ***
+## studyMSBB      0.299945   0.146613   2.046  0.04077 *  
+## ---
+## Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
+## 
+## Names of linear predictors: logitlink(P[Y&gt;=2]), logitlink(P[Y&gt;=3])
+## 
+## Residual deviance: 2636.079 on 2602 degrees of freedom
+## 
+## Log-likelihood: -1318.04 on 2602 degrees of freedom
+## 
+## Number of Fisher scoring iterations: 5 
+## 
+## No Hauck-Donner effect found in any of the estimates
+## 
+## 
+## Exponentiated coefficients:
+##    macroI    macroJ    macroK    macroT    macroU    macroV    macroW    macroX 
+## 0.9275402 1.2201420 1.2573518 1.3399485 1.0550770 1.3809076 1.5365880 0.7351452 
+##  apoe4e4+      sexM       aod studyMSBB 
+## 3.4362564 0.7872415 1.0316618 1.3497848</code></pre>
+</div>
+            </section>
+
+          </div>
+        </div>
+      </div>
+<a href="6-2-data-wrangling.html" class="navigation navigation-prev " aria-label="Previous page"><i class="fa fa-angle-left"></i></a>
+<a href="6-4-aim-1b.html" class="navigation navigation-next " aria-label="Next page"><i class="fa fa-angle-right"></i></a>
+    </div>
+  </div>
+<script src="libs/gitbook-2.6.7/js/app.min.js"></script>
+<script src="libs/gitbook-2.6.7/js/lunr.js"></script>
+<script src="libs/gitbook-2.6.7/js/clipboard.min.js"></script>
+<script src="libs/gitbook-2.6.7/js/plugin-search.js"></script>
+<script src="libs/gitbook-2.6.7/js/plugin-sharing.js"></script>
+<script src="libs/gitbook-2.6.7/js/plugin-fontsettings.js"></script>
+<script src="libs/gitbook-2.6.7/js/plugin-bookdown.js"></script>
+<script src="libs/gitbook-2.6.7/js/jquery.highlight.js"></script>
+<script src="libs/gitbook-2.6.7/js/plugin-clipboard.js"></script>
+<script>
+gitbook.require(["gitbook"], function(gitbook) {
+gitbook.start({
+"sharing": {
+"github": false,
+"facebook": true,
+"twitter": true,
+"linkedin": false,
+"weibo": false,
+"instapaper": false,
+"vk": false,
+"all": ["facebook", "twitter", "linkedin", "weibo", "instapaper"]
+},
+"fontsettings": {
+"theme": "white",
+"family": "sans",
+"size": 2
+},
+"edit": {
+"link": null,
+"text": null
+},
+"history": {
+"link": null,
+"text": null
+},
+"view": {
+"link": null,
+"text": null
+},
+"download": ["notebook.pdf", "notebook.epub"],
+"toc": {
+"collapse": "section"
+}
+});
+});
+</script>
+
+</body>
+
+</html>

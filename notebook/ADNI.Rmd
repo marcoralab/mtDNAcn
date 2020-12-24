@@ -15,8 +15,11 @@ library(inspectdf)
 library(skimr)
 library(ggmosaic)
 knitr::opts_knit$set(root.dir = '/sc/arion/projects/LOAD/shea/Projects/mtDNAcn')
-
+set_gtsummary_theme(theme_gtsummary_compact())
 # setwd('/sc/arion/projects/LOAD/shea/Projects/mtDNAcn')
+
+## Functions 
+`%nin%` = negate(`%in%`)
 ```
 
 Reference to ADNI 
@@ -26,6 +29,607 @@ Short description of ADNI
 ```{r adni-load, echo=TRUE, message=TRUE, warning=FALSE, error=F}
 
 
+## ---- ADNI merge file - contains key varibles for assessment ---- ##
+adni.raw <- read_csv('raw/ADNI/ADNIMERGE.csv', guess_max = 100000)
+
+## ---- ADNI APOE ---- ##
+apoe.raw <- read_csv('raw/ADNI/APOERES.csv', guess_max = 10000) %>% 
+  unite(APOE, APGEN1, APGEN2, sep = "") %>%
+  select(RID, APOE)
+
+## ---- ADNI wgs samples and Phy-mer haplotypes
+wgs.hap <- readxl::read_xlsx('raw/ADNI_extra/ADNI_wgs_Mitochondrial_Haplotypes.xlsx', guess_max = 10000) %>% 
+  rename(Haplogroup = HAPLOTYPE) %>%
+  mutate(macro = case_when(
+          str_detect(Haplogroup, "^L|^HV|^JT") ~ substr(Haplogroup, start = 1, stop = 2),
+                     TRUE ~ substr(Haplogroup, start = 1, stop = 1))
+  )
+
+## ---- Resilience phenotype 
+resilince <- read_rds("raw/ADNI_extra/ADNI_resilience_phenotypes_4Shea.rds") %>% 
+  as_tibble()%>% 
+  mutate(ID = as.numeric(ID))
+
+adni_mtdnacn <- read_tsv("raw/ADNI_extra/adni_mtcn_fmc.v2.txt") %>% 
+  rename(mtDNAcn = mt_copy_number) %>%
+  mutate(sample_id = str_replace(sample_id, "ADNI_", ""), 
+         sample_id = str_replace(sample_id, "_s_", "_S_"))
+
+## ---- CSF 
+# Shaw, L., et al. (2009). Cerebrospinal fluid biomarker signature in Alzheimer's disease neuroimaging initiative subjects. [Annals of Neurology  65(4), 403-413](https://dx.doi.org/10.1002/ana.21610)
+
+csf.raw <- read_csv('raw/ADNI/UPENNBIOMK_MASTER.csv', guess_max = 10000)%>% 
+  mutate(VISCODE = str_replace(VISCODE, "bl", "0"), 
+         VISCODE = str_replace(VISCODE, "m", ""), 
+         VISCODE = as.numeric(VISCODE))
+
 
 ```
+
+```{r adni-clean, echo=TRUE, message=TRUE, warning=FALSE, error=F}
+
+adni <- adni.raw %>%
+  left_join(resilince, by = c("RID" = "ID"))  %>% 
+  left_join(apoe.raw, by = "RID") %>% 
+  left_join(wgs.hap, by = c("PTID" = "PATNO")) %>% 
+  left_join(adni_mtdnacn, by = c("PTID" = "sample_id")) %>% 
+  filter(!is.na(Haplogroup)) %>% 
+  mutate(VISCODE = str_replace(VISCODE, "bl", "0"), 
+         VISCODE = str_replace(VISCODE, "m", ""), 
+         VISCODE = as.numeric(VISCODE), 
+         age = AGE + Years_bl) 
+  
+
+write_rds(adni, 'output/adni.rds')
+```
+
+```{r}
+adni_df <- adni %>% 
+  select(RID, ORIGPROT, VISCODE, age, PTGENDER, PTRACCAT, APOE4, PTEDUCAT,
+         DX, FDG, ABETA, TAU, PTAU, 
+         ADAS13, mPACCdigit, COGRES, GLOBALRES, 
+         macro, mtDNAcn) %>% 
+  rename(sex = PTGENDER, apoe4 = APOE4, educ = PTEDUCAT) %>%
+  filter(PTRACCAT == "White") %>% 
+  filter(macro %in% c('H', 'V', 'HV', 'J', 'T', 'U', 'K', 'I', 'W', 'X')) %>% 
+  filter(mtDNAcn < 300) %>%
+  mutate(zmtDNAcn = scale(mtDNAcn)[,1], 
+         ABETA = str_replace(ABETA, "<|>", ""), 
+         ABETA = as.numeric(ABETA), 
+         TAU = as.numeric(TAU), 
+         PTAU = as.numeric(PTAU), 
+         apoe4 = as_factor(recode(apoe4, "0" = "0", "1" = "1", "2" = "1")))
+
+## Pull out covars
+adni_covar <- adni_df %>% 
+  filter(VISCODE == 0) %>% 
+  select(RID, ORIGPROT, sex, apoe4, educ, macro, mtDNAcn, zmtDNAcn) 
+
+## Select first valid and last valid assement for each outcome
+vars <- c("DX", "FDG", "ABETA", "TAU", "PTAU", "ADAS13", "mPACCdigit", "COGRES", "GLOBALRES")
+adni_ls <- lapply(vars, 
+       function(x){
+          var <- x
+          bl <- adni_df %>% 
+            select(RID, VISCODE, age, var) %>%
+            group_by(RID) %>% 
+            drop_na() %>%
+            slice(which.min(VISCODE)) %>%
+            ungroup() %>%
+            magrittr::set_colnames(c("RID", "VISCODE", "age", paste0(var, "_bl")))
+          
+          lv <- adni_df %>% 
+            select(RID, VISCODE, age, var) %>%
+            group_by(RID) %>% 
+            drop_na() %>%
+            slice(which.max(VISCODE)) %>%
+            ungroup() %>%
+            magrittr::set_colnames(c("RID", "VISCODE", "age", paste0(var, "_lv"))) %>%
+            anti_join(., bl, by = c("RID", "VISCODE")) 
+        
+          left_join(bl, lv, by = "RID", suffix = c("_bl", "_lv")) %>%
+            left_join(adni_covar)
+          }
+       )
+names(adni_ls) <- vars
+
+adni_bl <- adni_covar %>% 
+  left_join(select(adni_ls$DX, RID, age_bl, DX_bl)) %>% 
+  left_join(select(adni_ls$FDG, RID, FDG_bl)) %>% 
+  left_join(select(adni_ls$ABETA, RID, ABETA_bl)) %>% 
+  left_join(select(adni_ls$TAU, RID, TAU_bl)) %>% 
+  left_join(select(adni_ls$PTAU, RID, PTAU_bl)) %>% 
+  left_join(select(adni_ls$ADAS13, RID, ADAS13_bl)) %>% 
+  left_join(select(adni_ls$mPACCdigit, RID, mPACCdigit_bl)) %>% 
+  left_join(select(adni_ls$COGRES, RID, COGRES_bl)) %>% 
+  left_join(select(adni_ls$GLOBALRES, RID, GLOBALRES_bl)) %>% 
+  rename(age = age_bl, DX = DX_bl, FDG = FDG_bl, ABETA = ABETA_bl, TAU = TAU_bl, 
+         PTAU = PTAU_bl, ADAS13 = ADAS13_bl, mPACCdigit = mPACCdigit_bl, 
+         COGRES = COGRES_bl, GLOBALRES = GLOBALRES_bl) %>%
+  relocate(RID, age) %>%
+  mutate(DX = fct_relevel(DX, "CN", "MCI", "Dementia"), 
+         A = case_when(ABETA <= 880 ~ 1, ABETA > 880 ~ 0), 
+         T = case_when(PTAU >= 24 ~ 1, PTAU < 24 ~ 0), 
+         N = case_when(TAU >= 270 ~ 1, TAU < 270 ~ 0), 
+         ATN = case_when(A == 0 & T == 0 & N == 0 ~ "A-T-N-", 
+                         A == 0 & T == 0 & N == 1 ~ "A-T-N+", 
+                         A == 0 & T == 1 & N == 0 ~ "A-T+N-", 
+                         A == 0 & T == 1 & N == 1 ~ "A-T+N+", 
+                         A == 1 & T == 0 & N == 0 ~ "A+T-N-", 
+                         A == 1 & T == 0 & N == 1 ~ "A+T-N+", 
+                         A == 1 & T == 1 & N == 0 ~ "A+T+N-", 
+                         A == 1 & T == 1 & N == 1 ~ "A+T+N+", 
+                         ), 
+         ATN = fct_relevel(ATN, "A-T-N-", "A+T-N-", "A+T+N-", "A+T+N+", "A+T-N+", 
+                           "A-T+N-", "A-T-N+", "A-T+N+"))
+
+adni_lv <- adni_covar %>% 
+  left_join(select(adni_ls$DX, RID, age_lv, DX_lv)) %>% 
+  left_join(select(adni_ls$FDG, RID, FDG_lv)) %>% 
+  left_join(select(adni_ls$ABETA, RID, ABETA_lv)) %>% 
+  left_join(select(adni_ls$TAU, RID, TAU_lv)) %>% 
+  left_join(select(adni_ls$PTAU, RID, PTAU_lv)) %>% 
+  left_join(select(adni_ls$ADAS13, RID, ADAS13_lv)) %>% 
+  left_join(select(adni_ls$mPACCdigit, RID, mPACCdigit_lv))%>% 
+  rename(age = age_lv, DX = DX_lv, FDG = FDG_lv, ABETA = ABETA_lv, TAU = TAU_lv, 
+         PTAU = PTAU_lv, ADAS13 = ADAS13_lv, mPACCdigit = mPACCdigit_lv) %>%
+  relocate(RID, age) %>%
+  mutate(DX = fct_relevel(DX, "CN", "MCI", "Dementia"), 
+         A = case_when(ABETA <= 880 ~ 1, ABETA > 880 ~ 0), 
+         T = case_when(PTAU >= 24 ~ 1, PTAU < 24 ~ 0), 
+         N = case_when(TAU >= 270 ~ 1, TAU < 270 ~ 0), 
+         ATN = case_when(A == 0 & T == 0 & N == 0 ~ "A-T-N-", 
+                         A == 0 & T == 0 & N == 1 ~ "A-T-N+", 
+                         A == 0 & T == 1 & N == 0 ~ "A-T+N-", 
+                         A == 0 & T == 1 & N == 1 ~ "A-T+N+", 
+                         A == 1 & T == 0 & N == 0 ~ "A+T-N-", 
+                         A == 1 & T == 0 & N == 1 ~ "A+T-N+", 
+                         A == 1 & T == 1 & N == 0 ~ "A+T+N-", 
+                         A == 1 & T == 1 & N == 1 ~ "A+T+N+", 
+                         ), 
+         ATN = fct_relevel(ATN, "A-T-N-", "A+T-N-", "A+T+N-", "A+T+N+", "A+T-N+", 
+                           "A-T+N-", "A-T-N+", "A-T+N+"))
+
+```
+
+## A/T/(N) Diagnosis
+
+Hansson, O., et al. (2018). CSF biomarkers of Alzheimer's disease concord with amyloid-β PET and predict clinical progression: A study of fully automated immunoassays in BioFINDER and ADNI cohorts. [Alzheimer's & Dementia  14(11), 1470-1481](https://dx.doi.org/10.1016/j.jalz.2018.01.010)
+
++ CSF samples were measured using the Elecsys b-amyloid(1–42) CSF [22], and the Elecsys phosphotau (181P) CSF and Elecsys total-tau CSF immunoassays on a cobas e 601 analyzer
+  - Prediction from BioFINDER study based on pre-analytic differences
+    - Ab1-42, 880 pg/mL		
+    - t-tau, 270 pg/mL	
+    - p-tau181, 24 pg/mL
+
+
+```{r}
+
+adni_bl %>%
+  filter(!is.na(ATN)) %>%
+  mutate(dx = fct_recode(ATN, "0" = "A-T-N-", "1" = "A+T-N-", "1" = "A+T+N-", "1" = "A+T+N+", 
+                         NULL = "A+T-N+", NULL = "A-T+N-", NULL = "A-T-N+", NULL = "A-T+N+")) %>%
+  ggplot(., aes(dx, y = mtDNAcn, colour = dx)) + 
+    ggbeeswarm::geom_quasirandom(dodge.width=1) + 
+   geom_pointrange(mapping = aes(x = dx, y = mtDNAcn, group = dx),
+                  show.legend = F,
+                  position = position_dodge(width = 1), 
+                  shape = 15, colour = 'black', size = 1,
+                  stat = "summary",
+                  fun.min = function(z) {quantile(z,0.25)},
+                  fun.max = function(z) {quantile(z,0.75)},
+                  fun = median) + 
+  theme_bw()
+
+adni_lv %>%
+  filter(!is.na(ATN)) %>%
+  mutate(dx = fct_recode(ATN, "0" = "A-T-N-", "1" = "A+T-N-", "1" = "A+T+N-", "1" = "A+T+N+", 
+                         NULL = "A+T-N+", NULL = "A-T+N-", NULL = "A-T-N+", NULL = "A-T+N+")) %>%
+  ggplot(., aes(dx, y = mtDNAcn, colour = dx)) + 
+    ggbeeswarm::geom_quasirandom(dodge.width=1) + 
+   geom_pointrange(mapping = aes(x = dx, y = mtDNAcn, group = dx),
+                  show.legend = F,
+                  position = position_dodge(width = 1), 
+                  shape = 15, colour = 'black', size = 1,
+                  stat = "summary",
+                  fun.min = function(z) {quantile(z,0.25)},
+                  fun.max = function(z) {quantile(z,0.75)},
+                  fun = median) + 
+  theme_bw()
+
+adni_lv %>%
+  filter(!is.na(ATN)) %>%
+  select(mtDNAcn, A, T, N) %>%
+  pivot_longer(c("A", "T", "N"), names_to = "ATN", values_to = "dx") %>%
+  mutate(dx = as.factor(dx)) %>%
+  ggplot(., aes(x = dx, y = mtDNAcn, colour = dx)) + 
+    facet_grid(. ~ ATN) + 
+    ggbeeswarm::geom_quasirandom(dodge.width=1) + 
+   geom_pointrange(mapping = aes(x = dx, y = mtDNAcn, group = dx),
+                  show.legend = F,
+                  position = position_dodge(width = 1), 
+                  shape = 15, colour = 'black', size = 1,
+                  stat = "summary",
+                  fun.min = function(z) {quantile(z,0.25)},
+                  fun.max = function(z) {quantile(z,0.75)},
+                  fun = median) + 
+  theme_bw()
+
+
+
+```
+
+Shaw, L., et al. (2009). Cerebrospinal fluid biomarker signature in Alzheimer's disease neuroimaging initiative subjects. [Annals of Neurology  65(4), 403-413](https://dx.doi.org/10.1002/ana.21610)
+
++ CSF biomarkers were measured using the multiplex xMAP Luminex platform (Luminex Corporation, Austin, TX) with Innogenetics (INNO-BIA AlzBio3; Ghent, Belgium) immunoassay kit-based research-use only reagents
+
+Ekman, U., et al. (2018). The A/T/N biomarker scheme and patterns of brain atrophy assessed in mild cognitive impairment. [Scientific Reports  8(1), 8431](https://dx.doi.org/10.1038/s41598-018-26151-8). 
+
++ The individual CSF values (INNO-BIA) were considered pathological (+) if: 
+  - ≤192 pg/ml for Aβ42 (A)
+  - ≥23 pg/ml for p-tau (T)
+  - ≥93 pg/ml for t-tau (N)
+  
+
+Initiative, A., et al. (2020). Longitudinal trajectories of Alzheimer’s ATN biomarkers in elderly persons without dementia [Alzheimer's Research & Therapy  12(1), 55](https://dx.doi.org/10.1186/s13195-020-00621-6). 
+
++ The cutoff concentrations for CSF (INNO-BIA) and neuroimagin biomarkers were: 
+  - 192 pg/ml for Aβ42  (A)
+  - 23 pg/ml for p-tau were (T) 
+  - 1.21 for FDG-PET (N)
+
+```{r}
+csf_bl <- csf.raw %>% 
+  filter(BATCH == 'MEDIAN') %>%
+  group_by(RID) %>% 
+  slice(which.min(VISCODE)) %>%
+  ungroup() %>% 
+  select(RID, VISCODE, ABETA, TAU, PTAU) %>%
+  mutate(A = case_when(ABETA <= 192 ~ 1, ABETA > 192 ~ 0), 
+         T = case_when(PTAU >= 23 ~ 1, PTAU < 23 ~ 0), 
+         N = case_when(TAU >= 93 ~ 1, TAU < 93 ~ 0), 
+         ATN = case_when(A == 0 & T == 0 & N == 0 ~ "A-T-N-", 
+                         A == 0 & T == 0 & N == 1 ~ "A-T-N+", 
+                         A == 0 & T == 1 & N == 0 ~ "A-T+N-", 
+                         A == 0 & T == 1 & N == 1 ~ "A-T+N+", 
+                         A == 1 & T == 0 & N == 0 ~ "A+T-N-", 
+                         A == 1 & T == 0 & N == 1 ~ "A+T-N+", 
+                         A == 1 & T == 1 & N == 0 ~ "A+T+N-", 
+                         A == 1 & T == 1 & N == 1 ~ "A+T+N+", 
+                         ), 
+         ATN = fct_relevel(ATN, "A-T-N-", "A+T-N-", "A+T+N-", "A+T+N+", "A+T-N+", 
+                           "A-T+N-", "A-T-N+", "A-T+N+"))
+
+
+csf_bl <- left_join(adni_bl, csf_bl, by = "RID", suffix = c(".elecsys", ".inno"))
+count(csf_bl, ATN.elecsys, ATN.inno)
+
+ggplot(csf_bl, aes(x = ABETA.elecsys, y = ABETA.inno)) + geom_point() + 
+ggplot(csf_bl, aes(x = TAU.elecsys, y = TAU.inno)) + geom_point()
+ggplot(csf_bl, aes(x = PTAU.elecsys, y = PTAU.inno)) + geom_point()
+
+csf_bl %>%
+  filter(!is.na(ATN.inno)) %>%
+  mutate(dx = fct_recode(ATN.inno, "0" = "A-T-N-", "1" = "A+T-N-", "1" = "A+T+N-", "1" = "A+T+N+", 
+                         NULL = "A+T-N+", NULL = "A-T+N-", NULL = "A-T-N+", NULL = "A-T+N+")) %>%
+  ggplot(., aes(dx, y = mtDNAcn, colour = dx)) + 
+    ggbeeswarm::geom_quasirandom(dodge.width=1) + 
+   geom_pointrange(mapping = aes(x = dx, y = mtDNAcn, group = dx),
+                  show.legend = F,
+                  position = position_dodge(width = 1), 
+                  shape = 15, colour = 'black', size = 1,
+                  stat = "summary",
+                  fun.min = function(z) {quantile(z,0.25)},
+                  fun.max = function(z) {quantile(z,0.75)},
+                  fun = median) + 
+  theme_bw()
+
+```
+
+
+## Descriptive statistics 
+```{r adni-desc-tab}
+adni_tab_bl <- adni_bl %>% select(-RID) %>%
+  tbl_summary(. , by = DX, 
+              statistic = list(all_continuous() ~ "{mean} ({sd})", 
+                               all_categorical() ~ "{n} ({p}%)")
+              )
+
+adni_tab_lv <- adni_lv %>% select(-RID) %>%
+  select(DX, age, sex, apoe4, mtDNAcn, FDG, ABETA, TAU, PTAU, macro) %>%
+  tbl_summary(. , by = DX, 
+              statistic = list(all_continuous() ~ "{mean} ({sd})", 
+                               all_categorical() ~ "{n} ({p}%)")
+              )
+
+tbl_merge(
+  list(adni_tab_bl, adni_tab_lv), 
+  tab_spanner = c("Baseline", "Last Visit")
+)
+
+```
+
+```{r adni-dx-res}
+
+adni_bl %>%
+  filter(DX != "MCI") %>%
+  mutate(DX = as.factor(DX)) %>%
+  glm(DX ~ zmtDNAcn  + apoe4 + sex + age, family = "binomial", data = .) %>%
+  tbl_regression(., exponentiate = TRUE) %>% bold_p()
+  
+adni_lv %>%
+  filter(DX != "MCI") %>%
+  mutate(DX = as.factor(DX)) %>%
+  glm(DX ~ zmtDNAcn + macro + apoe4 + sex + age, family = "binomial", data = .) %>%
+  tbl_regression(., exponentiate = TRUE) %>% bold_p()
+
+
+```
+
+## Assocation with mtDNAcn 
+
+```{r}
+
+adni_models <- tribble(
+  ~outcome, ~model, ~formula, 
+  "FDG", "lm", FDG ~ zmtDNAcn + macro + apoe4 + sex + age,
+  "ABETA", "lm", ABETA ~ zmtDNAcn + macro + apoe4 + sex + age,
+  "TAU", "lm", TAU ~ zmtDNAcn + macro + apoe4 + sex + age,
+  "PTAU", "lm", PTAU ~ zmtDNAcn + macro + apoe4 + sex + age,
+  "ADAS13", "lm", ADAS13 ~ zmtDNAcn + macro + apoe4 + sex + age + educ,
+  "mPACCdigit", "lm", mPACCdigit ~ zmtDNAcn + macro + apoe4 + sex + age + educ,
+  "GLOBALRES", "lm", GLOBALRES ~ zmtDNAcn + macro + apoe4 + sex + age + educ,
+  "zmtDNAcn", "lm", zmtDNAcn ~ macro + apoe4 + sex + age
+)
+
+
+output_bl <- adni_models %>%
+  mutate(res = map(formula, ~lm(formula = .x, data = adni_bl)),
+       tidy = map(res, tidy),
+       glance = map(res, glance), 
+       gt = map(res, ~tbl_regression(.x) %>% bold_p()))
+
+# output_lm %>% 
+#   unnest(tidy) %>% 
+#   filter(str_detect(term, "^macro")) %>% 
+#   filter(p.value < 0.05)
+
+tab1 <- output_bl %>%filter(outcome %nin% c("GLOBALRES", "zmtDNAcn"))
+tbl_merge(
+  pull(tab1, gt),
+  tab_spanner = pull(tab1, outcome)
+) %>% 
+  as_gt() %>%
+  tab_header(
+    title = "Association of mtDNAcn with endophentypes in ADNI at baseline",
+  )
+
+tab2 <- output_bl %>%filter(outcome %in% c("GLOBALRES", "zmtDNAcn"))
+tbl_merge(
+  pull(tab2, gt),
+  tab_spanner = pull(tab2, outcome)
+) %>% 
+  as_gt() %>%
+  tab_header(
+    title = "Association of mtDNAcn with endophentypes in ADNI at baseline",
+  )
+
+
+output_lv <- adni_models %>%
+  # filter(outcome %nin% c("GLOBALRES", "zmtDNAcn")) %>%
+  filter(outcome %nin% c("GLOBALRES", "zmtDNAcn", "ADAS13", "mPACCdigit")) %>%
+  mutate(res = map(formula, ~lm(formula = .x, data = adni_lv)),
+       tidy = map(res, tidy),
+       glance = map(res, glance), 
+       gt = map(res, ~tbl_regression(.x) %>% bold_p()))
+
+# output_lm %>% 
+#   unnest(tidy) %>% 
+#   filter(str_detect(term, "^macro")) %>% 
+#   filter(p.value < 0.05)
+
+tbl_merge(
+  pull(output_lv, gt),
+  tab_spanner = pull(output_lv, outcome)
+) %>% 
+  as_gt() %>%
+  tab_header(
+    title = "Association of mtDNAcn with endophentypes in ADNI at last visit",
+  )
+
+```
+
+
+```{r}
+
+adni_df %>% 
+  filter(VISCODE == 0) %>%
+  # group_by(RID) %>%
+  # filter(!is.na(FDG)) %>%
+  # slice(which.max(VISCODE)) %>% 
+  # ungroup() %>%
+ggplot(., aes(x = FDG, y = mtDNAcn)) + 
+  geom_point() + 
+  geom_smooth(method = "lm") + 
+  theme_bw()
+
+p.fdg_bl <- adni_bl %>%
+  ggpubr::ggscatter(., x = "FDG", y = "mtDNAcn", 
+    add = "reg.line", 
+    add.params = list(color = "blue", fill = "lightgray"),
+    conf.int = TRUE, 
+    title = "FDG BL"
+  ) + 
+  ggpubr::stat_cor(method = "pearson", label.x = 0.75, label.y = 400)
+
+p.fdg_lv <- adni_lv %>%
+  ggpubr::ggscatter(., x = "FDG", y = "mtDNAcn", 
+    add = "reg.line", 
+    add.params = list(color = "blue", fill = "lightgray"),
+    conf.int = TRUE, 
+    title = "FDG LV"
+  ) + 
+  ggpubr::stat_cor(method = "pearson", label.x = 0.75, label.y = 400)
+
+
+```
+
+
+```{r}
+p.resilience <- adni_bl %>%
+  ggpubr::ggscatter(., x = "GLOBALRES", y = "mtDNAcn", 
+    add = "reg.line", 
+    add.params = list(color = "blue", fill = "lightgray"),
+    conf.int = TRUE, 
+    title = "Resilience" 
+  ) + 
+  ggpubr::stat_cor(method = "pearson", label.x =-1.5, label.y = 400)
+
+```
+
+```{r}
+p.abeta.bl <- adni_bl %>%
+  ggpubr::ggscatter(., x = "ABETA", y = "mtDNAcn", 
+    add = "reg.line", 
+    add.params = list(color = "blue", fill = "lightgray"),
+    conf.int = TRUE, 
+    title = "ABETA BL"
+  ) + 
+  ggpubr::stat_cor(method = "pearson", label.x = 250, label.y = 400)
+
+p.abeta.lv <- adni_lv %>%
+  ggpubr::ggscatter(., x = "ABETA", y = "mtDNAcn", 
+    add = "reg.line", 
+    add.params = list(color = "blue", fill = "lightgray"),
+    conf.int = TRUE, 
+    title = "ABETA LV"
+  ) + 
+  ggpubr::stat_cor(method = "pearson", label.x = 250, label.y = 400)
+
+
+
+```
+
+
+```{r}
+p.tau.bl <- adni_bl %>%
+  ggpubr::ggscatter(., x = "TAU", y = "mtDNAcn", 
+    add = "reg.line", 
+    add.params = list(color = "blue", fill = "lightgray"),
+    conf.int = TRUE, 
+    title = "TAU BL"
+  ) + 
+  ggpubr::stat_cor(method = "pearson", label.x = 250, label.y = 400)
+
+p.tau.lv <- adni_lv %>%
+  ggpubr::ggscatter(., x = "TAU", y = "mtDNAcn", 
+    add = "reg.line", 
+    add.params = list(color = "blue", fill = "lightgray"),
+    conf.int = TRUE, 
+    title = "TAU LV"
+  ) + 
+  ggpubr::stat_cor(method = "pearson", label.x = 250, label.y = 400)
+
+
+```
+
+```{r}
+p.ptau.bl <- adni_bl %>%
+  ggpubr::ggscatter(., x = "PTAU", y = "mtDNAcn", 
+    add = "reg.line", 
+    add.params = list(color = "blue", fill = "lightgray"),
+    conf.int = TRUE, 
+    title = "PTAU BL"
+  ) + 
+  ggpubr::stat_cor(method = "pearson", label.x = 10, label.y = 400)
+
+p.ptau.lv <- adni_lv %>%
+  ggpubr::ggscatter(., x = "PTAU", y = "mtDNAcn", 
+    add = "reg.line", 
+    add.params = list(color = "blue", fill = "lightgray"),
+    conf.int = TRUE, 
+    title = "PTAU LV"
+  ) + 
+  ggpubr::stat_cor(method = "pearson", label.x = 10, label.y = 400)
+
+```
+
+```{r}
+p.adas.bl <- adni_bl %>%
+  ggpubr::ggscatter(., x = "ADAS13", y = "mtDNAcn", 
+    add = "reg.line", 
+    add.params = list(color = "blue", fill = "lightgray"),
+    conf.int = TRUE, 
+    title = "ADAS13 BL"
+  ) + 
+  ggpubr::stat_cor(method = "pearson", label.x = 0, label.y = 400)
+
+p.adas.lv <- adni_lv %>%
+  ggpubr::ggscatter(., x = "ADAS13", y = "mtDNAcn", 
+    add = "reg.line", 
+    add.params = list(color = "blue", fill = "lightgray"),
+    conf.int = TRUE, 
+    title = "ADAS13 LV"
+  ) + 
+  ggpubr::stat_cor(method = "pearson", label.x = 0, label.y = 400)
+
+```
+
+
+```{r}
+p.pacc.bl <- adni_bl %>%
+  ggpubr::ggscatter(., x = "mPACCdigit", y = "mtDNAcn", 
+    add = "reg.line", 
+    add.params = list(color = "blue", fill = "lightgray"),
+    conf.int = TRUE, 
+    title = "mPACCdigit BL"
+  ) + 
+  ggpubr::stat_cor(method = "pearson", label.x = -20, label.y = 400)
+
+p.pacc.lv <- adni_lv %>%
+  ggpubr::ggscatter(., x = "mPACCdigit", y = "mtDNAcn", 
+    add = "reg.line", add.params = list(color = "blue", fill = "lightgray"),
+    conf.int = TRUE, 
+    title = "mPACCdigit LV"
+  ) + 
+  ggpubr::stat_cor(method = "pearson", label.x = -60, label.y = 400)
+
+```
+
+```{r}
+ggpubr::ggarrange(p.fdg_bl, p.abeta.bl, p.tau.bl, p.ptau.bl, p.adas.bl, p.pacc.bl, p.resilience)
+
+ggpubr::ggarrange(p.fdg_lv, p.abeta.lv, p.tau.lv, p.ptau.bl, p.adas.lv, p.pacc.lv)
+
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 

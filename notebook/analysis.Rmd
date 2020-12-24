@@ -5,18 +5,50 @@ editor_options:
 ---
 # Analysis
 ```{r, warning=FALSE, message=FALSE}
-library(MASS)
-library(brant)
+# library(MASS)
+# library(brant)
+# library(VGAM)
 library(tidyverse)
 library(broom)
 library(glue)
-library(ggbeeswarm)
-library(gvlma)
 library(gtsummary)
 library(gt)
+library(metafor)
+library(janitor)
 knitr::opts_knit$set(root.dir = '/sc/arion/projects/LOAD/shea/Projects/mtDNAcn')
 set_gtsummary_theme(theme_gtsummary_compact())
 # setwd('/sc/arion/projects/LOAD/shea/Projects/mtDNAcn')
+
+## Functions 
+`%nin%` = negate(`%in%`)
+
+### Tidy VGAM output 
+tidy.vglm <- function(x, exponentiate = FALSE, conf.int=FALSE, conf.level=0.95) {
+  co <- as.data.frame(coef(summary(x)))
+  names(co) <- c("estimate","std.error","statistic","p.value")
+  if (conf.int == TRUE) {
+    qq <- qnorm((1+conf.level)/2)
+    co <- base::transform(co,
+                    conf.low=estimate-qq*std.error,
+                    conf.high=estimate+qq*std.error)
+  } 
+  if (exponentiate == TRUE) {
+    qq <- qnorm((1+conf.level)/2)
+    co <- base::transform(co,
+                    conf.low=estimate-qq*std.error,
+                    conf.high=estimate+qq*std.error)
+    co <- base::transform(co, 
+                    or = exp(estimate), 
+                    lci = exp(conf.low),
+                    uci = exp(conf.high))
+    
+  }
+  co <- data.frame(term=rownames(co),co)
+  rownames(co) <- NULL
+  co <- as_tibble(co)
+  return(co)
+}
+
 ```
 
 ```{r analysis-load-data}
@@ -37,49 +69,97 @@ mayo.raw <- read_rds('output/mayo.rds')
 
 *Rational:* mt-hgs have been assocaited with clinically diagnosed AD, however, due to the heterogenity in the underlying neuropathology not all cases or controls may had Alzheimer’s disease due to AD neuropathologic change which would weaken the statistical power to determine an association with AD. Secondly, using endophenotypes of AD such as neuropathology may further increase statistical power. 
 
-*Primary Proposed Analysis:* AMP-AD cohorts will be limited to non-hispanic whites and European- haplogroups only. For neuropathologicaly confirmed AD, modified regan diagnosis will be used as the outcome for ROSMAP and MSBB, for Mayo Controls+Pathologic Aging and AD diagnosis will be used as outcomes. Logistic regression adjusting for age at death, sex and APOE will be used to evaluate the associations of the mt-hgs with neuropathologicaly confirmed AD seperatly in each cohort. Fixed-effects meta-analysis will be used to measure the combined effect of the haplogroups in AMP-AD. Linear regression will be used to investigate the association with AD neurpathology. 
+*Primary Proposed Analysis:* AMP-AD cohorts will be limited to non-hispanic whites and European- haplogroups only. For neuropathologicaly confirmed AD, modified regan diagnosis will be used as the outcome for ROSMAP and MSBB, for Mayo Controls+Pathologic Aging and AD diagnosis will be used as outcomes. Logistic regression adjusting for age at death, PMI, sex and APOE will be used to evaluate the associations of the mt-hgs with neuropathologicaly confirmed AD seperatly in each cohort. Fixed-effects meta-analysis will be used to measure the combined effect of the haplogroups in AMP-AD. Linear regression will be used to investigate the association with AD neurpathology. 
 
 *Anticipated Problems and Alternative Approaches:* 
 
-+ Sample size: Small cell sizes, in particular for MSBB and Mayo for the mtHgs (i.e. I, W, X), may result in low statistical power, can alterntivly conduct a joint analysis. Can lump smaller cells into single category (e.g. IWX)
++ Sample size: Small cell sizes, in particular for MSBB and Mayo for the mtHgs (i.e. I, W, X), may result in low statistical power
+  - can alterntivly conduct a joint analysis
+  - can lump smaller cells into single category (e.g. IWX); also AOD categories 
 + Differences in study designs (population based - ROSMAP; case-control - MSBB, Mayo) and neurpathology definitions (ROSMAP + MSBB vs Mayo) may result in between study heterogenity. Additionlay Mayo AOD is censord. This will also limit usability of joint analysis 
 + Can possibly include ADNI using a A/T/N based diagnosis. 
 
-*Secondary, exploratory analysis:* Using ROSAMP, we can 1) examine the association of mt-hgs with additional neuropathological measures such as infarcts, TDP-43 and; 2) evaluate differential associations between clinically defined AD and neuropathologicaly confirmed AD.  
+*Secondary, exploratory analysis:* 
+
++ Using ROSAMP
+  1) examine the association of mt-hgs with additional neuropathological measures such as infarcts, TDP-43 
+  2) evaluate differential associations between clinically defined AD and neuropathologicaly confirmed AD.  
+
+**Aim 2:** Investigate the association of mtDNAcn with AD neuropathologic change
+
+*Hypothesis 2a:* Increased mtDNAcn will be assoicated with reduced risk of neuropathologicaly confirmed AD. 
+
+*Hypothesis 2b:* Increased mtDNAcn will be assoicated with reduced neuropatholgy markers of AD. 
+
+*Rational:*
+
+*Primary Proposed Analysis:* AMP-AD cohorts will be limited to non-hispanic whites and European- haplogroups only. For neuropathologicaly confirmed AD, modified regan diagnosis will be used as the outcome for ROSMAP and MSBB, for Mayo Controls+Pathologic Aging and AD diagnosis will be used as outcomes. Logistic regression adjusting for age at death, mitochondrial haplogroup, PMI, sex, APOE and source tissue (ROSMAP) will be used to evaluate the associations of the mt-hgs with neuropathologicaly confirmed AD seperatly in each cohort. Fixed-effects meta-analysis will be used to measure the combined effect of the haplogroups in AMP-AD. Linear regression will be used to investigate the association with AD neurpathology.
+
+*Anticipated Problems and Alternative Approaches:* 
+
++ Neuronal loss may confound observed associations with diagnosis 
+  - Conduct a sensetivity analysis to adjust for Neuron & Astrocyte gene set enrichment  
++ Joint analysis for ROSMAP and MSBB CERAD Score and Neurpathology, different covariates (tissue), will cause issues of empty cells 
+  - Seperate analyses as replication, potentialy do a meta anlaysis? 
+
+*Secondary, exploratory analysis:*
 
 ## Data Wrangling 
 
 ### ROSMAP
 + Neuropatholgical Diagnosis, i.e. individuals who have died
 + Caucasians only 
++ Exclude participants with no age of death (all AMP-AD participants are dead)
 + Haplogroups
   - European haplogroups (H, V, J, T, U, K, I, W, X)
   - Quality > 0.8
   - lump Hgs IWX
++ 16 duplicate samples with DNA isolated from multiple tissues
+  - preferentialy keep samples with DNA isolated from DLPFC > PCC > CER > Whole blood > PBMC > Other
 
 ```{r analysis-rosmap-wrangle, eval=T}
 rosmap_df <- rosmap.raw %>% 
   mutate(id = paste0(study, projid)) %>%
-  select(id, study, apoe_genotype, apoe4, age_death, aod_cat, msex, race7, spanish, 
-         ad_reagan, niareagansc, cogdx,
+  select(id, study, apoe_genotype, apoe4, age_death, aod_cat, year_bl, year_lv, msex, race7, spanish, pmi, 
+         ad_reagan, niareagansc, cogdx, 
+         cts_mmse30_lv, iadlsum_lv, katzsum_lv,
+         GLOBALRES, GLOBALRES_NC,
          Haplogroup, macro, Quality, 
+         mtcn_avg, Source.Tissue.Type, organ, Neurons, Astrocytes, rna_seq_tissue, rna_seq_batch, RIN,
          ceradsc, braaksc, gpath, amyloid, plaq_d, plaq_n, tangles, nft, 
-         dlbdx, ci_num2_gct, ci_num2_mct, cvda_4gp2, caa_4gp, arteriol_scler, hspath_typ, tdp_st4) %>%
-  distinct(id, .keep_all = TRUE) %>% 
+         dlbdx, ci_num2_gct, ci_num2_mct, cvda_4gp2, caa_4gp, arteriol_scler, hspath_typ, tdp_st4, 
+         mglia123_mf, mglia23_mf, mglia3_mf) %>%
+  ## 16 Duplicate Samples; preferentialy keep DLPFC samples
+  ## DLPFC is the minimum value after fct_relevel
+  mutate(Source.Tissue.Type = as_factor(Source.Tissue.Type), 
+         Source.Tissue.Type = fct_lump(Source.Tissue.Type, 5), 
+         Source.Tissue.Type = fct_relevel(Source.Tissue.Type, 
+           "Brain-DLPFC", "Brain-Posterior Cingulate Cortex", "Brain-Cerebellum", "Whole Blood", "Blood-PBMC", "Other")
+         ) %>%
+  group_by(id) %>%
+  slice(which.min(Source.Tissue.Type)) %>% 
+  ungroup() %>%
   filter(!is.na(age_death)) %>% 
   filter(macro %in% c('H', 'V', 'J', 'T', 'U', 'K', 'I', 'W', 'X')) %>%
   filter(Quality > 0.8) %>%
   mutate(aod_cat = fct_expand(aod_cat, "50-59"), 
          ad_reagan = factor(ad_reagan), 
          ad_reagan = fct_relevel(ad_reagan, "0", "1"), 
+         Diagnosis = case_when(
+           ## Clinicopathological diagnosis from RNA-seq analysis
+           cogdx == 1 & braaksc <= 3 & ceradsc >= 3 ~ "CTRL", 
+           cogdx == 4 & braaksc >= 4 & ceradsc <= 2 ~ 'AD', 
+           TRUE ~ "OTHER"
+          ),
          macro_lmp = fct_recode(macro, "H" = "H", "V" = "V", "J" = "J", "T" = "T", "U" = "U", "K" = "K",
                                 "IWX" = "I", "IWX" = "W", "IWX" = "X"),
          aod_cat2 = factor(aod_cat, ordered = FALSE), 
          aod_cat = fct_recode(aod_cat, "50-69" = "50-59", "50-69" = "60-69")) %>%
-  rename(dx = ad_reagan, aod = age_death, sex = msex)
+  rename(dx = ad_reagan, aod = age_death, sex = msex, mtDNAcn = mtcn_avg, SourceTissue = Source.Tissue.Type,
+         mmse = cts_mmse30_lv, iadl = iadlsum_lv, katz = katzsum_lv) 
 
 t1 <- rosmap_df %>% 
-  select(dx, aod, aod_cat = aod_cat2, apoe4, sex, macro) %>% 
+  select(dx, aod, aod_cat = aod_cat2, pmi, apoe4, sex, mtDNAcn, macro) %>% 
   mutate(aod_cat = factor(aod_cat, ordered = FALSE)) %>%
   tbl_summary(. , by = dx, 
               statistic = list(all_continuous() ~ "{mean} ({sd})", 
@@ -91,31 +171,45 @@ t1 <- rosmap_df %>%
 ### MSBB
 
 + Exclude individules who are not non-hispanic whites 
++ Exclude missing AD Regan Diagnosis (due to missing braak staging)
 + Haplogroups 
   - European haplogroups (H, V, J, T, U, K, I, W, X)
   - Quality > 0.8
   - lump Hgs IWX
 + Dichotomize CERAD dx  
++ Convert PMI to hours
++ xCell enrichments from BM10
 
 ```{r analysis-msbb-wrangle, eval=T}
 msbb_df <- msbb.raw  %>% 
-  select(id, study, sex, race, aod, aod_cat, apoe, apoe4,
-         niareagansc, ad_reagan, cerad, ceradsc, braaksc, 
-         Haplogroup, macro, Quality) %>%
+  select(id, study, sex, race, pmi = PMI, aod, aod_cat, apoe, apoe4, cdr,
+         niareagansc, ad_reagan, cerad, ceradsc, braaksc, PlaqueMean,
+         Haplogroup, macro, Quality, 
+         mtcn_avg, Neurons_BM10, Astrocytes_BM10, rna_seq_batch_BM10, RIN_BM10) %>%
   filter(!is.na(aod)) %>%
+  filter(!is.na(ad_reagan)) %>%
   filter(race == 'W') %>%
   filter(macro %in% c('H', 'V', 'J', 'T', 'U', 'K', 'I', 'W', 'X')) %>% 
   filter(Quality > 0.8) %>%
   mutate(dx = factor(ad_reagan, ordered = FALSE),
+          Diagnosis = case_when(
+           ## Clinicopathological diagnosis from RNA-seq analysis
+           cdr <= 0.5 & braaksc <= 3 & ceradsc >= 3 ~ "CTRL", 
+           cdr >= 1 & braaksc >= 4 & ceradsc <= 2 ~ 'AD', 
+           TRUE ~ "OTHER"
+          ),
          aod_cat = fct_expand(aod_cat, "50-59"), 
          cerad_dx = fct_recode(cerad, "0" = "Normal", "0" = "Possible", "1" = "Probable", "1" = "Definite"), 
          macro_lmp = fct_recode(macro, "H" = "H", "V" = "V", "J" = "J", "T" = "T", "U" = "U", "K" = "K",
                                 "IWX" = "I", "IWX" = "W", "IWX" = "X"),
          aod_cat2 = factor(aod_cat, ordered = FALSE), 
-         aod_cat = fct_recode(aod_cat, "50-69" = "50-59", "50-69" = "60-69") )
+         aod_cat = fct_recode(aod_cat, "50-69" = "50-59", "50-69" = "60-69"), 
+         pmi = pmi / 60, 
+         PlaqueMean = sqrt(PlaqueMean)) %>% 
+  rename(mtDNAcn = mtcn_avg, Neurons = Neurons_BM10, Astrocytes = Astrocytes_BM10, rna_seq_batch = rna_seq_batch_BM10, RIN = RIN_BM10)
 
 t2 <- msbb_df %>% 
-  select(dx, aod, aod_cat = aod_cat2, apoe4, sex, macro) %>% 
+  select(dx, aod, aod_cat = aod_cat2, pmi, apoe4, sex, mtDNAcn, macro) %>% 
   mutate(dx = fct_recode(dx, "AD" = "1", "CTRL" = "0")) %>%
   tbl_summary(. , by = dx,
               statistic = list(all_continuous() ~ "{mean} ({sd})", 
@@ -136,22 +230,27 @@ t2 <- msbb_df %>%
   - Collapse controls and pathologic aging
 + Age of Death is censored 
   - Collapse 50-59 / 60-69
++ PMI contains a large amount of missing data
++ RNAseq used DNA isolated from Neurons and Astrocytes 
+  - Matched RNAseq to WGS source tissue
 
 ```{r analysis-mayo-wrangle, eval=T}
 mayo_df <- mayo.raw %>% 
-  select(-SourceTissue, -mtcn_avg) %>% 
+  select(-Astrocytes_TCX, -Neurons_CER, -Neurons_TCX, -Astrocytes_CER, -RIN_CER, -RIN_TCX) %>% 
   filter(macro %in% c('H', 'V', 'J', 'T', 'U', 'K', 'I', 'W', 'X')) %>% 
   filter(Quality > 0.8) %>%
   filter(dx != "PSP") %>%
   mutate(dx = fct_drop(dx), 
          dx = fct_recode(dx, "0" = "Control", "0" = "Pathologic Aging", "1" = "AD"), 
+         dx = fct_relevel(dx, "0", "1"),
          macro_lmp = fct_recode(macro, "H" = "H", "V" = "V", "J" = "J", "T" = "T", "U" = "U", "K" = "K",
                                 "IWX" = "I", "IWX" = "W", "IWX" = "X"), 
          aod_cat2 = factor(aod_cat, ordered = FALSE), 
-         aod_cat = fct_recode(aod_cat, "50-69" = "50-59", "50-69" = "60-69")) 
+         aod_cat = fct_recode(aod_cat, "50-69" = "50-59", "50-69" = "60-69")) %>% 
+  rename(mtDNAcn = mtcn_avg)
          
 t3 <- mayo_df %>% 
-  select(dx, aod_cat = aod_cat2, apoe4, sex, macro) %>% 
+  select(dx, aod_cat = aod_cat2, pmi, apoe4, sex, mtDNAcn, macro) %>% 
   mutate(dx = fct_recode(dx, "AD" = "1", "CTRL" = "0")) %>%
   tbl_summary(. , by = dx,
               statistic = list(all_continuous() ~ "{mean} ({sd})", 
@@ -164,25 +263,18 @@ t3 <- mayo_df %>%
 
 ```{r analysis-joint}
 ampad <- bind_rows(
-  select(rosmap_df, id, study, dx, ceradsc, braaksc, aod, aod_cat, apoe4, sex, macro, macro_lmp),
-  select(msbb_df, id, study, dx, ceradsc, braaksc, aod, aod_cat, apoe4, sex, macro, macro_lmp),
-  select(mayo_df, id, study, dx, thal, braaksc, aod, aod_cat, apoe4, sex, macro, macro_lmp)
+  select(rosmap_df, id, study, dx, niareagansc, ceradsc, braaksc, aod, aod_cat, apoe4, sex, pmi, mtDNAcn, Neurons, Astrocytes, macro, macro_lmp),
+  select(msbb_df, id, study, dx, ceradsc, niareagansc, braaksc, aod, aod_cat, apoe4, sex, pmi, mtDNAcn, Neurons, Astrocytes, macro, macro_lmp),
+  select(mayo_df, id, study, dx, thal, braaksc, aod, aod_cat, apoe4, sex, macro, pmi, mtDNAcn, Neurons, Astrocytes, macro_lmp)
 ) 
 ```
 
 
 ```{r analysis-joint-table}
-tbl_merge(
-  list(t1, t2, t3),
-  tab_spanner = c("**ROSMAP**", "**MSBB**", "**Mayo**")
-) %>% 
-  as_gt() %>%
-  tab_header(
-    title = "Descriptive Statistics for AMP-AD",
-  )
 
 ampad %>% 
-  mutate(ceradsc = factor(ceradsc, ordered = FALSE),
+  mutate(niareagansc = factor(niareagansc, ordered = FALSE),
+         ceradsc = factor(ceradsc, ordered = FALSE),
          braaksc = factor(braaksc, ordered = FALSE),
          thal = factor(thal, ordered = FALSE), 
          aod_cat = factor(aod_cat, ordered = FALSE)) %>%
@@ -193,18 +285,33 @@ ampad %>%
 
 ```
 
-## Aim 1a
+## Aim 1 (mtHgs)
+### Aim 1a
 
-Investigate the assocation of haplogroups with AD neuropathologic change. 
+Investigate the assocation of haplogroups with AD neuropathologic change (binary outcome), using logistic regression. 
 
-```{r analysis1a}
+
+```{r analysis1a-glm-desc, echo = F}
+tbl_merge(
+  list(t1, t2, t3),
+  tab_spanner = c("**ROSMAP**", "**MSBB**", "**Mayo**")
+) %>% 
+  as_gt() %>%
+  tab_header(
+    title = "Descriptive Statistics for AMP-AD ADNC",
+  )
+
+```
+
+
+```{r analysis1a-glm-res, echo = T}
 
 res1a_rosmap <- select(rosmap_df, -macro_lmp) %>% 
   rename(macro_lmp = macro) %>% 
-  glm(dx ~ macro_lmp + apoe4 + sex + aod , 
+  glm(dx ~ macro_lmp + apoe4 + sex + aod + pmi, 
     family = "binomial", data = .) 
 
-res1a_msbb <- glm(dx ~ macro_lmp + apoe4 + sex + aod , 
+res1a_msbb <- glm(dx ~ macro_lmp + apoe4 + sex + aod + pmi, 
     family = "binomial", data = msbb_df) 
 
 res1a_mayo <- glm(dx ~ macro_lmp + apoe4 + sex + aod_cat , 
@@ -217,7 +324,7 @@ res1a_joint <- select(ampad, -macro_lmp) %>%
 ```
 
 
-```{r analysis1a-tab}
+```{r analysis1a-glm-tab, echo = F}
 tab1a_rosmap <- res1a_rosmap %>%
   tbl_regression(exponentiate = TRUE) 
 
@@ -226,6 +333,15 @@ tab1a_msbb <- res1a_msbb %>%
 
 tab1a_mayo <- res1a_mayo %>%
   tbl_regression(exponentiate = TRUE) 
+
+# tbl_merge(
+#   list(tab1a_rosmap, tab1a_msbb, tab1a_mayo),
+#   tab_spanner = c("**ROSMAP**", "**MSBB**", "**Mayo**")
+# ) %>% 
+#   as_gt() %>%
+#   tab_header(
+#     title = "Association of mtHgs with Neuropathologicly confirmed AD",
+#   )
 
 tab1a_joint <- res1a_joint %>%
   tbl_regression(exponentiate = TRUE) 
@@ -243,26 +359,429 @@ tbl_merge(
 
 ```
 
-## Aim 1b 
+Conduct meta-analysis of ROSMAP, MSBB, and Mayo
 
-```{r analysis-rosmap-path}
+```{r analysis1a-meta-tab, echo = F, message=F, warning=F}
 
+resm_rosmap <- glm(dx ~ macro_lmp + apoe4 + sex + aod + pmi, 
+      family = "binomial", data = rosmap_df) 
+
+resm_msbb <- glm(dx ~ macro_lmp + apoe4 + sex + aod + pmi, 
+                  family = "binomial", data = msbb_df) 
+
+resm_mayo <- glm(dx ~ macro_lmp + apoe4 + sex + aod_cat , 
+                  family = "binomial", data = mayo_df) 
+
+res1a_meta <- bind_rows(
+  coef(summary(resm_rosmap)) %>% 
+    as.data.frame() %>%
+    rownames_to_column() %>%
+    as_tibble() %>% 
+    clean_names() %>% 
+    mutate(study = "rosmap"), 
+  
+  coef(summary(resm_mayo)) %>% 
+    as.data.frame() %>%
+    rownames_to_column() %>%
+    as_tibble() %>% 
+    clean_names() %>% 
+    mutate(study = "mayo"), 
+  
+  coef(summary(resm_msbb)) %>% 
+    as.data.frame() %>%
+    rownames_to_column() %>%
+    as_tibble() %>% 
+    clean_names() %>% 
+    mutate(study = "msbb"), 
+  
+) %>% 
+  filter(str_detect(rowname, "^macro")) %>%
+  rename(haplogroup = rowname) %>% 
+  group_by(haplogroup) %>%
+  nest() %>%  
+  mutate(meta = map(data, ~rma.uni(yi = estimate, sei = std_error, data = .x,
+                                    method = "FE", measure = "OR")), 
+         res = map(meta, ~tidy(.x, exponentiate = TRUE, conf.int = TRUE))) %>% 
+  unnest(res)
+
+res1a_meta %>% 
+  select(haplogroup, OR = estimate, LCI = conf.low, UCI = conf.high, p.value) %>% 
+  mutate_if(is.numeric, round, 2) %>%
+  knitr::kable(format = "html", caption = "Meta-analysis of the assocation of mtHgs with ADNC") %>%
+  kableExtra::kable_styling("striped", full_width = F)
+  
+
+```
+
+
+Investigate the assocation of haplogroups with AD neuropathologic change (NIA-Regan Diagnosis), using ordinal logistic regression.
+
++ ROSMAP + MSBB only
++ Collapse "No AD" and "Low Liklihood of AD" due to small cell sizes in "No AD"
+
+
+```{r analysis1a-olr-desc, echo = F}
+ampad %>% 
+  filter(!is.na(niareagansc)) %>%
+  filter(study != "MAYO") %>% 
+  select(niareagansc, macro, aod, aod_cat, pmi, apoe4, sex, study) %>%
+  mutate(aod_cat = factor(aod_cat, ordered = FALSE), 
+         niareagansc = fct_recode(niareagansc, "NoAD" = "4", "Low" = "3", "Intermediate" = "2", "High" = "1")) %>% 
+  tbl_summary(., by = niareagansc,
+              statistic = list(all_continuous() ~ "{mean} ({sd})", 
+                               all_categorical() ~ "{n} ({p}%)")) %>%
+  add_overall() %>% 
+  as_gt() %>%
+  tab_header(
+    title = "Descriptive statistics for NIA-Regan Diagnosis",
+  )
+
+niareagansc_df <- ampad %>% 
+  filter(!is.na(niareagansc)) %>%
+  filter(!is.na(pmi)) %>%
+  filter(study != "MAYO") %>% 
+  mutate(niareagansc = fct_recode(niareagansc, "3" = "4"), 
+         study = fct_recode(study, "ROSMAP" = "MAP", "ROSMAP" = "ROS"), 
+         study = fct_relevel(study, "ROSMAP")) 
+```
+
+
+```{r analysis1a-niareagan-res, warning=FALSE}
+res1a_olr <- vglm(niareagansc ~ macro + apoe4 + sex + aod + pmi + study, 
+                  family=propodds(), data = niareagansc_df)
+res1a_olr_np <- vglm(niareagansc ~ macro + apoe4 + sex + aod + pmi + study, 
+                     family=cumulative(), data = niareagansc_df)
+
+res1a_niareagan_lrt <- lrtest(res1a_olr_np, res1a_olr)
+
+```
+
+```{r analysis1a-niareagan-tab, warning=FALSE, echo=F}
+tidy.vglm(res1a_olr, exponentiate = TRUE) %>% 
+  select(term, or, lci, uci, p.value) %>% 
+  filter(!str_detect(term, "Intercept")) %>%
+  mutate_if(is.numeric, round, 2) %>%
+  knitr::kable(format = "html", caption = "Assocation of mtHgs with NIA-Regagan diagnosis") %>%
+  kableExtra::kable_styling("striped", full_width = F)
+  
+```
+
+
+### Aim 1b
+
+Investigate the assocation of haplogroups with CERAD Score, using ordinal logistic regression
+
++ ROSMAP + MSBB only
+
+```{r analysis1b-cerad-desc, echo = F}
+ampad %>% 
+  filter(!is.na(ceradsc)) %>%
+  filter(study != "MAYO") %>% 
+  select(ceradsc, macro, aod, aod_cat, pmi, apoe4, sex, study) %>%
+  mutate(aod_cat = factor(aod_cat, ordered = FALSE), 
+         ceradsc = fct_recode(ceradsc, "NoAD" = "4", "Possible" = "3", "Probable" = "2", "Definite" = "1")) %>% 
+  tbl_summary(., by = ceradsc,
+              statistic = list(all_continuous() ~ "{mean} ({sd})", 
+                               all_categorical() ~ "{n} ({p}%)")) %>%
+  add_overall() 
+
+ceradsc_df <- ampad %>% 
+  filter(!is.na(ceradsc)) %>%
+  filter(!is.na(pmi)) %>%
+  filter(study != "MAYO") %>% 
+  mutate(study = fct_recode(study, "ROSMAP" = "MAP", "ROSMAP" = "ROS"), 
+         study = fct_relevel(study, "ROSMAP")) 
+```
+
+```{r analysis1a-cerad-res, warning=FALSE}
+res1b_cerad <- vglm(ceradsc ~ macro + apoe4 + sex + aod + pmi + study, 
+                  family=propodds(), data = ceradsc_df)
+# res1b_cerad_np <- vglm(ceradsc ~ macro + apoe4 + sex + aod + pmi + study, 
+#                      family=cumulative(), data = ceradsc_df)
+
+# lrtest(res1b_cerad_np, res1b_cerad)
+
+```
+
+```{r analysis1a-cerad-tab, echo=F}
+tidy.vglm(res1b_cerad, exponentiate = TRUE) %>% 
+  select(term, or, lci, uci, p.value) %>% 
+  filter(!str_detect(term, "Intercept")) %>%
+  mutate_if(is.numeric, round, 2) %>%
+  knitr::kable(format = "html", caption = "Assocation of mtHgs with CERAD") %>%
+  kableExtra::kable_styling("striped", full_width = F)
+
+```
+
+
+Investigate the assocation of haplogroups with Braak stage, using ordinal logistic regression
+
++ ROSMAP + MSBB only
++ Collapse Braak Stages. 
+
+
+```{r analysis1b-braak-desc, echo=F}
+ampad %>% 
+  filter(!is.na(braaksc)) %>%
+  #filter(study != "MAYO") %>% 
+  select(braaksc, macro, aod, aod_cat, pmi, apoe4, sex, study) %>%
+  mutate(aod_cat = factor(aod_cat, ordered = FALSE), 
+         braaksc = factor(braaksc, ordered = FALSE), 
+         braaksc = fct_recode(braaksc, "0-II" = "0", "0-II" = "1", "0-II" = "2", 
+                              "III-IV" = "3", "III-IV" = "4", "V-VI" = "5", "V-VI" = "6")) %>% 
+  tbl_summary(., by = braaksc,
+              statistic = list(all_continuous() ~ "{mean} ({sd})", 
+                               all_categorical() ~ "{n} ({p}%)")) %>%
+  add_overall() 
+
+braaksc_df <- ampad %>% 
+  filter(!is.na(braaksc)) %>%
+  filter(!is.na(pmi)) %>%
+  mutate(braaksc = fct_recode(braaksc, "1" = "0", "1" = "1", "1" = "2", 
+                              "2" = "3", "2" = "4", "3" = "5", "3" = "6"), 
+         study = fct_recode(study, "ROSMAP" = "MAP", "ROSMAP" = "ROS"), 
+         study = fct_relevel(study, "ROSMAP")) 
+```
+
+```{r analysis1a-braak-res, warning=FALSE}
+res1b_braak <- vglm(braaksc ~ macro + apoe4 + sex + aod + pmi + study, 
+                  family=propodds(), data = braaksc_df)
+res1b_braak_np <- vglm(braaksc ~ macro + apoe4 + sex + aod + pmi + study, 
+                     family=cumulative(), data = braaksc_df)
+
+res1b_braak_lrt <- lrtest(res1b_braak_np, res1b_braak)
+
+```
+
+
+```{r analysis1a-braak-tab, echo=F}
+tidy.vglm(res1b_braak, exponentiate = TRUE) %>% 
+  select(term, or, lci, uci, p.value) %>% 
+  filter(!str_detect(term, "Intercept")) %>%
+  mutate_if(is.numeric, round, 2) %>%
+  knitr::kable(format = "html", caption = "Assocation of mtHgs with Braak Stage") %>%
+  kableExtra::kable_styling("striped", full_width = F)
+
+```
+
+### Sensetivity Analysis
+
+Investigate the assoction of haplgroups with neuropathology in ROSMAP. 
+
++ Clump IWX
++ AD pathology 
+  - Amyloid - transform using square-root
+  - NFT 
+  - Global Pathology 
+  - CERAD
+  - Braak: Collapse to 3 level ordinal variable
++ DLB: Collapse to a binary variable? Only neocortical are related to dementia.
+  - present (nigral + limbic + neocortical) / absent (none) 
+  - present (neocortical) / absent (none + nigral + limbic)
++ TDP-43 collapse to binary variable 
++ Vascular 
+  - Cerebral atherosclerosis: ordered 
+  - Cerebral amyloid angiopathy: ordered
+  - Arteriolosclerosis: ordered
+
+```{r analysis1b-rosmap-desc}
 rosmap_df %>% 
-  dplyr::select(niareagansc, ceradsc, braaksc, gpath, amyloid, plaq_d, plaq_n, tangles, nft,
+  dplyr::select(macro_lmp, niareagansc, ceradsc, braaksc, gpath, amyloid, plaq_d, plaq_n, tangles, nft,
          dlbdx, ci_num2_gct, ci_num2_mct, cvda_4gp2, caa_4gp, arteriol_scler, hspath_typ, tdp_st4
          ) %>% 
   mutate(ceradsc = factor(ceradsc, ordered = FALSE),
          braaksc = factor(braaksc, ordered = FALSE), 
-         niareagansc = fct_recode(niareagansc, "NoAD" = "4", "Low" = "3", "Intermediate" = "2", "High" = "1")) %>% 
-  tbl_summary(., by = niareagansc,
+         niareagansc = factor(niareagansc, ordered = FALSE), 
+         braaksc = fct_recode(braaksc, "0-II" = "0", "0-II" = "1", "0-II" = "2", 
+                              "III-IV" = "3", "III-IV" = "4", "V-VI" = "5", "V-VI" = "6"), 
+         dlbdx = fct_recode(dlbdx, "not present" = "0", "nigral" = "1", 
+                            "limbic" = "2", "neocortical" = "3"), 
+         cvda_4gp2 = fct_recode(cvda_4gp2, "None" = "0", "Mild" = "1", 
+                            "Moderate" = "2", "Severe" = "3"),
+         caa_4gp = fct_recode(caa_4gp, "None" = "0", "Mild" = "1", 
+                            "Moderate" = "2", "Severe" = "3"),
+         arteriol_scler = fct_recode(arteriol_scler, "None" = "0", "Mild" = "1", 
+                            "Moderate" = "2", "Severe" = "3"),
+         tdp_st4 = fct_recode(tdp_st4, "None" = "0", "Amygdala" = "1", 
+                            "Limbic" = "2", "Neocortical" = "3"),
+         ) %>% 
+  tbl_summary(., by = macro_lmp,
               statistic = list(all_continuous() ~ "{mean} ({sd})", 
                                all_categorical() ~ "{n} ({p}%)")) %>%
   add_overall()
 
 ```
 
-```{r olr}
 
+```{r analysis1b-rosmap-path, echo=F}
+
+rosmap_path <- rosmap_df %>% 
+  mutate(niareagansc = fct_recode(niareagansc, "3" = "4"), 
+         braaksc = fct_recode(braaksc, "1" = "0", "1" = "1", "1" = "2", 
+                              "2" = "3", "2" = "4", "3" = "5", "3" = "6"), 
+         dlbdx = fct_recode(dlbdx, "0" = "0", "1" = "1", 
+                            "1" = "2", "1" = "3"), 
+         tdp_st4 = fct_recode(tdp_st4, "0" = "0", "0" = "1", 
+                            "1" = "2", "1" = "3"), 
+         # amyloid = sqrt(amyloid),
+         cvda_4gp2 = ordered(cvda_4gp2, levels = c('0', '1', '2', '3')), 
+         caa_4gp = ordered(caa_4gp, levels = c('0', '1', '2', '3')), 
+         arteriol_scler = ordered(arteriol_scler, levels = c('0', '1', '2', '3')), 
+         ) 
+
+## Check Cell sizes after collapsing 
+rosmap_path %>% 
+  dplyr::select(macro_lmp, niareagansc, ceradsc, braaksc, gpath, amyloid, plaq_d, plaq_n, tangles, nft,
+         dlbdx, ci_num2_gct, ci_num2_mct, cvda_4gp2, caa_4gp, arteriol_scler, hspath_typ, tdp_st4
+         ) %>% 
+  mutate(ceradsc = factor(ceradsc, ordered = FALSE),
+         braaksc = factor(braaksc, ordered = FALSE), 
+         niareagansc = factor(niareagansc, ordered = FALSE), 
+         cvda_4gp2 = factor(cvda_4gp2, ordered = FALSE),
+         caa_4gp = factor(caa_4gp, ordered = FALSE),
+         arteriol_scler = factor(arteriol_scler, ordered = FALSE)) %>% 
+  tbl_summary(., by = macro_lmp,
+              statistic = list(all_continuous() ~ "{mean} ({sd})", 
+                               all_categorical() ~ "{n} ({p}%)")) %>%
+  add_overall()
+
+models <- tribble(
+  ~outcome, ~model, ~formula, 
+  "niareagansc", "olr", niareagansc ~ macro_lmp + apoe4 + sex + aod + pmi, 
+  "ceradsc", "olr", ceradsc ~ macro_lmp + apoe4 + sex + aod + pmi,
+  "braaksc", "olr", braaksc ~ macro_lmp + apoe4 + sex + aod + pmi,
+  "cvda_4gp2", "olr", cvda_4gp2 ~ macro_lmp + apoe4 + sex + aod + pmi, 
+  "caa_4gp", "olr", caa_4gp ~ macro_lmp + apoe4 + sex + aod + pmi,
+  "arteriol_scler", "olr", arteriol_scler ~ macro_lmp + apoe4 + sex + aod + pmi,
+  "hspath_typ", "glm", hspath_typ ~ macro_lmp + apoe4 + sex + aod + pmi,
+  "dlbdx", "glm", dlbdx ~ macro_lmp + apoe4 + sex + aod + pmi,
+  "ci_num2_gct", "glm", ci_num2_gct ~ macro_lmp + apoe4 + sex + aod + pmi,
+  "ci_num2_mct", "glm", ci_num2_mct ~ macro_lmp + apoe4 + sex + aod + pmi,
+  "tdp_st4", "glm", tdp_st4 ~ macro_lmp + apoe4 + sex + aod + pmi,
+  "gpath", "lm", gpath ~ macro + apoe4 + sex + aod + pmi,
+  "amyloid", "lm", amyloid ~ macro + apoe4 + sex + aod + pmi,
+  "plaq_d", "lm", plaq_d ~ macro + apoe4 + sex + aod + pmi,
+  "plaq_n", "lm", plaq_n ~ macro + apoe4 + sex + aod + pmi,
+  "tangles", "lm", tangles ~ macro + apoe4 + sex + aod + pmi,
+  "nft", "lm", nft ~ macro + apoe4 + sex + aod + pmi,
+)
+
+```
+
+Linear regression models for continous outcomes 
+
++ AD Neuropathology 
+  - Global AD Pathology burden
+  - Overal amyloid level 
+  - Diffuse plaques 
+  - Neuritic Plaques 
+  - Tangle Density 
+  - NFT Burden
+
+```{r analysis1b-rosmap-lm, echo=F}
+## Continous Outcomes 
+output_lm <- models %>%
+  filter(model == "lm") %>%
+  mutate(res = map(formula, ~lm(formula = .x, data = rosmap_path)),
+       tidy = map(res, tidy),
+       glance = map(res, glance), 
+       gt = map(res, tbl_regression))
+
+# output_lm %>% 
+#   unnest(tidy) %>% 
+#   filter(str_detect(term, "^macro")) %>% 
+#   filter(p.value < 0.05)
+
+tbl_merge(
+  pull(output_lm, gt),
+  tab_spanner = pull(output_lm, outcome)
+) %>% 
+  as_gt() %>%
+  tab_header(
+    title = "Association of mtHgs with Neuropathology",
+  )
+
+```
+
+Logistic regression models for binary outcomes
+
++ Other Neuropatholgy 
+  - Lew Body Disease 
+  - Hippocampal scerlosis
+  - TDP-43 Stage
++ Vascular 
+  - Gross Cerebral Infarctions
+  - Micro Cerebral Infarctions
+
+```{r analysis1b-rosmap-glm, echo=F}
+## Binary Outcomes 
+output_glm <- models %>%
+  filter(model == "glm") %>%
+  mutate(res = map(formula, ~glm(formula = .x, family = "binomial", data = rosmap_path)),
+       tidy = map(res, tidy),
+       glance = map(res, glance), 
+       gt = map(res, ~tbl_regression(.x, exponentiate = TRUE)))
+
+# output_glm %>% 
+#   unnest(tidy) %>% 
+#   filter(str_detect(term, "^macro")) %>% 
+#   filter(p.value < 0.05)
+
+tbl_merge(
+  pull(output_glm, gt),
+  tab_spanner = pull(output_glm, outcome)
+) %>% 
+  as_gt() %>%
+  tab_header(
+    title = "Association of mtHgs with Neuropathology",
+  )
+
+```
+
+Ordinal Logistic Regression models for ordinal outcomes 
+
++ AD Pathology 
+  - NIA-Regan Score 
+  - CERAD score 
+  - Braak Stage 
++ Vascluar Pathology 
+  - Cerebral Atherosclerosis Rating
+  - Cerebral amyloid angiopathy
+  - Arteriolosclerosis
+
+```{r analysis1b-rosmap-olr, echo=F}
+## Ordinal Outcomes 
+output_olr <- models %>%
+  filter(model == "olr") %>%
+  mutate(res = map(formula, ~vglm(formula = .x,family=propodds(), data = rosmap_path)),
+          tidy = map(res, ~tidy.vglm(.x, exponentiate = TRUE)), 
+          # gt = map2(res, tidy, ~gt.vglm(.x, .y))
+         )
+
+# output_olr %>% 
+#   unnest(tidy) %>% 
+#   filter(str_detect(term, "^macro")) %>% 
+#   filter(p.value < 0.05)
+
+output_olr %>% 
+  unnest(tidy) %>% 
+  filter(str_detect(term, "^macro")) %>% 
+#  print(n = Inf) %>% 
+  select(outcome, term, or, lci, uci, p.value) %>% 
+  mutate(term = str_replace(term, "macro_lmp", "")) %>% 
+  mutate_if(is.numeric, round, 2) %>%
+  unite(ci, c(lci, uci), sep = ", ") %>%
+  mutate(out = paste0(or, " [", ci, "]; ", p.value)) %>%
+  select(outcome, term, out) %>%
+  pivot_wider(names_from = outcome, values_from = c("out")) %>%
+  knitr::kable(format = "html", caption = "Assocation of mtHgs neuropathology (OLR)") %>%
+  kableExtra::kable_styling("striped", full_width = F)
+
+```
+
+
+```{r analysis1b-rosmap-lrt, eval = FALSE}
+## Test if models meet proportional odd assumption 
 model_fit <- rosmap_df %>% 
   mutate(niareagansc = fct_recode(niareagansc, "3" = "4")) %>% 
   polr(niareagansc ~ apoe4 + sex + aod , data = ., Hess = TRUE)
@@ -293,231 +812,907 @@ sf <- function(y) {
 plot(s, which=1:3, pch=1:3, xlab='logit', main=' ', xlim=range(s[,3:4]))
 ```
 
-## mtDNAcn
-### ROSMAP
-#### NIA-Reagan Diagnosis
 
-```{r analysis-rosmap-path-glm, eval=F}
-rosmap_path_res <- glm(ad_reagan ~ z_mtdnacn + macro + age_death + msex + apoe4 + study + Source.Tissue.Type, 
-                       family = "binomial", data = rosmap_df)
+Investigate assocation of mtHgs with clinical diagnosis of AD
+
++ Diagnosis
+  - Controls: No cogntive impairment
+  - Cases: AD & AD+ 
+  - MCI & MCI+: exclude (n = 267)
+  - Other dementia: exlucde (n = 20)
+
+```{r rosmap-cogdx-tab, echo = F}
+
+rosmap_dx <- rosmap.raw %>% 
+  select(projid, study, apoe_genotype, apoe4, aod = age_death, sex = msex, race7, spanish, 
+         ad_reagan, niareagansc, cogdx, dcfdx_lv, pmi,
+         Haplogroup, macro, Quality) %>%
+  distinct(projid, .keep_all = TRUE) %>% 
+  # filter(!is.na(age_death)) %>% 
+  # filter(cogdx %nin% c(2,3,6)) %>% 
+  filter(macro %in% c('H', 'V', 'J', 'T', 'U', 'K', 'I', 'W', 'X')) %>%
+  filter(Quality > 0.8) %>%
+  mutate(macro_lmp = fct_recode(macro, "H" = "H", "V" = "V", "J" = "J", "T" = "T", "U" = "U", "K" = "K",
+                                "IWX" = "I", "IWX" = "W", "IWX" = "X"), 
+         cogdx = fct_recode(cogdx, "0" = "1", "1" = "4", "1" = "5", 
+                            NULL = "2", NULL = "3", NULL = "6"))
+
+models_dx <- tribble(
+  ~outcome, ~model, ~formula, 
+  "cogdx", "glm", cogdx ~ macro + apoe4 + sex + aod + pmi, 
+  "ad_reagan", "olr", ad_reagan ~ macro + apoe4 + sex + aod + pmi,
+  )
+
+## Continous Outcomes 
+output_dx <- models_dx %>%
+  mutate(res = map(formula, ~glm(formula = .x, family = "binomial", data = rosmap_dx)),
+       tidy = map(res, tidy),
+       glance = map(res, glance), 
+       gt = map(res, ~tbl_regression(.x, exponentiate = TRUE) %>% bold_p()))
+
+tbl_merge(
+  pull(output_dx, gt),
+  tab_spanner = pull(output_dx, outcome)
+) %>% 
+  as_gt() %>%
+  tab_header(
+    title = "Differential association of mtHgs with clinical vs neuropathological AD",
+  )
+
 ```
 
-```{r analysis-rosmap-path-tab, echo=FALSE, eval=F}
+
+Investigate assocation of mtHgs with resilience 
+
+```{r rosmap-resilience-tab, echo = F}
+rosmap_resilience <- rosmap.raw %>% 
+  select(projid, study, apoe_genotype, apoe4, aod = age_death, sex = msex, race7, spanish, GLOBALRES, GLOBALRES_NC, pmi,
+         Haplogroup, macro, Quality, ad_reagan) %>%
+  distinct(projid, .keep_all = TRUE) %>% 
+  filter(!is.na(GLOBALRES)) %>%
+  # filter(!is.na(age_death)) %>% 
+  # filter(cogdx %nin% c(2,3,6)) %>% 
+  filter(macro %in% c('H', 'V', 'J', 'T', 'U', 'K', 'I', 'W', 'X')) %>%
+  filter(Quality > 0.8) %>%
+  mutate(macro_lmp = fct_recode(macro, "H" = "H", "V" = "V", "J" = "J", "T" = "T", "U" = "U", "K" = "K",
+                                "IWX" = "I", "IWX" = "W", "IWX" = "X"))
+
+lm(GLOBALRES ~ macro + apoe4 + sex + aod + pmi, data = rosmap_resilience) %>% 
+  tbl_regression() %>% bold_p() %>%
+  as_gt() %>%
+  tab_header(
+    title = "Assocation of mtHgs with Resilience",
+  )
+
+```
+
+
+## Aim 2 (mtDNAcn)
+### Aim 2a 
+
++ AMP-AD 
+  - Standardize mtDNAcn 
++ ROSMAP 
+  - Exclude samples with DNA isolated from blood 
+  - Adjust for Source Tissue
+  - Clinical diagnosis converted to binary variable
++ Mayo 
+  - Exclude Cerebellar Cortex 
+  - Lump IWX
+  - Lump HV
+  - AOD cat 
++ MSBB
+  - Lump IWX
+
+```{r analysis2a-rosmap-res, echo=F}
+rosmap_mtdna <- rosmap_df %>% 
+  filter(organ == "brain", SourceTissue != "Other") %>%
+  # filter(SourceTissue == "Brain-DLPFC") %>%
+  mutate(SourceTissue = fct_drop(SourceTissue), 
+         zmtDNAcn = scale(mtDNAcn)[,1], 
+         cogdx = fct_recode(cogdx, "0" = "1", "1" = "4", "1" = "5", 
+                            NULL = "2", NULL = "3", NULL = "6"),
+         niareagansc = fct_recode(niareagansc, "3" = "4"),
+         braaksc = fct_recode(braaksc, "1" = "0", "1" = "1", "1" = "2", 
+                              "2" = "3", "2" = "4", "3" = "5", "3" = "6"), 
+         dlbdx = fct_recode(dlbdx, "0" = "0", "1" = "1", 
+                            "1" = "2", "1" = "3"), 
+         tdp_st4 = fct_recode(tdp_st4, "0" = "0", "0" = "1", 
+                            "1" = "2", "1" = "3"), 
+         amyloid = sqrt(amyloid),
+         cvda_4gp2 = ordered(cvda_4gp2, levels = c('0', '1', '2', '3')), 
+         caa_4gp = ordered(caa_4gp, levels = c('0', '1', '2', '3')), 
+         arteriol_scler = ordered(arteriol_scler, levels = c('0', '1', '2', '3'))
+         ) %>% 
+  select(-macro_lmp) %>%
+  rename(macro_lmp = macro)
+
+rosmap_path_res <- glm(dx ~ zmtDNAcn + macro_lmp + aod + sex + apoe4 + pmi + SourceTissue, 
+                       family = "binomial", data = rosmap_mtdna)
+
 rosmap_path_tab <- tidy(rosmap_path_res)
 
-rosmap_path_tab %>% 
-  mutate_at(., vars("estimate", "std.error", "statistic"), round, 3) %>% 
-  mutate(p.value = glue("{p} {signif}", 
-                        signif = gtools::stars.pval(p.value), 
-                        p = ifelse(p.value < 0.001, formatC(p.value, format = "e", digits = 1), round(p.value, 3))
-                        )) %>%
-  knitr::kable(format = "html", caption = "Assocation of mtDNA with MMSE in ROSMAP") %>%
+```
+
+```{r analysis2a-msbb-res, echo=F}
+msbb_mtdna <- msbb_df %>% 
+  mutate(zmtDNAcn = scale(mtDNAcn)[,1], 
+         niareagansc = fct_recode(niareagansc, "3" = "4"),
+         ceradsc = fct_recode(ceradsc, "3" = "4"),
+         braaksc = fct_recode(braaksc, "1" = "0", "1" = "1", "1" = "2", 
+                              "2" = "3", "2" = "4", "3" = "5", "3" = "6"))
+
+msbb_path_res <- glm(dx ~ zmtDNAcn + macro_lmp + aod + sex + apoe4 + pmi, 
+                       family = "binomial", data = msbb_mtdna)
+
+msbb_path_tan <- tidy(msbb_path_res)
+
+```
+
+```{r analysis2a-mayo-res, echo=F}
+mayo_mtdna <- mayo_df %>% 
+  filter(SourceTissue == "Temporal Cortex") %>%
+  mutate(zmtDNAcn = scale(mtDNAcn)[,1],
+         macro_lmp = fct_recode(macro, "HV" = "H", "HV" = "V", "J" = "J", "T" = "T", "U" = "U", "K" = "K",
+                                "IWX" = "I", "IWX" = "W", "IWX" = "X"),
+) 
+
+mayo_path_res <- glm(dx ~ zmtDNAcn + macro_lmp + aod_cat + sex + apoe4, 
+                       family = "binomial", data = mayo_mtdna)
+
+mayo_path_tab <- tidy(mayo_path_res)
+
+```
+
+
+```{r analysis2a-glm-tab, echo = F}
+tab2a_rosmap <- rosmap_path_res %>%
+  tbl_regression(exponentiate = TRUE) %>% bold_p()
+
+tab2a_msbb <- msbb_path_res %>%
+  tbl_regression(exponentiate = TRUE) %>% bold_p()
+
+tab2a_mayo <- mayo_path_res %>%
+  tbl_regression(exponentiate = TRUE) %>% bold_p()
+
+tbl_merge(
+  list(tab2a_rosmap, tab2a_msbb, tab2a_mayo),
+  tab_spanner = c("**ROSMAP**", "**MSBB**", "**Mayo**")
+) %>% 
+  as_gt() %>%
+  tab_header(
+    title = "Association of mtDNAcn with Neuropathologicly confirmed AD",
+  )
+
+
+```
+
+
+
+```{r analysis2a-meta-tab, echo=F}
+
+res2a_meta <- bind_rows(
+  coef(summary(rosmap_path_res)) %>% 
+    as.data.frame() %>%
+    rownames_to_column() %>%
+    as_tibble() %>% 
+    clean_names() %>% 
+    mutate(study = "rosmap"), 
+  
+  coef(summary(msbb_path_res)) %>% 
+    as.data.frame() %>%
+    rownames_to_column() %>%
+    as_tibble() %>% 
+    clean_names() %>% 
+    mutate(study = "msbb"), 
+  
+  coef(summary(mayo_path_res)) %>% 
+    as.data.frame() %>%
+    rownames_to_column() %>%
+    as_tibble() %>% 
+    clean_names() %>% 
+    mutate(study = "mayo"), 
+  
+) %>% 
+  filter(rowname == "zmtDNAcn") %>%
+  group_by(rowname) %>%
+  nest() %>%  
+  mutate(meta = map(data, ~rma.uni(yi = estimate, sei = std_error, slab = study, data = .x,
+                                    method = "FE", measure = "OR")), 
+         res = map(meta, ~tidy(.x, exponentiate = TRUE, conf.int = TRUE))) %>% 
+  unnest(res)
+```
+
+Fixed effects inverse weighted Meta-analysis of mtDNAcn with ADNC
+
+```{r analysis2a-meta-plot, echo=F}
+pull(res2a_meta, meta) %>% 
+  magrittr::extract2(1) %>%
+  forest(.)
+
+```
+
+### Aim 2b 
+
++ ROSMAP 
+  - Should I drop PCC and Cerebelum samples, then do joint analysis with MSBB?
++ MSBB
+
+Investigate the assocation of mtDNAcn with NIA-Regan Score, CERAD Score and Braak Stage in **ROSMAP**
+
+```{r analysis2b-rosmap-niaregan-res}
+
+rosmap_niaregan_res2b <- vglm(niareagansc ~ zmtDNAcn + macro_lmp + aod + sex + apoe4 + pmi + SourceTissue, 
+                    family=propodds(), data = rosmap_mtdna)
+
+rosmap_cerad_res2b <- vglm(ceradsc ~ zmtDNAcn + macro_lmp + aod + sex + apoe4 + pmi + SourceTissue, 
+                    family=propodds(), data = rosmap_mtdna)
+
+rosmap_braak_res2b <- vglm(braaksc ~ zmtDNAcn + macro_lmp + aod + sex + apoe4 + pmi + SourceTissue, 
+                    family=propodds(), data = rosmap_mtdna)
+
+```
+
+```{r analysis2b-rosmap-niaregan-tab, echo=F, message=F}
+rosmap_niaregan_tab2b <- tidy.vglm(rosmap_niaregan_res2b, exponentiate = TRUE) %>% 
+    mutate_at(vars("or", "lci", "uci"), round, 2) %>% 
+    mutate(outcome = "niareagansc", 
+          p.value = scales::pvalue(p.value), 
+          out = paste0(or, " [", lci, ", ", uci, "]; p = ", p.value)) 
+rosmap_cerad_tab2b <- tidy.vglm(rosmap_cerad_res2b, exponentiate = TRUE) %>% 
+    mutate_at(vars("or", "lci", "uci"), round, 2) %>% 
+    mutate(outcome = "ceradsc", 
+          p.value = scales::pvalue(p.value), 
+          out = paste0(or, " [", lci, ", ", uci, "]; p = ", p.value)) 
+rosmap_braak_tab2b <- tidy.vglm(rosmap_braak_res2b, exponentiate = TRUE) %>% 
+    mutate_at(vars("or", "lci", "uci"), round, 2) %>% 
+    mutate(outcome = "braaksc", 
+          p.value = scales::pvalue(p.value), 
+          out = paste0(or, " [", lci, ", ", uci, "]; p = ", p.value)) 
+
+left_join(
+  select(rosmap_niaregan_tab2b, term, niareagansc = out), 
+  select(rosmap_cerad_tab2b, term, ceradsc = out)
+) %>% 
+  left_join(select(rosmap_braak_tab2b, term, braaksc = out))  %>%
+  knitr::kable(format = "html", caption = "Assocation of mtDNAcn with NIA-Regan in ROSMAP") %>%
+  kableExtra::kable_styling("striped", full_width = F, font_size = 11)
+
+```
+
+Investigate the assocation of mtDNAcn with NIA-Regan Score, CERAD Score and Braak Stage in **MSBB**
+
+```{r analysis2b-msbb-niaregan-res}
+
+msbb_niaregan_res2b <- vglm(niareagansc ~ zmtDNAcn + macro_lmp + aod + sex + apoe4 + pmi, 
+                    family=propodds(), data = msbb_mtdna)
+
+msbb_cerad_res2b <- vglm(ceradsc ~ zmtDNAcn + macro_lmp + aod + sex + apoe4 + pmi, 
+                    family=propodds(), data = msbb_mtdna)
+
+msbb_braak_res2b <- vglm(braaksc ~ zmtDNAcn + macro_lmp + aod + sex + apoe4 + pmi, 
+                    family=propodds(), data = msbb_mtdna)
+
+```
+
+```{r analysis2b-msbb-niaregan-tab, echo=F, message=F}
+msbb_niaregan_tab2b <- tidy.vglm(msbb_niaregan_res2b, exponentiate = TRUE) %>% 
+    mutate_at(vars("or", "lci", "uci"), round, 2) %>% 
+    mutate(outcome = "niareagansc", 
+          p.value = scales::pvalue(p.value), 
+          out = paste0(or, " [", lci, ", ", uci, "]; p = ", p.value)) 
+msbb_cerad_tab2b <- tidy.vglm(msbb_cerad_res2b, exponentiate = TRUE) %>% 
+    mutate_at(vars("or", "lci", "uci"), round, 2) %>% 
+    mutate(outcome = "ceradsc", 
+          p.value = scales::pvalue(p.value), 
+          out = paste0(or, " [", lci, ", ", uci, "]; p = ", p.value)) 
+msbb_braak_tab2b <- tidy.vglm(msbb_braak_res2b, exponentiate = TRUE) %>% 
+    mutate_at(vars("or", "lci", "uci"), round, 2) %>% 
+    mutate(outcome = "braaksc", 
+          p.value = scales::pvalue(p.value), 
+          out = paste0(or, " [", lci, ", ", uci, "]; p = ", p.value)) 
+
+left_join(
+  select(msbb_niaregan_tab2b, term, niareagansc = out), 
+  select(msbb_cerad_tab2b, term, ceradsc = out)
+) %>% 
+  left_join(select(msbb_braak_tab2b, term, braaksc = out))  %>%
+  knitr::kable(format = "html", caption = "Assocation of mtDNAcn with NIA-Regan in MSBB") %>%
+  kableExtra::kable_styling("striped", full_width = F, font_size = 11)
+
+```
+
+### Sensetivity Analysis 
+
+#### Adjust for xCell gene set enrichments for Neurons and Astrocytes 
+
++ Adjust for RNAseq batch and RIN where avaliable 
+  + ROSMAP 
+    - DLPFC only
+    - lmp IWX
+  + MSBB 
+    - lmp IWX
+    - lmp RNAseq batch
+  + Mayo 
+    - lmp IWX
+
+```{r analysis-xcell-rosmap, echo=F}
+rosmap_xcell <- rosmap_mtdna %>% 
+  filter(SourceTissue == "Brain-DLPFC" & rna_seq_tissue == "DLPFC") %>% 
+  mutate(macro_lmp = fct_recode(macro_lmp, "H" = "H", "V" = "V", "J" = "J", "T" = "T", "U" = "U", "K" = "K",
+                                "IWX" = "I", "IWX" = "W", "IWX" = "X"), 
+         zmtDNAcn = scale(mtDNAcn)[,1], 
+         Neurons = scale(Neurons)[,1], 
+         Astrocytes = scale(Astrocytes)[,1]) 
+
+rosmap_xcell_res <-   glm(dx ~ zmtDNAcn + macro_lmp + aod + sex + apoe4 + pmi + Neurons + rna_seq_batch + RIN, 
+                       family = "binomial", data = rosmap_xcell)
+rosmap_woxcell_res <-   glm(dx ~ zmtDNAcn + macro_lmp + aod + sex + apoe4 + pmi, 
+                       family = "binomial", data = rosmap_xcell)
+
+rosmap_xcell_tab <- tidy(rosmap_xcell_res) 
+
+```
+
+```{r analysis-xcell-msbb, echo=F}
+msbb_xcell <- msbb_df %>% 
+  filter(!is.na(Neurons), !is.na(dx)) %>%
+  mutate(zmtDNAcn = scale(mtDNAcn)[,1], 
+         Neurons = scale(Neurons)[,1], 
+         Astrocytes = scale(Astrocytes)[,1],
+         niareagansc = fct_recode(niareagansc, "3" = "4"),
+         ceradsc = fct_recode(ceradsc, "3" = "4"),
+         braaksc = fct_recode(braaksc, "1" = "0", "1" = "1", "1" = "2", 
+                              "2" = "3", "2" = "4", "3" = "5", "3" = "6"), 
+         rna_seq_batch = fct_lump(rna_seq_batch, 7))
+
+msbb_xcell_res <-  glm(dx ~ zmtDNAcn + macro_lmp + aod + sex + apoe4 + pmi + Neurons + rna_seq_batch + RIN, 
+                       family = "binomial", data = msbb_xcell)
+msbb_woxcell_res <-  glm(dx ~ zmtDNAcn + macro_lmp + aod + sex + apoe4 + pmi, 
+                       family = "binomial", data = msbb_xcell)
+msbb_xcel_tab <- tidy(msbb_xcell_res)
+
+```
+
+```{r analysis-xcell-mayo, echo=F, warning=F}
+mayo_xcell <- mayo_df %>% 
+  filter(SourceTissue == "Temporal Cortex") %>%
+  # filter(!is.na(Neurons), !is.na(dx), !is.na(pmi)) %>%
+  filter(!is.na(Neurons), !is.na(dx)) %>%
+  mutate(zmtDNAcn = scale(mtDNAcn)[,1], 
+         Neurons = scale(Neurons)[,1], 
+         Astrocytes = scale(Astrocytes)[,1],
+         macro_lmp = fct_recode(macro, "HV" = "H", "HV" = "V", "J" = "J", "T" = "T", "U" = "U", "K" = "K",
+                                "IWX" = "I", "IWX" = "W", "IWX" = "X")
+) 
+
+mayo_xcell_res <- glm(dx ~ zmtDNAcn + macro_lmp + aod_cat + sex + apoe4 + Neurons + Astrocytes + RIN,  # + pmi
+                       family = "binomial", data = mayo_xcell)
+mayo_woxcell_res <- glm(dx ~ zmtDNAcn + macro_lmp + aod_cat + sex + apoe4 , # + pmi
+                       family = "binomial", data = mayo_xcell)
+
+mayo_xcell_tab <- tidy(mayo_xcell_res)
+
+```
+
+```{r analysis-xcell-meta-tab, echo=F}
+
+xcell_meta <- bind_rows(
+  coef(summary(rosmap_xcell_res)) %>% 
+    as.data.frame() %>%
+    rownames_to_column() %>%
+    as_tibble() %>% 
+    clean_names() %>% 
+    mutate(study = "rosmap"), 
+  
+  coef(summary(msbb_xcell_res)) %>% 
+    as.data.frame() %>%
+    rownames_to_column() %>%
+    as_tibble() %>% 
+    clean_names() %>% 
+    mutate(study = "msbb"), 
+  
+  coef(summary(mayo_xcell_res)) %>% 
+    as.data.frame() %>%
+    rownames_to_column() %>%
+    as_tibble() %>% 
+    clean_names() %>% 
+    mutate(study = "mayo"), 
+  
+) %>% 
+  filter(rowname == "zmtDNAcn") %>%
+  group_by(rowname) %>%
+  nest() %>%  
+  mutate(meta = map(data, ~rma.uni(yi = estimate, sei = std_error, slab = study, data = .x,
+                                    method = "FE", measure = "OR")), 
+         res = map(meta, ~tidy(.x, exponentiate = TRUE, conf.int = TRUE))) %>% 
+  unnest(res)
+```
+
+```{r analysis-woxcell-meta-tab, echo=F}
+
+woxcell_meta <- bind_rows(
+  coef(summary(rosmap_woxcell_res)) %>% 
+    as.data.frame() %>%
+    rownames_to_column() %>%
+    as_tibble() %>% 
+    clean_names() %>% 
+    mutate(study = "rosmap"), 
+  
+  coef(summary(msbb_woxcell_res)) %>% 
+    as.data.frame() %>%
+    rownames_to_column() %>%
+    as_tibble() %>% 
+    clean_names() %>% 
+    mutate(study = "msbb"), 
+  
+  coef(summary(mayo_woxcell_res)) %>% 
+    as.data.frame() %>%
+    rownames_to_column() %>%
+    as_tibble() %>% 
+    clean_names() %>% 
+    mutate(study = "mayo"), 
+  
+) %>% 
+  filter(rowname == "zmtDNAcn") %>%
+  group_by(rowname) %>%
+  nest() %>%  
+  mutate(meta = map(data, ~rma.uni(yi = estimate, sei = std_error, slab = study, data = .x,
+                                    method = "FE", measure = "OR")), 
+         res = map(meta, ~tidy(.x, exponentiate = TRUE, conf.int = TRUE))) %>% 
+  unnest(res)
+```
+
+
+```{r analysis-xcell-desc, echo = F}
+
+tbl_merge(
+  list(
+    rosmap_xcell %>% 
+      select(dx, zmtDNAcn, macro_lmp, aod_cat, sex, apoe4, pmi, Neurons, Astrocytes) %>% 
+      tbl_summary(., by = dx, 
+                  statistic = list(all_continuous() ~ "{mean} ({sd})", 
+                               all_categorical() ~ "{n} ({p}%)")), 
+    msbb_xcell %>% 
+      select(dx, zmtDNAcn, macro_lmp, aod_cat, sex, apoe4, pmi, Neurons, Astrocytes) %>% 
+      tbl_summary(., by = dx, 
+                  statistic = list(all_continuous() ~ "{mean} ({sd})", 
+                               all_categorical() ~ "{n} ({p}%)")),
+    mayo_xcell %>% 
+      select(dx, zmtDNAcn, macro_lmp, aod_cat, sex, apoe4, pmi, Neurons, Astrocytes) %>% 
+      tbl_summary(., by = dx, 
+                  statistic = list(all_continuous() ~ "{mean} ({sd})", 
+                               all_categorical() ~ "{n} ({p}%)"))
+  ),
+  tab_spanner = c("**ROSMAP**", "**MSBB**", "**Mayo**")
+) %>% 
+  as_gt() %>%
+  tab_header(
+    title = "Descriptive statistics for xCell analysis",
+  )
+
+```
+
+
+```{r analysis-xcell-tab, echo = F}
+rosmap_xcell_gt <- rosmap_xcell_res %>%
+  tbl_regression(exponentiate = TRUE) 
+
+msbb_xcell_gt <- msbb_xcell_res %>%
+  tbl_regression(exponentiate = TRUE) 
+
+mayo_xcell_gt <- mayo_xcell_res %>%
+  tbl_regression(exponentiate = TRUE) 
+
+tbl_merge(
+  list(rosmap_xcell_gt, msbb_xcell_gt, mayo_xcell_gt),
+  tab_spanner = c("**ROSMAP**", "**MSBB**", "**Mayo**")
+) %>% 
+  as_gt() %>%
+  tab_header(
+    title = "Association of mtDNAcn with Neuropathologicly confirmed AD, adjusting for xCell",
+  )
+
+
+```
+
+Fixed effects inverse weighted Meta-analysis of mtDNAcn with ADNC, adjusting for xCell
+
+```{r analysis-xcell-meta-plot, echo=F}
+pull(xcell_meta, meta) %>% 
+  magrittr::extract2(1) %>%
+  forest(.)
+
+```
+
+```{r analysis-woxcell-tab, echo = F}
+rosmap_woxcell_gt <- rosmap_woxcell_res %>%
+  tbl_regression(exponentiate = TRUE) 
+
+msbb_woxcell_gt <- msbb_woxcell_res %>%
+  tbl_regression(exponentiate = TRUE) 
+
+mayo_woxcell_gt <- mayo_woxcell_res %>%
+  tbl_regression(exponentiate = TRUE) 
+
+tbl_merge(
+  list(rosmap_woxcell_gt, msbb_woxcell_gt, mayo_woxcell_gt),
+  tab_spanner = c("**ROSMAP**", "**MSBB**", "**Mayo**")
+) %>% 
+  as_gt() %>%
+  tab_header(
+    title = "Association of mtDNAcn with Neuropathologicly confirmed AD, wo/ adjusting for xCell",
+  )
+
+
+```
+
+Fixed effects inverse weighted Meta-analysis of mtDNAcn with ADNC, without adjusting for xCell
+
+```{r analysis-woxcell-meta-plot, echo=F}
+pull(woxcell_meta, meta) %>% 
+  magrittr::extract2(1) %>%
+  forest(.)
+
+```
+
+#### Assocation of mtDNAcn with AD pathology in ROSMAP
+
+```{r analysis2b-rosmap-path-desc}
+rosmap_mtdna_path <- rosmap_mtdna %>% 
+  mutate(
+    macro = macro_lmp,
+    macro_lmp = fct_recode(macro_lmp, "H" = "H", "V" = "V", "J" = "J", "T" = "T", "U" = "U", "K" = "K",
+                                "IWX" = "I", "IWX" = "W", "IWX" = "X")
+  )
+
+rosmap_mtdna_path_xcell <- rosmap_mtdna_path %>%
+  filter(SourceTissue == "Brain-DLPFC" & rna_seq_tissue == "DLPFC") %>% 
+  mutate(zmtDNAcn = scale(mtDNAcn)[,1], 
+         Neurons = scale(Neurons)[,1], 
+         Astrocytes = scale(Astrocytes)[,1]) 
+
+  
+
+rosmap_mtdna_path %>% 
+  dplyr::select(zmtDNAcn, macro_lmp, niareagansc, SourceTissue, ceradsc, braaksc, gpath, amyloid, plaq_d, plaq_n, tangles, nft,
+         dlbdx, ci_num2_gct, ci_num2_mct, cvda_4gp2, caa_4gp, arteriol_scler, hspath_typ, tdp_st4
+         ) %>% 
+  mutate(ceradsc = factor(ceradsc, ordered = FALSE),
+         braaksc = factor(braaksc, ordered = FALSE), 
+         niareagansc = factor(niareagansc, ordered = FALSE), 
+         cvda_4gp2 = factor(cvda_4gp2, ordered = FALSE),
+         caa_4gp = factor(caa_4gp, ordered = FALSE),
+         arteriol_scler = factor(arteriol_scler, ordered = FALSE)) %>% 
+  tbl_summary(.,
+              statistic = list(all_continuous() ~ "{mean} ({sd})", 
+                               all_categorical() ~ "{n} ({p}%)")) 
+
+```
+
+
+```{r analysis2b-rosmap-path, echo=F, eval=T}
+rosmap_path_res <- glm(dx ~ zmtDNAcn + macro_lmp + aod + sex + apoe4 + pmi + SourceTissue, 
+                       family = "binomial", data = rosmap_mtdna)
+
+models_mtdnacn <- tribble(
+  ~outcome, ~model, ~formula, 
+  "cvda_4gp2", "olr", cvda_4gp2 ~ zmtDNAcn + macro_lmp + apoe4 + sex + aod + pmi + SourceTissue, 
+  "caa_4gp", "olr", caa_4gp ~ zmtDNAcn + macro_lmp + apoe4 + sex + aod + pmi + SourceTissue,
+  "arteriol_scler", "olr", arteriol_scler ~ zmtDNAcn + macro_lmp + apoe4 + sex + aod + pmi + SourceTissue,
+  "hspath_typ", "glm", hspath_typ ~ zmtDNAcn + macro_lmp + apoe4 + sex + aod + pmi + SourceTissue,
+  "dlbdx", "glm", dlbdx ~ zmtDNAcn + macro_lmp + apoe4 + sex + aod + pmi + SourceTissue,
+  "ci_num2_gct", "glm", ci_num2_gct ~ zmtDNAcn + macro_lmp + apoe4 + sex + aod + pmi + SourceTissue,
+  "ci_num2_mct", "glm", ci_num2_mct ~ zmtDNAcn + macro_lmp + apoe4 + sex + aod + pmi + SourceTissue,
+  "tdp_st4", "glm", tdp_st4 ~ zmtDNAcn + macro_lmp + apoe4 + sex + aod + pmi + SourceTissue,
+  "gpath", "lm", gpath ~ zmtDNAcn + macro + apoe4 + sex + aod + pmi + SourceTissue,
+  "amyloid", "lm", amyloid ~ zmtDNAcn + macro + apoe4 + sex + aod + pmi + SourceTissue,
+  "plaq_d", "lm", plaq_d ~ zmtDNAcn + macro + apoe4 + sex + aod + pmi + SourceTissue,
+  "plaq_n", "lm", plaq_n ~ zmtDNAcn + macro + apoe4 + sex + aod + pmi + SourceTissue,
+  "tangles", "lm", tangles ~ zmtDNAcn + macro + apoe4 + sex + aod + pmi + SourceTissue,
+  "nft", "lm", nft ~ zmtDNAcn + macro + apoe4 + sex + aod + pmi + SourceTissue,
+)
+
+```
+
+
+Linear regression models for continous outcomes 
+
++ AD Neuropathology 
+  - Global AD Pathology burden
+  - Overal amyloid level 
+  - Diffuse plaques 
+  - Neuritic Plaques 
+  - Tangle Density 
+  - NFT Burden
+
+```{r analysis2b-rosmap-lm, echo=F, eval=T}
+## Continous Outcomes 
+output_lm_mtdnacn <- models_mtdnacn %>%
+  filter(model == "lm") %>%
+  mutate(res = map(formula, ~lm(formula = .x, data = rosmap_mtdna_path)),
+       tidy = map(res, tidy),
+       glance = map(res, glance), 
+       gt = map(res, tbl_regression))
+
+# output_lm %>%
+#   unnest(tidy) %>%
+#   filter(str_detect(term, "^macro|zmtDNAcn")) %>%
+#   filter(p.value < 0.05)
+
+tbl_merge(
+  pull(output_lm_mtdnacn, gt),
+  tab_spanner = pull(output_lm_mtdnacn, outcome)
+) %>% 
+  as_gt() %>%
+  tab_header(
+    title = "Association of mtDNAcn with Neuropathology",
+  )
+
+```
+
+
+Adjusting for xCell Scores
+
+```{r analysis2b-rosmap-lm-xcell, echo=F, eval=T}
+## Continous Outcomes 
+models_mtdnacn_xcell <- tribble(
+  ~outcome, ~model, ~formula, 
+  "gpath", "base", gpath ~ zmtDNAcn + macro_lmp + apoe4 + sex + aod + pmi,
+  "amyloid", "base", amyloid ~ zmtDNAcn + macro_lmp + apoe4 + sex + aod + pmi,
+  "plaq_d", "base", plaq_d ~ zmtDNAcn + macro_lmp + apoe4 + sex + aod + pmi,
+  "plaq_n", "base", plaq_n ~ zmtDNAcn + macro_lmp + apoe4 + sex + aod + pmi,
+  "tangles", "base", tangles ~ zmtDNAcn + macro_lmp + apoe4 + sex + aod + pmi,
+  "nft", "base", nft ~ zmtDNAcn + macro_lmp + apoe4 + sex + aod + pmi,
+  "gpath", "xcell", gpath ~ zmtDNAcn + macro_lmp + apoe4 + sex + aod + pmi + Neurons + Astrocytes + rna_seq_batch + RIN,
+  "amyloid", "xcell", amyloid ~ zmtDNAcn + macro_lmp + apoe4 + sex + aod + pmi + Neurons + Astrocytes + rna_seq_batch + RIN,
+  "plaq_d", "xcell", plaq_d ~ zmtDNAcn + macro_lmp + apoe4 + sex + aod + pmi + Neurons + Astrocytes + rna_seq_batch + RIN,
+  "plaq_n", "xcell", plaq_n ~ zmtDNAcn + macro_lmp + apoe4 + sex + aod + pmi + Neurons + Astrocytes + rna_seq_batch + RIN,
+  "tangles", "xcell", tangles ~ zmtDNAcn + macro_lmp + apoe4 + sex + aod + pmi + Neurons + Astrocytes + rna_seq_batch + RIN,
+  "nft", "xcell", nft ~ zmtDNAcn + macro_lmp + apoe4 + sex + aod + pmi + Neurons + Astrocytes + rna_seq_batch + RIN,
+
+)
+
+output_lm_mtdnacn_xcell <- models_mtdnacn_xcell %>%
+  mutate(res = map(formula, ~lm(formula = .x, data = rosmap_mtdna_path_xcell)),
+       tidy = map(res, tidy),
+       glance = map(res, glance), 
+       gt = map(res, tbl_regression))
+
+# output_lm %>%
+#   unnest(tidy) %>%
+#   filter(str_detect(term, "^macro|zmtDNAcn")) %>%
+#   filter(p.value < 0.05)
+
+tbl_merge(
+  output_lm_mtdnacn_xcell %>% 
+    filter(model == "xcell") %>% 
+    pull(., gt),
+  tab_spanner = pull(output_lm_mtdnacn, outcome)
+) %>% 
+  as_gt() %>%
+  tab_header(
+    title = "Association of mtDNAcn with Neuropathology adjusting for xCell Scores",
+  )
+
+tbl_merge(
+  output_lm_mtdnacn_xcell %>% 
+    filter(model == "base") %>% 
+    pull(., gt),
+  tab_spanner = pull(output_lm_mtdnacn, outcome)
+) %>% 
+  as_gt() %>%
+  tab_header(
+    title = "Association of mtDNAcn with Neuropathology wo/ xCell Scores",
+  )
+
+```
+
+
+Logistic regression models for categorical outcomes 
+
++ Neuropathology 
+  - Hippocampal Sclerosis
+  - Lewy-bodies 
+  - Gross Infarcts 
+  - Micro Infarcts 
+  - TDP-43 
+
+```{r analysis2b-rosmap-glm, echo=F, eval=T}
+## Continous Outcomes 
+output_glm_mtdnacn <- models_mtdnacn %>%
+  filter(model == "glm") %>%
+  mutate(res = map(formula, ~glm(formula = .x, family = "binomial", data = rosmap_mtdna_path)),
+       tidy = map(res, tidy),
+       glance = map(res, glance), 
+       gt = map(res, tbl_regression, exponentiate = TRUE))
+
+# output_lm %>%
+#   unnest(tidy) %>%
+#   filter(str_detect(term, "^macro|zmtDNAcn")) %>%
+#   filter(p.value < 0.05)
+
+tbl_merge(
+  pull(output_glm_mtdnacn, gt),
+  tab_spanner = pull(output_glm_mtdnacn, outcome)
+) %>% 
+  as_gt() %>%
+  tab_header(
+    title = "Association of mtDNAcn with Neuropathology",
+  )
+
+```
+
+
+Ordinal Logistic regression models for ordinal vascular outcomes 
+
++ Neuropathology 
+  - Cerebral atherosclerosis
+  - Cerebral amyloid angiopathy
+  - Arteriolosclerosis
+
+```{r analysis2b-rosmap-olr, echo=F, eval=T}
+## Continous Outcomes 
+output_olr_mtdnacn <- models_mtdnacn %>%
+  filter(model == "olr") %>%
+  mutate(res = map(formula, ~vglm(.x, family=propodds(), data = rosmap_mtdna_path)),
+       tidy = map(res, ~tidy.vglm(.x, exponentiate = TRUE)))
+
+# output_lm %>%
+#   unnest(tidy) %>%
+#   filter(str_detect(term, "^macro|zmtDNAcn")) %>%
+#   filter(p.value < 0.05)
+
+output_olr_mtdnacn %>% 
+  unnest(tidy) %>% 
+  filter(str_detect(term, "^zmtDNAcn|^macro")) %>% 
+#  print(n = Inf) %>% 
+  select(outcome, term, or, lci, uci, p.value) %>% 
+  mutate(term = str_replace(term, "macro_lmp", "")) %>% 
+  mutate_if(is.numeric, round, 2) %>%
+  unite(ci, c(lci, uci), sep = ", ") %>%
+  mutate(out = paste0(or, " [", ci, "]; ", p.value)) %>%
+  select(outcome, term, out) %>%
+  pivot_wider(names_from = outcome, values_from = c("out")) %>%
+  knitr::kable(format = "html", caption = "Assocation of mtDNAcn with neuropathology (OLR)") %>%
   kableExtra::kable_styling("striped", full_width = F)
-```
-
-```{r analysis-rosmap-path-plot, eval=F}
-ggplot(rosmap_df, aes(x = ad_reagan, y = z_mtdnacn, colour = Source.Tissue.Type)) + 
-  geom_quasirandom() + 
-  geom_pointrange(mapping = aes(x = ad_reagan, y = z_mtdnacn),
-                      show.legend = F, colour = 'black',
-                     # size = 1,
-                      position = position_dodge(width = 1),
-                      shape = 15,
-                      stat = "summary",
-                      fun = median,
-                      fun.min = function(z) {quantile(z,0.25)},
-                      fun.max = function(z) {quantile(z,0.75)}) + 
-  theme_bw() + theme(legend.position = "bottom")
-
-```
-
-#### Clinical diagnosis
-```{r analysis-rosmap-clin-glm, eval=F}
-rosmap_clin_res <- glm(dx ~ z_mtdnacn + macro + age_death + msex + apoe4 + study + Source.Tissue.Type, family = "binomial", data = rosmap_df)
-```
-
-```{r analysis-rosmap-clin-tab, echo=FALSE, eval=F}
-rosmap_clin_tab <- tidy(rosmap_clin_res)
-
-rosmap_clin_tab %>% 
-  mutate_at(., vars("estimate", "std.error", "statistic"), round, 3) %>% 
-  mutate(p.value = glue("{p} {signif}", 
-                        signif = gtools::stars.pval(p.value), 
-                        p = ifelse(p.value < 0.001, formatC(p.value, format = "e", digits = 1), round(p.value, 3))
-                        )) %>%
-  knitr::kable(format = "html", caption = "Assocation of mtDNA with MMSE in ROSMAP") %>%
-  kableExtra::kable_styling("striped", full_width = F)
-```
-
-```{r clin-plot, eval=F}
-rosmap_df %>% 
-  filter(!is.na(dx)) %>%
-  ggplot(., aes(x = dx, y = z_mtdnacn, colour = Source.Tissue.Type)) + 
-    geom_quasirandom() + 
-    geom_pointrange(mapping = aes(x = dx, y = z_mtdnacn),
-                        show.legend = F, colour = 'black',
-                       # size = 1,
-                        position = position_dodge(width = 1),
-                        shape = 15,
-                        stat = "summary",
-                        fun = median,
-                        fun.min = function(z) {quantile(z,0.25)},
-                        fun.max = function(z) {quantile(z,0.75)}) + 
-  theme_bw() + theme(legend.position = "bottom")
-
-
-```
-
-```{r, eval=F}
-
-lm(sqrt(gpath) ~ z_mtdnacn + macro + age_death + msex + apoe4 + study + Source.Tissue.Type, data = rosmap_df) %>% 
-  tidy(.)
-lm(sqrt(amyloid) ~ z_mtdnacn + macro + age_death + msex + apoe4 + study + Source.Tissue.Type, data = rosmap_df)  %>% 
-  tidy(.)
-lm(sqrt(tangles) ~ z_mtdnacn + macro + age_death + msex + apoe4 + study + Source.Tissue.Type, data = rosmap_df)  %>% 
-  tidy(.)
 
 ```
 
 
-### haplogroups 
+Investigate assocation of mtDNAcn with resilience 
 
-```{r, eval=F}
-rosmap_hap <- rosmap %>% 
-  filter(Source.Tissue.Type %in% c("Brain-DLPFC", "Brain-Posterior Cingulate Cortex", "Brain-Cerebellum", "Whole Blood")) %>%
-  filter(macro %in% c('H', 'V', 'J', 'T', 'U', 'K', 'I', 'W', 'X')) %>%
-  filter(!is.na(macro)) %>%
-  mutate(ad_reagan = fct_relevel(ad_reagan, "0", "1"),
-         Source.Tissue.Type = fct_inorder(Source.Tissue.Type), 
-         dx = fct_recode(dcfdx_lv, "0" = "1", NULL = "2", NULL = "3", "1" = "4", NULL = "5", NULL = "6")) 
+```{r rosmap-resilince-mtdnacn-tab, echo=F}
+
+rosmap_mtdna %>% 
+  lm(GLOBALRES ~ zmtDNAcn + macro_lmp + apoe4 + sex + aod + pmi + SourceTissue, data = .) %>% 
+    tbl_regression() %>% 
+  bold_p() %>% 
+  as_gt() %>%
+  tab_header(
+    title = "ROSMAP: Association of mtDNAcn with Resilience",
+  )
 
 ```
 
-```{r, eval=F}
-glm(ad_reagan ~ macro + age_death + msex + apoe4 + study + Source.Tissue.Type, 
-                       family = "binomial", data = rosmap_hap) %>% 
+
+### Assocation of mtDNAcn with Clinical AD vs ADNC 
+
+```{r rosmap-cogdx-mtdnacn-tab, echo = F}
+
+models_mtdnacn_dx <- tribble(
+  ~outcome, ~model, ~formula, 
+  "cogdx", "glm", cogdx ~ zmtDNAcn + macro_lmp + apoe4 + sex + aod + pmi + SourceTissue, 
+  "ad_reagan", "glm", dx ~ zmtDNAcn + macro_lmp + apoe4 + sex + aod + pmi + SourceTissue,
+  )
+
+## Continous Outcomes 
+output_mtdnacn_dx <- models_mtdnacn_dx %>%
+  mutate(res = map(formula, ~glm(formula = .x, family = "binomial", data = rosmap_mtdna)),
+       tidy = map(res, tidy),
+       glance = map(res, glance), 
+       gt = map(res, ~tbl_regression(.x, exponentiate = TRUE) %>% bold_p()))
+
+tbl_merge(
+  pull(output_mtdnacn_dx, gt),
+  tab_spanner = pull(output_mtdnacn_dx, outcome)
+) %>% 
+  as_gt() %>%
+  tab_header(
+    title = "Differential association of mtDNAcn with clinical vs neuropathological AD",
+  )
+
+```
+
+### Association of blood mtDNAcn with diagnosis + pathology of AD 
+
+```{r rosmap-blood-mtdnacn, echo = F}
+
+rosmap_blood_mtdna <- rosmap_df %>% 
+  filter(SourceTissue == "Whole Blood") %>%
+  # filter(SourceTissue == "Brain-DLPFC") %>%
+  mutate(SourceTissue = fct_drop(SourceTissue), 
+         zmtDNAcn = scale(mtDNAcn)[,1], 
+         cogdx = fct_recode(cogdx, "0" = "1", "1" = "4", "1" = "5", 
+                            NULL = "2", NULL = "3", NULL = "6"),
+         niareagansc = fct_recode(niareagansc, "3" = "4"),
+         amyloid = sqrt(amyloid),
+         ) 
+
+rosmap_blood_res <- glm(dx ~ zmtDNAcn + aod + sex + apoe4 + pmi, 
+                       family = "binomial", data = rosmap_blood_mtdna)
+
+rosmap_blood_tab <- tidy(rosmap_blood_res)
+
+rosmap_blood_mtdna %>% 
+  filter(year_lv >= 2008) %>% 
+  glm(dx ~ zmtDNAcn + aod + sex + apoe4 + pmi, family = "binomial", data = .) %>% 
   tidy()
 
-glm(dx ~ macro + age_death + msex + apoe4 + study + Source.Tissue.Type, 
-                       family = "binomial", data = rosmap_hap) %>% 
-  tidy()
+```
 
-lm(sqrt(gpath) ~  macro + age_death + msex + apoe4 + study, data = rosmap_hap) %>% 
-  tidy(.)
-lm(sqrt(amyloid) ~  macro + age_death + msex + apoe4 + study, data = rosmap_hap)  %>% 
-  tidy(.)
-lm(sqrt(nft) ~  macro + age_death + msex + apoe4 + study, data = rosmap_hap)  %>% 
-  tidy(.)
-lm(cts_mmse30_lv ~  macro + age_death + msex + apoe4 + study, data = rosmap_hap)  %>% 
-  tidy(.)
+```{r}
+rosmap_blood_mtdna %>% 
+  mutate(cogdx = ifelse(is.na(cogdx), 3, cogdx)) %>%
+  mutate(cogdx = recode(cogdx, "1" = "CN", "2" = "Dementia", "3" = "MCI"), 
+         cogdx = fct_relevel(cogdx, "CN", "MCI", "Dementia")) %>%
+ggplot(., aes(x = cogdx, y = mtDNAcn)) + 
+  ggbeeswarm::geom_quasirandom() + 
+  labs(title = "ROSMAP - Whole Blood") + 
+  theme_bw()
 
-#gvlma(test)
+labels <- c(year_bl = "Baseline", year_lv = "Last Visit")
+rosmap_blood_mtdna %>% 
+  select(cogdx, mtDNAcn, year_bl, year_lv) %>% 
+  pivot_longer(c("year_bl", "year_lv"), names_to = "visit", values_to = "year") %>%
+  filter(!is.na(year)) %>%
+  mutate(cogdx = ifelse(is.na(cogdx), 3, cogdx)) %>%
+  mutate(cogdx = recode(cogdx, "1" = "CN", "2" = "Dementia", "3" = "MCI"), 
+         cogdx = fct_relevel(cogdx, "CN", "MCI", "Dementia")) %>%
+ggplot(., aes(x = year, y = mtDNAcn, colour = cogdx)) + 
+  ggbeeswarm::geom_quasirandom() + 
+  facet_grid(visit ~ ., labeller=labeller(visit = labels)) + 
+  theme_bw() + 
+  labs(title = "ROSMAP - mtDNAcn by Year of visit") +
+  theme(legend.position = "bottom")
 
+ggsave("~/Downloads/rosmap_mtdan_year.png", units = "in", height = 4.5, width = 9)
 ```
 
 
-## MSBB
+## Aim 3
 
-### Data Wrangling 
+```{r analysis3-res}
 
-+ Exclude individules who are not non-hispanic whites 
-+ Exclude individules with non-European haplogroups
-+ Dichotomize CERAD dx  
+rosmap_res3 <- rosmap_mtdna %>% 
+    rename(macro = macro_lmp) %>% 
+    lm(zmtDNAcn ~ dx + macro + aod + sex + apoe4 + pmi + SourceTissue, data = .) 
 
-```{r load-msbb, eval=F}
-msbb_df <- msbb  %>% 
-  filter(race == 'W') %>%
-  filter(macro %in% c('H', 'V', 'J', 'T', 'U', 'K', 'I', 'W', 'X')) %>% 
-  mutate(cerad_dx = fct_recode(cerad, "0" = "Normal", "0" = "Possible", "1" = "Probable", "1" = "Definite"), 
-         macro = fct_lump(macro, n = 6, other_level = "IWX"))
+msbb_res3 <- lm(zmtDNAcn ~ dx + macro + aod + sex + apoe4 + pmi, data = msbb_mtdna) 
 
-```
+mayo_res3 <- lm(zmtDNAcn ~ dx + macro + aod_cat + sex + apoe4 + pmi, data = mayo_mtdna) 
 
-### NIA-Reagan 
 
-```{r analysis-msbb-path-glm, eval=F}
-msbb_path_res <- glm(ad_reagan ~ z_mtdnacn + macro + aod + sex + apoe4, 
-                       family = "binomial", data = msbb_df)
 
 ```
 
-```{r analysis-msbb-path-tab, echo=FALSE, eval=F}
-msbb_path_tab <- tidy(msbb_path_res)
+```{r analysis3-tab, echo=F}
 
-msbb_path_tab %>% 
-  mutate_at(., vars("estimate", "std.error", "statistic"), round, 3) %>% 
-  mutate(p.value = glue("{p} {signif}", 
-                        signif = gtools::stars.pval(p.value), 
-                        p = ifelse(p.value < 0.001, formatC(p.value, format = "e", digits = 1), round(p.value, 3))
-                        )) %>%
-  knitr::kable(format = "html", caption = "Assocation of mtDNA with MMSE in msbb") %>%
-  kableExtra::kable_styling("striped", full_width = F)
-```
-
-```{r analysis-msbb-path-plot, echo=FALSE, fig.cap="mtDNAcn by NIA-Regan dx", eval=F}
-msbb_df %>% 
-  filter(!is.na(ad_reagan)) %>%
-    ggplot(., aes(x = ad_reagan, y = z_mtdnacn, colour = ad_reagan)) + 
-      geom_quasirandom() + 
-      geom_pointrange(mapping = aes(x = ad_reagan, y = z_mtdnacn),
-                          show.legend = F, colour = 'black',
-                         # size = 1,
-                          position = position_dodge(width = 1),
-                          shape = 15,
-                          stat = "summary",
-                          fun = median,
-                          fun.min = function(z) {quantile(z,0.25)},
-                          fun.max = function(z) {quantile(z,0.75)}) + 
-      theme_bw() + theme(legend.position = "bottom")
-
-```
-
-
-```{r, eval=F}
-glm(ad_reagan ~ macro + aod + sex + apoe4,  family = "binomial", data = msbb_df) %>% 
-  tidy()
-glm(cerad_dx ~ macro + aod + sex + apoe4,  family = "binomial", data = msbb_df) %>% 
-  tidy()
-lm(NP.1 ~ macro + aod + sex + apoe4, data = msbb_df) %>% 
-  tidy()
-```
-
-### CERAD 
-
-```{r analysis-msbb-cerad-glm, eval=F}
-msbb_cerad_res <- glm(cerad_dx ~ z_mtdnacn + macro + aod + sex + apoe4, 
-                       family = "binomial", data = msbb_df)
-
-```
-
-```{r analysis-msbb-cerad-tab, echo=FALSE, eval=F}
-msbb_cerad_tab <- tidy(msbb_cerad_res)
-
-msbb_cerad_tab %>% 
-  mutate_at(., vars("estimate", "std.error", "statistic"), round, 3) %>% 
-  mutate(p.value = glue("{p} {signif}", 
-                        signif = gtools::stars.pval(p.value), 
-                        p = ifelse(p.value < 0.001, formatC(p.value, format = "e", digits = 1), round(p.value, 3))
-                        )) %>%
-  knitr::kable(format = "html", caption = "Assocation of mtDNA with MMSE in msbb") %>%
-  kableExtra::kable_styling("striped", full_width = F)
-```
-
-```{r analysis-msbb-cerad-plot, echo=FALSE, fig.cap="mtDNAcn by CERAD dx", eval=F}
-msbb_df %>% 
-  filter(!is.na(cerad_dx)) %>%
-    ggplot(., aes(x = cerad_dx, y = z_mtdnacn, colour = cerad_dx)) + 
-      geom_quasirandom() + 
-      geom_pointrange(mapping = aes(x = cerad_dx, y = z_mtdnacn),
-                          show.legend = F, colour = 'black',
-                         # size = 1,
-                          position = position_dodge(width = 1),
-                          shape = 15,
-                          stat = "summary",
-                          fun = median,
-                          fun.min = function(z) {quantile(z,0.25)},
-                          fun.max = function(z) {quantile(z,0.75)}) + 
-      theme_bw() + theme(legend.position = "bottom")
+tbl_merge(
+  list(
+    rosmap_res3 %>%
+      tbl_regression(), 
+    msbb_res3 %>%
+      tbl_regression(), 
+    mayo_res3 %>%
+      tbl_regression()
+  ),
+  tab_spanner = c("**ROSMAP**", "**MSBB**", "**Mayo**")
+) %>% 
+  as_gt() %>%
+  tab_header(
+    title = "Association of mtHgs with mtDNAcn",
+  )
 
 ```
 

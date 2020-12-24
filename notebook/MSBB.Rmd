@@ -23,7 +23,7 @@ Samples come from 364 postmortem control, mild cognitive impaired (MCI) and AD b
 
 Clinical Code Book: [Synapse](https://adknowledgeportal.synapse.org/Explore/Studies?Study=syn3159438)
 
-```{r load-mssb}
+```{r load-mssb, warning=F, message=F, error=F}
 ## MSBB
 msbb.raw1 <- read_tsv('data/AMPAD/msbb/WGS_Metadata.txt') 
 msbb.raw2 <- read_tsv('data/AMPAD_extra/msbb.wgs.meta.tsv')
@@ -40,14 +40,26 @@ msbb.raw <- msbb.raw1 %>%
 mosdepth <- read_tsv("data/mosdepth/mosdepth_mtDNAcn_All.txt")
 haplogrep <- read_tsv("data/haplogrep/haplogrep_jointAll.txt")
 
+xcell.raw <- read_csv("data/xcell/ampad_xCell.csv") 
+
 ```
 
-```{r, MSBB, echo = TRUE, message=FALSE}
+```{r wrangle-msbb,, warning=F, message=F, error=F}
+## Wrangle xcell data
+xcell <- xcell.raw %>% 
+  filter(study == "MSBB") %>% 
+  group_by(Tissue, ID) %>% 
+  slice(which.max(str_length(SampleID))) %>% 
+  ungroup() %>% 
+  select(-SampleID, -study, -Neurons.pval, -Astrocytes.pval) %>% 
+  rename(rna_seq_tissue = Tissue, rna_seq_batch = batch) %>% 
+  pivot_wider(names_from = rna_seq_tissue, values_from = c(Neurons, Astrocytes, rna_seq_batch, RIN))
 
 ## Recode NP.1 -> ceradsc to be consistent with ROSMAP
 msbb <- msbb.raw %>%
   left_join(haplogrep, by = c('WGS' = 'SampleID')) %>%
   left_join(mosdepth, by = c('WGS' = 'SampleID')) %>%
+  left_join(xcell, by = c("individualIdentifier" = "ID")) %>%
   mutate(id = paste0('MSBB', WGS)) %>%
   mutate(APOE_inferred = recode(APOE_inferred, 'e2/e2' = '22', 'e2/e3' = '23', 'e3/e3' = '33', 'e2/e4' = '24', 'e3/e4' = '34', 'e4/e4' = '44'),
         apoe4 = recode(APOE_inferred, '22' = 'e4-', '23' = 'e4-', '33' = 'e4-', '24' = 'e4+', '34' = 'e4+', '44' = 'e4+'),
@@ -85,12 +97,21 @@ msbb <- msbb.raw %>%
   mutate_at(vars(HippoPlaquesWCoresValue, EntorPlaquesWCoresValue, MidPlaquesWCoresValue, 
                        SupPlaquesWCoresValue, InfPlaquesWCoresValue, OcciPlaquesWCoresValue), 
             ordered) %>%
-  select(id, study, sex = SEX, race = RACE, SourceTissue, PMI, NP.1, cerad, niareagansc, ad_reagan, ceradsc, HippoPlaquesWCoresValue, EntorPlaquesWCoresValue, MidPlaquesWCoresValue, SupPlaquesWCoresValue, InfPlaquesWCoresValue, OcciPlaquesWCoresValue, braaksc = bbscore, braaksc_B, ceradsc_C, apoe = APOE_inferred, apoe4, aod = AOD, aod_cat, cdr = CDR, PlaqueMean, mtcn_avg, z_mtdnacn, Haplogroup, Quality, macro)
+  select(id, individualIdentifier, study, sex = SEX, race = RACE, SourceTissue, 
+         PMI, NP.1, cerad, niareagansc, ad_reagan, ceradsc, HippoPlaquesWCoresValue, 
+         EntorPlaquesWCoresValue, MidPlaquesWCoresValue, SupPlaquesWCoresValue, 
+         InfPlaquesWCoresValue, OcciPlaquesWCoresValue, braaksc = bbscore, braaksc_B, 
+         ceradsc_C, apoe = APOE_inferred, apoe4, aod = AOD, aod_cat, cdr = CDR, 
+         PlaqueMean, mtcn_avg, z_mtdnacn, Haplogroup, Quality, macro, 
+         Neurons_BM10, Neurons_BM22, Neurons_BM36, Neurons_BM44, 
+         Astrocytes_BM10, Astrocytes_BM22, Astrocytes_BM36, Astrocytes_BM44, 
+         rna_seq_batch_BM10, rna_seq_batch_BM22, rna_seq_batch_BM36, rna_seq_batch_BM44, 
+         RIN_BM10, RIN_BM22, RIN_BM36, RIN_BM44)
 
 write_rds(msbb, 'output/msbb.rds')
 ```
 
-## Pathology
+## MSBB Pathology
 
 **Amyloid** 
 
@@ -129,7 +150,7 @@ msbb_path_n %>%
   knitr::kable(caption = "Variable type: Numeric") 
 ```
 
-```{r, echo=FALSE, message=FALSE, warning=FALSE}
+```{r msbb-path-n-plot, echo=FALSE, message=FALSE, warning=FALSE}
 msbb_path_n %>% show_plot()
 ```
 
@@ -149,7 +170,7 @@ msbb_path_c %>%
   DT::datatable()
 ```
 
-```{r, echo=FALSE, message=FALSE, warning=FALSE}
+```{r msbb-path-c-plot, echo=FALSE, message=FALSE, warning=FALSE}
 msbb_path_c %>% show_plot(high_cardinality = 1)
 ```
 
@@ -247,15 +268,22 @@ msbb_path_crosstab <- msbb %>%
          prop = n / sum(n)) 
 
 ggplot(msbb_path_crosstab, aes(y = ceradsc, x = braaksc, label = n)) + 
-  geom_tile(aes(fill = niareagansc, alpha = prop), colour = "white") + 
+  # geom_tile(aes(fill = niareagansc, alpha = prop), colour = "white") + 
+  geom_tile(aes(fill = niareagansc), colour = "white") + 
   geom_text() + theme_classic() +
   scale_x_discrete(position = 'top') + 
   theme_classic() + 
-  scale_fill_manual(values=c("#abdda4","#fee08b","#fdae61","#f46d43","#d53e4f"),na.value = "grey90")
+  scale_fill_manual(values=c("#abdda4","#fee08b","#fdae61","#f46d43","#d53e4f"),na.value = "grey90") + 
+  labs(title = "MSBB: NIA-Regan Diagnosis") + 
+  theme(legend.position = "bottom", 
+        text = element_text(size=11))
+
+ggsave("/Users/sheaandrews/Downloads/msbb_dx.pdf", height = 5, width = 5)
 
 ```
 
-## Other Variables 
+## MSBB Other Variables 
++ 'PMI': Postmortem interval in minutes
 
 ```{r msbb-numeric, echo=FALSE, message=FALSE, tidy=FALSE}
 msbb_vars <- c('sex', 'race', "PMI", "apoe", "apoe4", "cdr", "aod", "mtcn_avg", "Haplogroup", "Quality", "macro")
@@ -292,4 +320,66 @@ msbb_c %>%
 
 ```{r, echo=FALSE, message=FALSE, warning=FALSE}
 msbb_c %>% show_plot()
+```
+
+## MSBB RNA-seq
++ WGS (ie mtDNAcn) was generated from DNA isolated from BM10 or BM22
++ RNAseq data was generated from DNA isolated from BM10, BM22, BM36 and BM44
+
+```{r msbb-rna-numeric, echo=FALSE, message=FALSE, tidy=FALSE}
+msbb_vars <- c("Neurons_BM10", "Neurons_BM22", "Neurons_BM36", "Neurons_BM44", 
+         "Astrocytes_BM10", "Astrocytes_BM22", "Astrocytes_BM36", "Astrocytes_BM44", 
+         "rna_seq_batch_BM10", "rna_seq_batch_BM22", "rna_seq_batch_BM36", "rna_seq_batch_BM44", 
+         "RIN_BM10", "RIN_BM22", "RIN_BM36", "RIN_BM44")
+
+msbb_n <- msbb %>% 
+  select(all_of(msbb_vars)) %>%
+  inspect_num(.) 
+
+msbb_n %>% 
+  select(-hist) %>% 
+  mutate_if(is.numeric, round, 2) %>%
+  knitr::kable(caption = "Variable type: Numeric") 
+```
+
+```{r msbb-rna-plot, echo=FALSE, message=FALSE, warning=FALSE}
+msbb_n %>% show_plot()
+```
+
+```{r msbb-rna-dx-plots}
+msbb_xcell <- xcell.raw %>% 
+  filter(study == "MSBB") %>%
+  select(-Neurons.pval, -Astrocytes.pval, -study) %>% 
+  left_join(.,
+            select(msbb, individualIdentifier, aod, ad_reagan, cdr, mtcn_avg, sex),
+            by = c("ID" = "individualIdentifier"))  %>% 
+    pivot_longer(c("Neurons", "Astrocytes"), names_to = "cells", values_to = "xcell")
+
+ggplot(msbb_xcell, aes(x = ad_reagan, y = xcell, colour = cells)) + 
+  ggbeeswarm::geom_quasirandom(dodge.width=1) + 
+  facet_grid(cells ~ Tissue) + 
+  theme_bw()
+
+ggplot(msbb_xcell, aes(x = cdr, y = xcell, colour = cells)) + 
+  ggbeeswarm::geom_quasirandom(dodge.width=1) + 
+  geom_smooth(method = lm) + 
+  facet_grid(cells ~ Tissue) + 
+  theme_bw()
+
+ggplot(msbb_xcell, aes(x = sex, y = xcell, colour = cells)) + 
+  ggbeeswarm::geom_quasirandom(dodge.width=1) + 
+  facet_grid(cells ~ Tissue) + 
+  theme_bw()
+
+ggplot(msbb_xcell, aes(x = aod, y = xcell, colour = ad_reagan)) + 
+  facet_grid(cells ~ Tissue) +
+  geom_point() + 
+  geom_smooth(method = lm) + 
+  theme_bw()
+
+ggplot(msbb_xcell, aes(x = mtcn_avg, y = xcell, colour = ad_reagan)) + 
+  facet_grid(cells ~ Tissue) +
+  geom_point() + 
+  geom_smooth(method = lm) + 
+  theme_bw()
 ```

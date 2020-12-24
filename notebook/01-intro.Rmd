@@ -6,10 +6,21 @@ Updates to project - just like a wet lab Lab Book
 
 ### To Do 
 
+### 2020-09-09
++ xCell: Got xCell working in R using MSBB bulk gene expression data. 
+  - Was using normalized (library size) gene expression data and adjusted for covariates. Need to use raw counts and adjust for gene length 
+
+### 2020-09-04
++ Initial analysis of haplogroup assocations with ROSMAP pathology data. Some initial positive results between haplogroup K and tau pathology. 
+
 ### 2020-09-02
 + Ordinal Logistic Regression 
   - Looking at running OLR for neuropathology outcomes in ROSMAP in particular. Cannot (well you technicaly can) use a linear regression as the assumption of LM will be violated, in particualr the constant marginal effect where the distances between successive points in the dependent variable are assumed to be identical - clearly not the case with a ordinal variable. [Norris, C., et al. 2006](https://dx.doi.org/10.1016/j.jclinepi.2005.09.007)
   - Proportional odds assumption: relationship between each pair of outcome groups is the same, such that the coefficients that describe the relationship between, say, the lowest versus all higher categories of the response variable are the same as those that describe the relationship between the next lowest category and all higher categories, etc.
+    * Can check assumption using a LRT or a Wald test (Yee pg 397), also graphically (Harrel; UCLA)
+    * Assumption is frequently violated, however, the model can still be powerful and usefull (Harrell pg 313); the practical
+implications of violating this assumption are minimal. Assumption is sensetive to other misspeicifcations.
+    * Can try using a different link function or introducing interactions; or partial proportional odds
 + References 
   - Abreu, M., Siqueira, A., Caiaffa, W. (2009). Regressão logística ordinal em estudos epidemiológicos. [Revista de Saúde Pública  43(1), 183-194](https://dx.doi.org/10.1590/s0034-89102009000100025)
   - Yee, T. (2015). Vector Generalized Linear and Additive Models, With an Implementation in R. [Springer](https://dx.doi.org/10.1007/978-1-4939-2818-7)
@@ -18,8 +29,8 @@ Updates to project - just like a wet lab Lab Book
 - R Packages 
   - VGAM: Conducting OLR using `vlgm`
   - MASS: Conducting OLR using `polyr`
-  - Brant: Checks proportional odds assumption when using `polyr`
-  - QMSS: Checks proportional odds assumption when using `vlgm`
+  - Brant: Checks proportional odds assumption when using `polyr` (also aproximate wald test)
+  - QMSS: Checks proportional odds assumption when using `vlgm` (LR test)
 
 + Sample size for logistic regression 
   - Rule of thumb is a minimum sample size for logistic regression of ~10 events per predictor paramater [Riley, R. et al. 2019](https://dx.doi.org/10.1002/sim.7992)

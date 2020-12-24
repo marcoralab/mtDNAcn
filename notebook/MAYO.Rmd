@@ -4,7 +4,7 @@ editor_options:
   chunk_output_type: console
 ---
 # MAYO
-```{r, warning=F, message=F, error=F, echo=FALSE}
+```{r setup-mayo, warning=F, message=F, error=F, echo=FALSE}
 # library(knitr)
 # library(kableExtra)
 library(tidyverse)
@@ -14,8 +14,10 @@ library(dlookr)
 library(inspectdf)
 library(skimr)
 library(ggmosaic)
-library(vcfR)
 knitr::opts_knit$set(root.dir = '/sc/arion/projects/LOAD/shea/Projects/mtDNAcn')
+
+synapser::synLogin()
+
 # setwd('/sc/arion/projects/LOAD/shea/Projects/mtDNAcn')
 ```
 
@@ -44,38 +46,40 @@ tcx  <- read_csv('data/AMPAD_extra/mayo/MayoRNAseq_RNAseq_TCX_covariates.csv')  
   anti_join(cbe, by = 'SampleID') 
 mayo_path <- bind_rows(cbe, tcx)
 
+## Get imputed PMI from DEG analysis
+pmi <- synapser::synGet("syn8466814")$path %>%
+  read_tsv() %>% 
+  group_by(Donor_ID) %>% 
+  select(Donor_ID, PMI) %>%
+  mutate(Donor_ID = as.character(Donor_ID)) %>%
+  slice(1)
+
 mosdepth <- read_tsv("data/mosdepth/mosdepth_mtDNAcn_All.txt")
 haplogrep <- read_tsv("data/haplogrep/haplogrep_jointAll.txt")
 
-vcf <- read.vcfR("data/AMPAD_extra/mayo/NIA_JG_1898_samples_GRM_WGS_b37_JointAnalysis01_2017-12-08_APOE.recalibrated_variants.Mayo.vcf.gz")
+xcell.raw <- read_csv("data/xcell/ampad_xCell.csv") 
+
+apoe <- read_tsv("data/AMPAD_extra/mayo/wgs_apoe.tsv") %>% 
+  mutate(Indiv = as.character(Indiv))
+
 ```
 
-```{r, mayo-clean, echo = FALSE, message=TRUE}
-
-## Read in VCF file to extract APOE SNPs
-Z <- vcfR2tidy(vcf, format_fields = c("GT"))
-apoe <- Z$gt %>% 
-  filter(POS %in% c(45412079, 45411941)) %>% 
-  mutate(snp = as_factor(POS), 
-         snp = fct_recode(snp, "rs7412" = "45412079", "rs429358" = "45411941")) %>%
-  select(Indiv, snp, gt_GT_alleles) %>% 
-  pivot_wider(values_from = gt_GT_alleles, names_from = snp) %>% 
-    mutate(
-      apoe = case_when(
-          rs429358 == "T/C" & rs7412 == "C/T" ~ 24,
-          rs429358 == "T/T" & rs7412 == "T/T" ~ 22,
-          rs429358 == "T/T" & rs7412 == "C/T" ~ 23,
-          rs429358 == "T/T" & rs7412 == "C/C" ~ 33,
-          rs429358 == "T/C" & rs7412 == "C/C" ~ 34,
-          rs429358 == "C/C" & rs7412 == "C/C" ~ 44
-        )
-    )
+```{r mayo-clean, echo = FALSE, message=TRUE}
+xcell <- xcell.raw %>% 
+  filter(study == "MAYO") %>% 
+  select(-SampleID, -study, -batch, -Neurons.pval, -Astrocytes.pval) %>% 
+  rename(rna_seq_tissue = Tissue) %>%
+  mutate(ID = as.character(ID)) %>% 
+  pivot_wider(names_from = rna_seq_tissue, values_from = c(Neurons, Astrocytes, RIN))
 
 mayo <- mayo.raw %>%
+  select(-PMI) %>%
+  left_join(pmi, by = c('WGS_Participant_ID' = 'Donor_ID')) %>%
   left_join(apoe, by = c('WGS_Participant_ID' = 'Indiv')) %>% 
   left_join(mayo_path, by = c('WGS_Participant_ID' = 'SampleID')) %>%
   left_join(haplogrep, by = c('WGS_Participant_ID' = 'SampleID')) %>%
   left_join(mosdepth, by = c('WGS_Participant_ID' = 'SampleID')) %>%
+  left_join(xcell, by = c('WGS_Participant_ID' = 'ID')) %>%
   mutate(id = paste0('MAYO', WGS_Participant_ID),
         apoe4 = recode(apoe, '22' = 'e4-', '23' = 'e4-', '33' = 'e4-', '24' = 'e4+', '34' = 'e4+', '44' = 'e4+'),
         aod = str_replace(AgeAtDeath, '90_or_above', '90'),
@@ -93,9 +97,20 @@ mayo <- mayo.raw %>%
         braaksc_B = fct_recode(braaksc, B0 = "0", B1 = "1", B1 = "2", B2 = "3", B2 = "4", B3 = "5", B3 = "6"), 
         macro = case_when(
           str_detect(Haplogroup, "^L|^HV|^JT") ~ substr(Haplogroup, start = 1, stop = 2),
-                     TRUE ~ substr(Haplogroup, start = 1, stop = 1))
+                     TRUE ~ substr(Haplogroup, start = 1, stop = 1)), 
+        Neurons = case_when(
+          WGS_Source_Tissue_Type == "Temporal Cortex" ~ Neurons_TCX, 
+          WGS_Source_Tissue_Type == "Cerebellar Cortex" ~ Neurons_TCX),
+    Astrocytes = case_when(
+          WGS_Source_Tissue_Type == "Temporal Cortex" ~ Astrocytes_TCX, 
+          WGS_Source_Tissue_Type == "Cerebellar Cortex" ~ Astrocytes_TCX),
+    RIN = case_when(
+          WGS_Source_Tissue_Type == "Temporal Cortex" ~ RIN_TCX, 
+          WGS_Source_Tissue_Type == "Cerebellar Cortex" ~ RIN_TCX)
         ) %>%
-  select(id, study, sex = Sex, apoe, apoe4, race, aod, aod_cat, thal = Thal, braaksc, SourceTissue = WGS_Source_Tissue_Type, dx = Diagnosis, mtcn_avg, Haplogroup, Quality, macro)
+  select(id, study, sex = Sex, apoe, apoe4, race, aod, aod_cat, thal = Thal, braaksc, SourceTissue = WGS_Source_Tissue_Type, 
+         dx = Diagnosis, pmi = PMI, mtcn_avg, Haplogroup, Quality, macro,  Neurons_CER, Neurons_TCX, Astrocytes_CER, Astrocytes_TCX,
+         RIN_CER, RIN_TCX, Neurons, Astrocytes, RIN)
 
 # get_dupes(mayo, id)  %>%
 #   print(n = Inf)
@@ -247,3 +262,57 @@ gen_c %>% show_plot(high_cardinality = 5)
 
 ```
 
+## RNAseq 
+
+```{r mayo-rna-numeric, echo=FALSE, message=FALSE, tidy=FALSE}
+mayo_vars <- c("Neurons_CER", "Neurons_TCX",
+         "Astrocytes_CER", "Astrocytes_TCX",
+         "RIN_CER", "RIN_TCX")
+
+mayo_n <- mayo %>% 
+  select(all_of(mayo_vars)) %>%
+  inspect_num(.) 
+
+mayo_n %>% 
+  select(-hist) %>% 
+  mutate_if(is.numeric, round, 2) %>%
+  knitr::kable(caption = "Variable type: Numeric") 
+```
+
+```{r mayo-rna-plot, echo=FALSE, message=FALSE, warning=FALSE}
+mayo_n %>% show_plot()
+```
+
+```{r mayo-rna-dx-plots}
+mayo_xcell <- select(mayo, Neurons, Astrocytes, 
+                       aod, aod_cat, dx, mtcn_avg, sex ) %>% 
+  filter(!is.na(Neurons)) %>% 
+  pivot_longer(c(Neurons, Astrocytes), names_to = "cells", values_to = "xcell")
+
+ggplot(mayo_xcell, aes(x = dx, y = xcell, colour = dx)) + 
+  ggbeeswarm::geom_quasirandom(dodge.width=1) + 
+  facet_grid(cells ~ .) + 
+  theme_bw()
+
+ggplot(mayo_xcell, aes(x = sex, y = xcell, colour = cells)) + 
+  ggbeeswarm::geom_quasirandom(dodge.width=1) + 
+  facet_grid(cells ~ .) + 
+  theme_bw()
+
+ggplot(mayo_xcell, aes(x = aod, y = xcell, colour = dx)) + 
+  facet_grid(cells ~ .) +
+  geom_point() + 
+  geom_smooth(method = lm) + 
+  theme_bw()
+
+ggplot(mayo_xcell, aes(x = aod_cat, y = xcell, colour = dx)) + 
+  facet_grid(cells ~ dx) +
+  ggbeeswarm::geom_quasirandom(dodge.width=1) + 
+  theme_bw()
+
+ggplot(mayo_xcell, aes(x = mtcn_avg, y = xcell, colour = dx)) + 
+  facet_grid(cells ~ dx) +
+  geom_point() + 
+  geom_smooth(method = lm) + 
+  theme_bw()
+```

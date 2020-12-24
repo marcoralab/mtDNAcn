@@ -4,7 +4,7 @@ editor_options:
   chunk_output_type: console
 ---
 # ROSMAP
-```{r, warning=F, message=F, error=F, echo=FALSE}
+```{r setup-rosmap, warning=F, message=F, error=F, echo=FALSE}
 # library(knitr)
 # library(kableExtra)
 library(tidyverse)
@@ -14,6 +14,8 @@ library(dlookr)
 library(inspectdf)
 library(skimr)
 knitr::opts_knit$set(root.dir = '/sc/arion/projects/LOAD/shea/Projects/mtDNAcn')
+set_gtsummary_theme(theme_gtsummary_compact())
+
 # setwd('/sc/arion/projects/LOAD/shea/Projects/mtDNAcn')
 ```
 
@@ -31,40 +33,58 @@ rosmap.pheno_bl <- readxl::read_xlsx("data/AMPAD_extra/rosmap/dataset_899_basic_
 rosmap.pheno_long.raw <- readxl::read_xlsx("data/AMPAD_extra/rosmap/dataset_899_long_08-22-2020.xlsx") %>%
   mutate(projid = as.numeric(projid))
 
+## Activities of daily living
+rosmap.adl.raw <- readxl::read_xlsx("data/AMPAD_extra/rosmap/dataset_641_long_04-29-2020.xlsx") %>%
+  mutate(projid = as.numeric(projid)) %>% 
+  select(projid, study, fu_year, iadlsum, katzsum)
+
 # wgs_clinical.raw <- read_csv('data/AMPAD_extra/rosmap/ROSMAP_Clinical_2019-05_v3.csv')
 ## Mitochondrial 
 rosmap.wgsqc <- read_csv("data/AMPAD_extra/rosmap/WGS_sample_QC_info.csv", guess_max = 10000)
 mosdepth <- read_tsv("data/mosdepth/mosdepth_mtDNAcn_All.txt")
 haplogrep <- read_tsv("data/haplogrep/haplogrep_jointAll.txt")
 
-vcf <- read.vcfR("data/AMPAD_extra/rosmap/DEJ_11898_B01_GRM_WGS_2017-05-15_APOE.recalibrated_variants.vcf.gz")
+apoe <- read_tsv("data/AMPAD_extra/rosmap/wgs_apoe.tsv")
+
+xcell <- read_csv("data/xcell/ampad_xCell.csv") %>% 
+  filter(study == "ROSMAP") %>% 
+  select(-SampleID, -study) %>% 
+  rename(rna_seq_tissue = Tissue, rna_seq_batch = batch) %>%
+  mutate(ID = as.numeric(ID))
+
+# Neuroimaging 
+tot_vol.raw <- bind_rows(
+  read_csv("data/AMPAD_extra/rosmap/mri_total_volumes_share_ROS.csv"), 
+  read_csv("data/AMPAD_extra/rosmap/mri_total_volumes_share_MAP.csv")
+) %>% 
+  select(-X9) %>% 
+  mutate(projid = as.numeric(projid), 
+         visit = as.numeric(visit))
+subcort_v6 <- read_csv("data/AMPAD_extra/rosmap/mri_subcortical_v6_share.csv") %>% 
+  select(-X69)
+
+# Resilience 
+resilince <- read_rds("data/AMPAD_extra/rosmap/ROSMAP_resilience_phenotypes_4Shea.rds") %>% 
+  as_tibble() %>% 
+  mutate(ID = as.numeric(ID))
+
+# Year of Assessment 
+yoa <- readxl::read_xlsx("data/AMPAD_extra/rosmap/dataset_889_long_YearOfAssement_11-2020.xlsx") %>%
+  rename(year = `YEAR(cogdate)`) %>% 
+  mutate(fu_year = as.numeric(fu_year), 
+         projid = str_remove(projid, "^0+"), 
+         projid = as.numeric(projid)) %>% 
+  select(projid, fu_year, year) 
+
 ```
 
 
 ```{r munge-rosmap, warning=F, message=F, error=F}
-Z <- vcfR2tidy(vcf, format_fields = c("GT"))
-apoe <- Z$gt %>% 
-  filter(POS %in% c(45412079, 45411941)) %>% 
-  mutate(snp = as_factor(POS), 
-         snp = fct_recode(snp, "rs7412" = "45412079", "rs429358" = "45411941")) %>%
-  select(Indiv, snp, gt_GT_alleles) %>% 
-  pivot_wider(values_from = gt_GT_alleles, names_from = snp) %>% 
-    mutate(
-      apoe = case_when(
-          rs429358 == "T/C" & rs7412 == "C/T" ~ 24,
-          rs429358 == "T/T" & rs7412 == "T/T" ~ 22,
-          rs429358 == "T/T" & rs7412 == "C/T" ~ 23,
-          rs429358 == "T/T" & rs7412 == "C/C" ~ 33,
-          rs429358 == "T/C" & rs7412 == "C/C" ~ 34,
-          rs429358 == "C/C" & rs7412 == "C/C" ~ 44
-        )
-    ) %>% 
-  left_join(select(rosmap.wgsqc, projid, WGS_id), by = c('Indiv' = 'WGS_id')) %>% 
-  distinct(projid, .keep_all = TRUE) %>% 
-  select(-Indiv)
 
 ## extract baseline and last vist values and spread
 rosmap.pheno_long <- rosmap.pheno_long.raw %>% 
+  left_join(yoa) %>% 
+  left_join(rosmap.adl.raw) %>% 
   group_by(projid) %>%
   slice(c(which.min(fu_year), which.max(fu_year))) %>%
   mutate(visit = case_when(fu_year == min(fu_year) ~ "bl", 
@@ -75,22 +95,32 @@ rosmap.pheno_long <- rosmap.pheno_long.raw %>%
 
 ## Merge WGS files 
 rosmap_wgs <- rosmap.wgsqc %>% 
+  filter(QC == "Pass") %>% 
   select(projid, SampleID = WGS_id, Source.Tissue.Type, QC) %>% 
   left_join(mosdepth, by = "SampleID") %>% 
   left_join(haplogrep, by = "SampleID") %>% 
-  filter(QC == "Pass") %>% 
   mutate(macro = case_when(
     str_detect(Haplogroup, "^L|^HV|^JT") ~ substr(Haplogroup, start = 1, stop = 2), 
     TRUE ~ substr(Haplogroup, start = 1, stop = 1)
   ))
 
-### 16 duplicate IDS 
+## extract last MRI measurment
+tot_vol <- tot_vol.raw %>% 
+  group_by(projid) %>% 
+  arrange(visit) %>% 
+  slice(which.max(visit)) %>%
+  ungroup()  
+
+### 32 duplicate IDS 
 # get_dupes(rosmap_wgs, projid)  %>% 
 #   print(n = Inf)
 
 rosmap <- rosmap.pheno_bl %>%
+  left_join(resilince, by = c("projid" = "ID")) %>%
   left_join(apoe, by = "projid") %>%
   left_join(rosmap.pheno_long, by = c("projid", "study", "scaled_to")) %>%
+  left_join(tot_vol, by = "projid") %>%
+  left_join(xcell, by = c("projid" = "ID")) %>%
   left_join(rosmap_wgs, by = "projid") %>%
     mutate(race7 = as_factor(race7),
         race7 = fct_recode(race7,'White' = '1', 'Black' = '2', "AMR" = "3", "Oceania" = "4", 
@@ -381,6 +411,135 @@ blood_mt %>%
 
 ```
 
+## RNA-seq 
+
++ Neuronal and astrocyte cell type enrichment are estimated using xCell to adjust 
+for potential neuronal cell loss in dementia
++ Only avaliable in a subset of participants 
+
+```{r rosmap-rna-numeric, echo=FALSE}
+rna_n <- rosmap %>% 
+  select(Neurons, Astrocytes, rna_seq_tissue, rna_seq_batch, RIN) %>% 
+  inspect_num(.) 
+
+rna_n %>% 
+  select(-hist) %>% 
+  mutate_if(is.numeric, round, 2) %>%
+  knitr::kable(caption = "Variable type: Numeric") 
+
+```
+
+
+```{r, echo=F, warning=FALSE}
+rosmap %>% 
+  select(Source.Tissue.Type, rna_seq_tissue) %>% 
+  mutate(Source.Tissue.Type = as.character(Source.Tissue.Type), 
+         rna_seq_tissue = as.character(rna_seq_tissue)) %>%
+ gtsummary::tbl_cross(
+    row = Source.Tissue.Type, 
+    col = rna_seq_tissue, 
+    percent = "cell",
+  ) 
+```
+
+### Plots 
+
+```{r rosmap-rna-plots}
+rna_n %>% show_plot()
+```
+
+
+```{r rosmap-rna-dx-plots}
+rosmap_xcell <- select(rosmap, Neurons, Astrocytes, rna_seq_tissue, Source.Tissue.Type, 
+                       age_death, cogdx, ad_reagan, mtcn_avg, msex, 
+                       cts_mmse30_lv, iadlsum_lv, katzsum_lv
+                       ) %>% 
+  mutate(ad_reagan = as_factor(ad_reagan), 
+         cogdx = fct_recode(cogdx, "CTRL" = "1", 
+                            "MCI" = "2", "MCI" = "3", 
+                            "AD" = "4", "AD" = "5", NULL = "6")) %>%
+  filter(!is.na(Neurons)) %>% 
+  pivot_longer(c(Neurons, Astrocytes), names_to = "cells", values_to = "xcell")
+
+## Cogntive diagnosis by xCell Score
+rosmap_xcell %>%
+  filter(!is.na(cogdx)) %>%
+ggplot(., aes(x = cogdx, y = xcell, colour = cells)) + 
+  facet_grid(. ~ cells) + 
+  ggbeeswarm::geom_quasirandom(dodge.width=1) + 
+   geom_pointrange(mapping = aes(x = cogdx, y = xcell, group = cells),
+                  show.legend = F,
+                  position = position_dodge(width = 1), 
+                  shape = 15, colour = 'black', size = 1,
+                  stat = "summary",
+                  fun.min = function(z) {quantile(z,0.25)},
+                  fun.max = function(z) {quantile(z,0.75)},
+                  fun = median) + 
+  theme_bw() + 
+  theme(legend.position = "none")
+
+## Neuropath diagnosis by xCell Score
+ggplot(rosmap_xcell, aes(x = ad_reagan, y = xcell, colour = cells)) + 
+  facet_grid(. ~ cells) + 
+  ggbeeswarm::geom_quasirandom(dodge.width=1) + 
+  geom_pointrange(mapping = aes(x = ad_reagan, y = xcell, group = cells),
+                  show.legend = F,
+                  position = position_dodge(width = 1), 
+                  shape = 15, colour = 'black', size = 1,
+                  stat = "summary",
+                  fun.min = function(z) {quantile(z,0.25)},
+                  fun.max = function(z) {quantile(z,0.75)},
+                  fun = median) + 
+  theme_bw() + 
+  theme(legend.position = "none")
+
+## IADL by xCell Score
+ggplot(rosmap_xcell, aes(x = iadlsum_lv, y = xcell, colour = ad_reagan)) + 
+  facet_grid(. ~ cells) +
+  geom_point() + 
+  geom_smooth(method = lm) + theme_bw() + 
+  theme(legend.position = "bottom")
+
+## MMSE by xCell Score
+ggplot(rosmap_xcell, aes(x = cts_mmse30_lv, y = xcell, colour = ad_reagan)) + 
+  facet_grid(. ~ cells) +
+  geom_point() + 
+  geom_smooth(method = lm) + theme_bw() + 
+  theme(legend.position = "bottom")
+
+## AOD by xCell Score 
+ggplot(rosmap_xcell, aes(x = age_death, y = xcell, colour = ad_reagan)) + 
+  facet_grid(. ~ cells) +
+  geom_point() + 
+  geom_smooth(method = lm) + 
+  theme_bw() + 
+  theme(legend.position = "bottom")
+
+## mtDNAcn vs xCell Score, by clinical DX
+rosmap_xcell %>% 
+  filter(Source.Tissue.Type == "Brain-DLPFC") %>%
+  filter(!is.na(cogdx)) %>% 
+ggplot(., aes(x = mtcn_avg, y = xcell, colour = cogdx)) + 
+  facet_grid(. ~ cells) +
+  geom_point() + 
+  geom_smooth(method = lm) + 
+  theme_bw() + 
+  theme(legend.position = "bottom")
+
+## mtDNAcn vs xCell Score, by neuropath DX
+rosmap_xcell %>% 
+  filter(Source.Tissue.Type == "Brain-DLPFC") %>%
+ggplot(., aes(x = mtcn_avg, y = xcell, colour = ad_reagan)) + 
+  facet_grid(. ~ cells) +
+  geom_point() + 
+  geom_smooth(method = lm) + 
+  theme_bw() + 
+  theme(legend.position = "bottom")
+
+```
+
+
+
 ## Clinical Diagnosis 
 + [Clinical cognitive diagnosis summary](https://www.radc.rush.edu/docs/var/detail.htm?category=Clinical+Diagnosis&subcategory=Final+consensus+diagnosis&variable=cogdx): `dcfdx` Physician’s overall cognitive diagnostic category
   * 1 =	NCI: No cognitive impairment (No impaired domains)
@@ -472,6 +631,7 @@ rosmap %>%
 
 [Pathology](https://www.radc.rush.edu/docs/var/overview.htm?category=Pathology): post-mortem neuropathologic evaluation
 
++ + 'PMI': Postmortem interval in hours
 + Alzheimer's disease 
   - [NIA-Reagan diagnosis of AD](https://www.radc.rush.edu/docs/var/detail.htm?category=Pathology&subcategory=Alzheimer%27s+disease&variable=niareagansc): `niareagansc` modified NIA-Reagan diagnosis of Alzheimer’s disease is based on consensus recommendations for postmortem diagnosis of Alzheimer’s disease. The criteria rely on both neurofibrillary tangles (Braak) and neuritic plaques (CERAD).
     * 1	= High; 2	= Intermediate; 3	= Low; 4	= No AD
@@ -502,6 +662,7 @@ rosmap %>%
 + [Hippocampal sclerosis (Typical)](https://www.radc.rush.edu/docs/var/detail.htm?category=Pathology&subcategory=Hippocampal+sclerosis&variable=hspath_typ): `hspath_typ` Definite presence of typical hippocampal sclerosis
 + [TDP-43 stage](https://www.radc.rush.edu/docs/var/detail.htm?category=Pathology&subcategory=TDP-43&variable=tdp_st4): `tdp_st4` TDP-43 pathology from 8 regions
   - 0 = None; 1 = Amygdala; 2 = Amygdala + Limbic; 3 = Amygdala + Limbic + Neocortical
+  - dichotomized version: 0 = No TDP-43 pathology or TDP-43 pathology in amygdala only (Stages 0 and 1); 1 = TDP-43 pathology extending beyond amygdala (Stages 2 and 3)
 + [Microglia](https://www.radc.rush.edu/docs/var/overview.htm?category=Pathology&subcategory=Microglia): Immunohistochemistry for microglia
   - mglia123_caud_vm 
   - mglia123_it 
@@ -517,7 +678,7 @@ rosmap %>%
   - mglia3_put_p
 
 ```{r, rosmap-path, echo=FALSE, results='asis'}
-path_vars <- c("niareagansc", "ceradsc", "braaksc", "gpath", "amyloid", "plaq_d", "plaq_n", "tangles", "nft", "dlbdx", 
+path_vars <- c("pmi", "niareagansc", "ceradsc", "braaksc", "gpath", "amyloid", "plaq_d", "plaq_n", "tangles", "nft", "dlbdx", 
          "ci_num2_gct", "ci_num2_mct", "cvda_4gp2", "caa_4gp", "arteriol_scler", "hspath_typ", "tdp_st4")
 
 rosmap %>% 
@@ -627,12 +788,20 @@ rosmap_path_crosstab <- rosmap %>%
   mutate(ceradsc = fct_reorder(ceradsc, desc(ceradsc)), 
          prop = n / sum(n))
 
-ggplot(rosmap_path_crosstab, aes(y = ceradsc, x = braaksc, label = n)) + 
-  geom_tile(aes(fill = niareagansc, alpha = prop), colour = "white") + 
+rosmap_path_crosstab %>% 
+  filter(!is.na(niareagansc)) %>%
+ggplot(., aes(y = ceradsc, x = braaksc, label = n)) + 
+  # geom_tile(aes(fill = niareagansc, alpha = prop), colour = "white") + 
+  geom_tile(aes(fill = niareagansc), colour = "white") + 
   geom_text() + theme_classic() +
   scale_x_discrete(position = 'top') + 
   theme_classic() + 
-  scale_fill_manual(values=c("#abdda4","#fee08b","#fdae61","#f46d43","#d53e4f"),na.value = "grey90")
+  scale_fill_manual(values=c("#abdda4","#fee08b","#fdae61","#f46d43","#d53e4f"),na.value = "grey90") + 
+  labs(title = "ROSMAP: NIA-Regan Diagnosis") + 
+  theme(legend.position = "bottom", 
+        text = element_text(size=11))
+
+ggsave("/Users/sheaandrews/Downloads/rosmap_dx.pdf", height = 8, width = 8)
 
 ```
 
@@ -758,6 +927,32 @@ cog_n %>% show_plot()
 # cog_c %>% show_plot()
 ```
 
+## Resilience  
+
+```{r rosmap-resilience, echo=FALSE}
+
+resilince <- rosmap %>% 
+  select(COGRES, GLOBALRES, COGRES_NC, GLOBALRES_NC ) 
+
+resilince %>% 
+  diagnose() 
+```
+
+```{r rosmap-cog-numeric, echo=FALSE, message=FALSE, tidy=FALSE}
+resilince_n <- resilince %>% 
+  inspect_num(.) 
+
+resilince_n %>% 
+  select(-hist) %>% 
+  mutate_if(is.numeric, round, 2) %>%
+  knitr::kable(caption = "Variable type: Numeric", table.attr = "class='dtable'") 
+
+```
+
+
+```{r, echo=F}
+resilince_n %>% show_plot()
+```
 
 ## Blood Measures 
 
@@ -795,3 +990,97 @@ blood_n %>%
 ```{r, echo=F}
 blood_n %>% show_plot()
 ```
+
+## Neuroimaging 
+
+Only 728 particpants have a MRI measurement, with only 21 also haveing a mtDNAcn measurement. 
+
+```{r}
+neuroi <- rosmap %>%
+  select(study, projid, mri_id, visit, csf, gm, wm, icv,
+         apoe_genotype, mtcn_avg, organ, Source.Tissue.Type, 
+         msex, pmi, age_bl, age_death, ad_reagan, apoe, cogdx, fu_year_lv) 
+
+```
+
+```{r rosmap-neuroi-numeric, echo=FALSE, message=FALSE, tidy=FALSE}
+neuroi_n <- neuroi %>% 
+  select(visit, csf, gm, wm, icv) %>%
+  inspect_num(.) %>% 
+  mutate_if(is.numeric, round, 2) 
+
+neuroi_n %>% 
+  select(-hist) %>% 
+   DT::datatable(caption = "Variable type: Numeric", rownames = FALSE)
+
+```
+
+### Plots 
+
+```{r, echo=F}
+neuroi_n %>% show_plot()
+```
+
+```{r}
+rosmap %>%
+  mutate(ad_reagan = as_factor(ad_reagan)) %>%
+  ggplot(., aes(x = ad_reagan, y = icv, colour = ad_reagan)) + 
+    ggbeeswarm::geom_quasirandom(dodge.width=1) +
+ facet_grid(. ~ msex) + 
+  theme_bw()
+
+rosmap %>%
+    filter(!is.na(mtcn_avg), !is.na(icv)) %>%
+    mutate(ad_reagan = as_factor(ad_reagan), 
+           Source.Tissue.Type = fct_drop(Source.Tissue.Type)) %>%
+  ggplot(., aes(x =  mtcn_avg, y = icv, colour = ad_reagan)) + 
+    geom_point() + 
+    facet_grid(Source.Tissue.Type ~ msex) + 
+    theme_bw()
+
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
