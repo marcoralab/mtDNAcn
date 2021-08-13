@@ -1,0 +1,608 @@
+---
+title: "AMP-AD analysis"
+author: "Shea Andrews"
+date: "2/24/2020"
+output: 
+  html_document:
+    code_folding: "hide"
+    toc: true
+    toc_float: true
+    toc_depth: 2
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r setup, include=FALSE}
+knitr::opts_knit$set(root.dir = '/Users/shea/minerva/sc/arion/projects/LOAD/shea/Projects/mDNACN')
+library(readxl)
+library(forcats)
+library(tidyverse)
+library(skimr)
+library(ggmosaic)
+library(ggbeeswarm)
+library(ggpubr)
+library(broom)
+# library(knitr)
+# library(kableExtra)
+#setwd('/Users/shea/minerva/sc/arion/projects/LOAD/shea/Projects/mDNACN')
+```
+
+```{r load,  include=FALSE}
+df.ls <- readRDS(file = "data/ampad_dian.rds")
+msbb <- df.ls$msbb
+rosmap <- df.ls$rosmap
+mayo <- df.ls$mayo
+dian <- df.ls$dian
+```
+
+# Association of mtDNA-CN with Alzheimer's disease 
+
+## MSBB
+
+Sample exclusion 
+
+- non-white (55) 
+
+mtDNA-CN was standardized 
+
+### Clinical Diagnosis 
+
+- Clinical Dementia (CDR)
+  + Dementia: CDR > 0.5
+  + Control: CDR <= 0.5 
+  
+GLM: DX ~ mtDNA + Age of Death + APOE + Sex
+
+```{r msbb, echo = FALSE, message=FALSE}
+
+msbb.mtdna <- msbb %>% 
+  filter(race == 'W') %>%
+  mutate(dx = ifelse(cdr <= 0.5, 'CTRL', 'AD'),
+         dx = fct_relevel(dx, 'CTRL', 'AD'), 
+         dx.path = ifelse(cerad %in% c('Normal','Possible'), 'CTRL', 'AD'),
+         dx.path = fct_relevel(dx.path, 'CTRL', 'AD')) #%>% 
+ # filter(macro %in% c('H', 'V', 'J', 'T', 'U', 'K', 'I', 'W', 'X'))
+
+```
+
+```{r msbb_mtdna_dx, echo=FALSE, echo=FALSE}
+ggplot(msbb.mtdna, aes(x = as.factor(cdr), y = mtcn_avg, colour = dx)) + 
+  geom_quasirandom() + 
+  scale_color_manual(values = c('steelblue', 'firebrick')) + 
+  geom_boxplot(colour = 'black', alpha = 0.5, width = 0.1, outlier.shape = NA) + 
+  labs(x = 'CDR', y = 'mtDNA-CN') +
+  theme_bw() + theme(legend.position = 'bottom')
+```
+
+```{r msbb_dx_glm, warning=FALSE, results='asis', echo=FALSE}
+glm(dx ~ z_mtdnacn + aod + sex + apoe4, family = 'binomial', data = msbb.mtdna) %>% 
+  tidy(conf.int = TRUE, exponentiate = TRUE) %>% 
+  select(term, estimate, std.error, conf.low, conf.high, statistic, p.value) %>%
+      mutate(estimate = round(estimate, 2),
+         std.error = round(std.error, 2),
+         conf.low = round(conf.low, 2),
+         conf.high = round(conf.high, 2),
+         statistic = round(statistic, 2)) %>%
+  knitr::kable(.) 
+```
+
+### Neuropathological Diagnosis (CERAD)
+
+- CERAD Neuropathology Confirmed
+  + AD: Definite + Probable 
+  + Control: Possible + No AD
+ 
+GLM: DX ~ mtDNA + Age of Death + APOE + Sex
+
+```{r msbb_mtdna_cerad, echo=FALSE}
+ggplot(msbb.mtdna, aes(x = cerad, y = mtcn_avg, colour = dx.path)) + 
+  geom_quasirandom() + 
+  scale_color_manual(values = c('steelblue', 'firebrick')) + 
+  geom_boxplot(colour = 'black', alpha = 0.5, width = 0.1, outlier.shape = NA) + 
+  labs(x = 'CERAD', y = 'mtDNA-CN') +
+  theme_bw() + theme(legend.position = 'bottom')
+
+```
+
+
+```{r msbb_dxpath_glm, warning=FALSE, results='asis', echo=FALSE}
+msbb_mtdnacn_dx.path <- glm(dx.path ~ z_mtdnacn + aod + sex + apoe4, family = 'binomial', data = msbb.mtdna) 
+
+msbb_mtdnacn_dx.path %>% 
+  tidy(conf.int = TRUE, exponentiate = TRUE) %>%
+  select(term, estimate, std.error, conf.low, conf.high, statistic, p.value) %>%
+      mutate(estimate = round(estimate, 2),
+         std.error = round(std.error, 2),
+         conf.low = round(conf.low, 2),
+         conf.high = round(conf.high, 2),
+         statistic = round(statistic, 2))%>%
+  knitr::kable(.) 
+```
+
+## ROSMAP 
+
+Sample exclusion 
+
+- non-white (2) 
+- MCI + Other (318)
+- missing mtDNA (17)
+- Source Tissue Other (39)
+  + lymphocytes (5)
+  + Blood-Cerebellum (1)
+  + Blood-PBMC (22)
+  + Brain-Anterior Caudate (4)
+  + Brain-Frontal Cortex (BA unknown) (1)
+  + Brain-Frontal Pole (BA10-12,32) (1)
+  + Brain-Occipital Association Cortex (BA18,19) (4)
+  + Brain-PCC (1)
+  + Brain-region unknown (1)
+- age 60-69 (2)
+
+```{r rosmap}
+
+rosmap.analysis <- rosmap %>% 
+  filter(race == 'W') %>%
+  filter(dx.raw != 6) %>%
+  filter(organ != 'lymphocytes') %>% 
+#  filter(aod_cat != '60-69') %>% 
+  mutate(dx.raw = fct_recode(dx.raw, NCI = '1', MCI = '2', MCI = '3', AD = '4', AD = '5'), 
+         SourceTissue_lmp = fct_lump(SourceTissue, n = 4)) #%>% 
+ # filter(macro %in% c('H', 'V', 'J', 'T', 'U', 'K', 'I', 'W', 'X'))
+
+```
+
+```{r rosmap_mtdna_tissue_plot, echo=FALSE,warning=FALSE}
+
+ggplot(rosmap.analysis, aes(x = SourceTissue_lmp, y = mtcn_avg, colour = dx.raw)) + 
+  geom_quasirandom(size = 0.5, dodge.width=1) + 
+  scale_color_manual(values = c('steelblue', 'grey50', 'firebrick')) + 
+  facet_grid(organ ~ ., scales = 'free_y') +
+  labs(x = "Source Tissue", y = "mtDNA-CN") + 
+  theme_bw() + 
+    theme(legend.position = 'bottom', 
+          axis.text.x = element_text(angle = 15, hjust = 1))
+
+```
+
+### Clinical Diagnosis 
+
+GLM: DX ~ mtDNA-CN + Age of Death (categorical) + Sex + apoe4 + study + Source Tissue
+
+```{r msbb_mtdna, warning=FALSE, echo=FALSE}
+rosmap.mtdna <- rosmap.analysis %>% 
+  filter(SourceTissue_lmp != 'Other') %>% 
+  filter(dx.raw != 'MCI') %>% 
+  filter(organ != 'blood') 
+```
+
+```{r msbb_mtdna_plot, warning=FALSE, echo=FALSE}
+
+ggplot(rosmap.mtdna, aes(x = dx.raw, y = mtcn_avg, colour = dx.raw)) + 
+  geom_quasirandom(dodge.width=1) + 
+  geom_boxplot(colour = 'black', alpha = 0.5, width = 0.1, outlier.shape = NA) + 
+  scale_color_manual(values = c('steelblue', 'firebrick')) + 
+  labs(x = "Diagnosis", 
+       y = "mtDNA-CN") + 
+  theme_bw() + 
+    theme(legend.position = 'bottom')
+```
+
+```{r msbb_mtdna_glm, warning=FALSE, results='asis', echo=FALSE}
+
+rosmap_mtdna_dx <- glm(dx ~ z_mtdnacn + aod + sex + apoe4 + study + SourceTissue, family = 'binomial', data = rosmap.mtdna) 
+
+rosmap_mtdna_dx %>% 
+  tidy(conf.int = TRUE, exponentiate = TRUE) %>% 
+  select(term, estimate, std.error, conf.low, conf.high, statistic, p.value) %>%
+      mutate(estimate = round(estimate, 2),
+         std.error = round(std.error, 2),
+         conf.low = round(conf.low, 2),
+         conf.high = round(conf.high, 2),
+         statistic = round(statistic, 2)) %>%
+  knitr::kable(.) 
+```
+
+## Mayo Clinic
+
+Sample exclusion 
+
+- Pathologic Aging + PSP (157) 
+- age 50-59 (3)
+
+```{r mayo_mtdna_plot, warning=FALSE, echo=FALSE}
+ggplot(mayo, aes(x = dx.raw, y = mtcn_avg, colour = dx.raw)) + 
+  geom_quasirandom(dodge.width=1) + 
+  geom_boxplot(colour = 'black', alpha = 0.5, width = 0.1, outlier.shape = NA) + 
+  scale_color_manual(values = c('firebrick', 'steelblue', 'darkgreen', 'darkorange')) + 
+  labs(x = "Diagnosis", 
+       y = "mtDNA-CN") + 
+  theme_bw() + 
+    theme(legend.position = 'bottom')
+```
+
+
+```{r mayo}
+mayo.mtdna <- mayo %>% 
+  mutate(dx.raw = fct_recode(dx.raw, 'Control' = 'Pathologic Aging')) %>%
+  filter(dx.raw %in% c('AD', 'Control')) %>%
+  filter(aod_cat != '50-59') %>% 
+  mutate(dx.raw = fct_drop(dx.raw), 
+         dx.raw = fct_relevel(dx.raw, 'Control', 'AD')) #%>% 
+ # filter(macro %in% c('H', 'V', 'J', 'T', 'U', 'K', 'I', 'W', 'X'))
+
+```
+
+GLM: DX ~ mtDNA-CN + Age of Death (categorical) + Sex + apoe4
+
+```{r mayo_mtdna_glm, warning=FALSE, results='asis', echo=FALSE}
+
+mayo_mtdna.dx <- glm(dx.raw ~ z_mtdnacn + aod_cat + sex + apoe4, family = 'binomial', data = mayo.mtdna) 
+
+mayo_mtdna.dx %>% 
+  tidy(conf.int = TRUE, exponentiate = TRUE) %>% 
+  select(term, estimate, std.error, conf.low, conf.high, statistic, p.value) %>%
+      mutate(estimate = round(estimate, 2),
+         std.error = round(std.error, 2),
+         conf.low = round(conf.low, 2),
+         conf.high = round(conf.high, 2),
+         statistic = round(statistic, 2)) %>%
+  knitr::kable(.) 
+```
+
+```{r, combined_mtdna_res}
+library(texreg)
+
+list(msbb_mtdnacn_dx.path, mayo_mtdna.dx, rosmap_mtdna_dx) %>% 
+  screenreg(., single.row = TRUE, 
+             custom.model.names = c('MSBB', 'MAYO', 'ROSMAP'), 
+            custom.coef.names = c('Intercept', 'mtDNAcn', 'AOD', 'Male', 'APOE e4+', 'AOD.L', 'AOD.Q', 'AOD.C', 'ROS', 'DLFPC', 'PCC'))
+
+```
+
+# Association of mitochondrial haplogroups with Alzheimer's disease 
+
+## MSBB
+
+Sample exclusion 
+
+- non-white (n = 55) 
+- non-European Haplogroups (n = 84)
+- Haplogroup Quality (3)
+
+```{r msbb_hg}
+
+msbb.hg <- msbb %>% 
+  filter(race == 'W') %>% 
+  filter(macro %in% c('H', 'V', 'J', 'T', 'U', 'K', 'I', 'W', 'X')) %>%
+  filter(Quality > 0.8) %>%
+  mutate(dx = ifelse(cdr <= 0.5, 'CTRL', 'AD'),
+         dx = fct_relevel(dx, 'CTRL', 'AD'), 
+         dx.path = ifelse(cerad %in% c('Normal','Possible'), 'CTRL', 'AD'),
+         dx.path = fct_relevel(dx.path, 'CTRL', 'AD'), 
+         macro = fct_drop(macro), 
+         macro_lmp = fct_lump(macro, n = 6), 
+         macro_lmp = fct_recode(macro_lmp, IWX = 'Other'))  
+```
+
+### Clinical Diagnosis
+- Clinical Dementia (CDR)
+  + Dementia: CDR > 0.5
+  + Control: CDR <= 0.5 
+ 
+GLM: DX ~ haplogroup + Age of Death + APOE + Sex
+
+```{r, msbb_hg_dx, echo=FALSE}
+## Mosaic plot of haplogroup distribution across studies
+ ggplot(data = msbb.hg) +
+   geom_mosaic(aes(x = product(macro), fill=as.factor(cdr)), na.rm=TRUE) +
+    scale_fill_manual(values = c( "#C6DBEF", "#9ECAE1" , "#FB6A4A", "#EF3B2C", "#CB181D", "#A50F15", "#67000D")) +
+   labs(x="Mitochondrial Haplogroup", title = 'Proportion of Mitochondrial haplogroups per study') + theme_bw() + 
+  theme(axis.title.y = element_blank(), 
+        axis.text.y = element_blank(), 
+        axis.ticks.y = element_blank(), 
+        legend.position="bottom")
+```
+
+```{r msbb_hg_dx_glm, warning=FALSE, results='asis', echo=FALSE}
+glm(dx ~ macro_lmp + aod + sex + apoe4 + z_mtdnacn, family = 'binomial', data = msbb.hg) %>% 
+  tidy(conf.int = TRUE, exponentiate = TRUE) %>% 
+  select(term, estimate, std.error, conf.low, conf.high, statistic, p.value) %>%
+      mutate(estimate = round(estimate, 2),
+         std.error = round(std.error, 2),
+         conf.low = round(conf.low, 2),
+         conf.high = round(conf.high, 2),
+         statistic = round(statistic, 2)) %>%
+  knitr::kable(.) 
+```
+
+
+### Neuropathological Diagnosis (CERAD)
+
+- CERAD Neuropathology Confirmed
+ + AD: Definite + Probable 
+ + Control: Possible + No AD
+ 
+GLM: DX ~ haplogroup + Age of Death + APOE + Sex
+
+```{r, msbb_hg_cerad, echo=FALSE}
+## Mosaic plot of haplogroup distribution across studies
+ ggplot(data = msbb.hg) +
+   geom_mosaic(aes(x = product(macro), fill=cerad), na.rm=TRUE) +
+    scale_fill_manual(values = c( "#C6DBEF", "#9ECAE1" , "#FB6A4A", "#EF3B2C", "#CB181D", "#A50F15", "#67000D")) +
+   labs(x="Mitochondrial Haplogroup", title = 'Proportion of Mitochondrial haplogroups per study') + theme_bw() + 
+  theme(axis.title.y = element_blank(), 
+        axis.text.y = element_blank(), 
+        axis.ticks.y = element_blank(), 
+        legend.position="bottom")
+```
+
+```{r, msbb_hg_cerad_glm, warning=FALSE, results='asis', echo=FALSE}
+msbb_hg_dx.path <- glm(dx.path ~ macro_lmp + aod + sex + apoe4, family = 'binomial', data = msbb.hg) 
+
+msbb_hg_dx.path %>% 
+  tidy(conf.int = TRUE, exponentiate = TRUE) %>% 
+  select(term, estimate, std.error, conf.low, conf.high, statistic, p.value) %>%
+      mutate(estimate = round(estimate, 2),
+         std.error = round(std.error, 2),
+         conf.low = round(conf.low, 2),
+         conf.high = round(conf.high, 2),
+         statistic = round(statistic, 2)) %>%
+  knitr::kable(.) 
+```
+
+## ROSMAP 
+
+Sample exclusion 
+
+- non-white (2) 
+- MCI + Other (318)
+- missing mtDNA (17)
+- non-European haplogroups (34)
+- Haplogroup Quality (20)
+- age 60-69 (2)
+
+```{r rosmap_hg}
+
+rosmap.hg <- rosmap.analysis %>% 
+  filter(SourceTissue_lmp != 'Other') %>% 
+  filter(macro %in% c('H', 'V', 'J', 'T', 'U', 'K', 'I', 'W', 'X'))  %>% 
+  filter(Quality > 0.8) %>%
+  mutate(macro_lmp = fct_drop(macro), 
+         dx.raw = fct_drop(dx.raw))  
+
+```
+
+```{r, rosmap_hg_dx, echo=FALSE}
+## Mosaic plot of haplogroup distribution across studies
+ ggplot(data = rosmap.hg) +
+   geom_mosaic(aes(x = product(macro_lmp), fill=dx.raw), na.rm=TRUE) +
+    scale_fill_manual(values = c("#C6DBEF", "grey" , "#FB6A4A")) +
+   labs(x="Mitochondrial Haplogroup", title = 'Proportion of Mitochondrial haplogroups per study') + theme_bw() + 
+  theme(axis.title.y = element_blank(), 
+        axis.text.y = element_blank(), 
+        axis.ticks.y = element_blank(), 
+        legend.position="bottom")
+```
+
+
+GLM: Diagnosis ~ Haplgroup + Age of Death (categorical) + Sex + apoe4 + study + Source Tissue
+
+```{r rosmap_hg_dx_glm, warning=FALSE, results='asis', echo=FALSE}
+rosmap_hg.dx <- glm(dx ~ macro_lmp + aod + sex + apoe4 + study, family = 'binomial', data = rosmap.hg) 
+
+rosmap_hg.dx %>% 
+  tidy(conf.int = TRUE, exponentiate = TRUE) %>% 
+  select(term, estimate, std.error, conf.low, conf.high, statistic, p.value) %>%
+    mutate(estimate = round(estimate, 2),
+         std.error = round(std.error, 2),
+         conf.low = round(conf.low, 2),
+         conf.high = round(conf.high, 2),
+         statistic = round(statistic, 2)) %>%
+  knitr::kable(.) 
+```
+
+## Mayo 
+
+- non-European haplogroups (4)
+- Haplogroup Quality (1)
+
+```{r mayo_hg}
+
+mayo.hg <- mayo.mtdna %>% 
+  filter(macro %in% c('H', 'V', 'J', 'T', 'U', 'K', 'I', 'W', 'X'))  %>% 
+  filter(Quality > 0.8) %>%
+  mutate(macro = fct_drop(macro), 
+         aod_cat = fct_drop(aod_cat), 
+         dx.raw = fct_drop(dx.raw), 
+         macro_lmp = fct_lump(macro, n = 5), 
+         macro_lmp = fct_recode(macro_lmp, IWX = 'Other'))  
+
+```
+
+```{r, mayo_hg_dx, echo=FALSE}
+## Mosaic plot of haplogroup distribution across studies
+ ggplot(data = mayo.hg) +
+   geom_mosaic(aes(x = product(macro), fill=dx.raw), na.rm=TRUE) +
+   scale_fill_manual(values = c("#C6DBEF", "#FB6A4A")) +
+   labs(x="Mitochondrial Haplogroup", title = 'Proportion of Mitochondrial haplogroups per study') + theme_bw() + 
+  theme(axis.title.y = element_blank(), 
+        axis.text.y = element_blank(), 
+        axis.ticks.y = element_blank(), 
+        legend.position="bottom")
+```
+
+GLM: Diagnosis ~ Haplgroup + Age of Death (categorical) + Sex + apoe4 
+
+```{r mayo_hg_dx_glm, warning=FALSE, results='asis', echo=FALSE}
+mayo_hg.dx <- glm(dx.raw ~ macro_lmp + aod_cat + sex + apoe4, family = 'binomial', data = mayo.hg)
+
+mayo_hg.dx %>% 
+  tidy(conf.int = TRUE, exponentiate = TRUE) %>% 
+  select(term, estimate, std.error, conf.low, conf.high, statistic, p.value) %>%
+    mutate(estimate = round(estimate, 2),
+         std.error = round(std.error, 2),
+         conf.low = round(conf.low, 2),
+         conf.high = round(conf.high, 2),
+         statistic = round(statistic, 2)) %>%
+  knitr::kable(.) 
+```
+
+```{r, combined_hg_res}
+
+list(msbb_hg_dx.path, mayo_hg.dx, rosmap_hg.dx) %>% 
+  screenreg(., single.row = TRUE, 
+             custom.model.names = c('MSBB', 'MAYO', 'ROSMAP'), 
+            custom.coef.names = c('Intercept', 'J', 'K', 'T', 'U', 'V', 'IWX', 'AOD', 'Male', 'APOE e4+', 'AOD.L', 'AOD.Q', 'AOD.C', 'I', 'W', 'X', 'ROS'), 
+            reorder.coef = c(1,2,3,4,5,6,7,14,15,16,8,9,10,11,12,13,17))
+
+```
+
+
+# Association of mitochondrial haplogroups with mtDNA-CN
+
+## MSBB
+
+Sample exclusion 
+
+- non-white (n = 55) 
+- non-European Haplogroups (n = 84)
+
+```{r msbb_mtdna_hg_plot}
+ggplot(msbb.hg, aes(x = as.factor(macro), y = mtcn_avg, colour = dx.path)) + 
+  geom_quasirandom() + 
+  scale_color_manual(values = c('steelblue', 'firebrick')) + 
+  geom_boxplot(colour = 'black', alpha = 0.5, width = 0.1, outlier.shape = NA) + 
+  labs(x = 'Haplogroup', y = 'mtDNA-CN') +
+  theme_bw() + theme(legend.position = 'bottom')
+```
+
+
+LM: mtDNA-CN ~ haplogroup + CDR + Age of Death + APOE + Sex
+
+```{r msbb_mtdna_hg_lm, warning=FALSE, results='asis', echo=FALSE}
+msbb_hg_mtdna <- lm(z_mtdnacn ~ macro_lmp + dx.path + aod + sex + apoe4, data = msbb.hg) 
+
+msbb_hg_mtdna %>% 
+  tidy(conf.int = TRUE) %>% 
+  select(term, estimate, std.error, conf.low, conf.high, statistic, p.value) %>% 
+  mutate(estimate = round(estimate, 2),
+         std.error = round(std.error, 2),
+         conf.low = round(conf.low, 2),
+         conf.high = round(conf.high, 2),
+         statistic = round(statistic, 2)) %>%
+  knitr::kable(.) 
+```
+
+
+## ROSMAP
+
+Sample exclusion 
+
+- non-white (n = 55) 
+- non-European Haplogroups (n = 84)
+- Source Tissue Blood + lymphocytes
+
+```{r rosmap_mtdna_hg_plot}
+rosmap.hg %>% 
+  filter(organ == 'brain') %>% 
+  ggplot(., aes(x = as.factor(macro), y = mtcn_avg, colour = dx.raw)) + 
+  geom_quasirandom() + 
+  scale_color_manual(values = c('steelblue', 'grey50', 'firebrick')) + 
+  geom_boxplot(colour = 'black', alpha = 0.5, width = 0.1, outlier.shape = NA) + 
+  labs(x = 'Haplogroup', y = 'mtDNA-CN') +
+  theme_bw() + theme(legend.position = 'bottom')
+```
+
+LM : mtDNA-CN ~ haplogroup + DX + Age of Death + APOE + Sex + Study + Source Tissue
+
+```{r rosmap_mtdna_hg, warning=FALSE, results='asis', echo=FALSE}
+rosmap_hg_mtdna <- rosmap.hg %>% 
+  filter(organ == 'brain') %>% 
+#  filter(SourceTissue == 'Brain-DLPFC') %>% 
+  lm(z_mtdnacn ~ macro_lmp + dx + aod + sex + apoe4 + study + SourceTissue_lmp, data = .) 
+
+rosmap_hg_mtdna %>% 
+  tidy(conf.int = TRUE) %>% 
+  select(term, estimate, std.error, conf.low, conf.high, statistic, p.value) %>%
+  knitr::kable(.) 
+```
+
+## Mayo
+
+```{r mayo_mtdna_hg_plot}
+mayo.hg %>% 
+  ggplot(., aes(x = as.factor(macro), y = mtcn_avg, colour = dx.raw)) + 
+  geom_quasirandom() + 
+  scale_color_manual(values = c('steelblue', 'firebrick')) + 
+  geom_boxplot(colour = 'black', alpha = 0.5, width = 0.1, outlier.shape = NA) + 
+  labs(x = 'Haplogroup', y = 'mtDNA-CN') +
+  theme_bw() + theme(legend.position = 'bottom')
+```
+
+LM : mtDNA-CN ~ haplogroup + DX + Age of Death + APOE + Sex
+
+```{r mayo_mtdna_hg, warning=FALSE, results='asis', echo=FALSE}
+mayo_hg_mtdna <- mayo.hg %>% 
+  lm(z_mtdnacn ~ macro_lmp + dx.raw + aod_cat + sex + apoe4, data = .)
+
+mayo_hg_mtdna %>% 
+  tidy(conf.int = TRUE) %>% 
+  select(term, estimate, std.error, conf.low, conf.high, statistic, p.value) %>%
+  knitr::kable(.) 
+```
+
+```{r, combined_hg_res}
+
+list(msbb_hg_mtdna, mayo_hg_mtdna, rosmap_hg_mtdna) %>% 
+  screenreg(., single.row = TRUE, 
+             custom.model.names = c('MSBB', 'MAYO', 'ROSMAP'), 
+            custom.coef.names = c('Intercept', 'J', 'K', 'T', 'U', 'V', 'IWX', 'AOD', 'Male', 'APOE e4+', 'AOD.L', 'AOD.Q', 'AOD.C', 'I', 'W', 'X', 'ROS'), 
+            reorder.coef = c(1,2,3,4,5,6,7,14,15,16,8,9,10,11,12,13,17))
+
+```
+
+# DIAN
+```{r, dian_plot, echo=FALSE}
+dian %>% 
+  mutate(FAD = fct_recode(FAD, 'WT' = '0', 'PS1' = '1', 'PS2' = '2', 'APP' = '3'), 
+         fam_mutation = fct_recode(fam_mutation, 'PS1' = '1', 'PS2' = '2', 'APP' = '3')) %>%
+  ggplot(., aes(x = FAD, y = mtcn_avg, colour = fam_mutation)) + 
+  geom_quasirandom(size = 0.5, dodge.width=1) + 
+  theme_bw() + 
+  theme(legend.position = 'bottom') + 
+  labs(y = 'mtDNA-CN')
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

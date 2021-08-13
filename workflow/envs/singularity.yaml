@@ -1,0 +1,5 @@
+channels:
+    - bioconda
+    - conda-forge
+dependencies:
+    - singularity=3.7.1
