@@ -59,6 +59,9 @@ mt_shifted_sa = config["reference"]["mt_shifted"]["mt_shifted_sa"]
 shift_back_chain = config["reference"]["mt_shifted"]["shift_back_chain"]
 control_region_shifted_reference_interval_list = config["reference"]["mt_shifted"]["control_region_shifted_reference_interval_list"]
 
+# Gnomad Resources
+ARTIFACT_PRONE_SITES = config["gnomad_resources"]["ARTIFACT_PRONE_SITES"]
+
 # Varibles
 RWD = os.getcwd()
 BAM = ['bam', 'bai']
@@ -634,43 +637,50 @@ rule hail_inputs:
 rule annotate_coverage:
     input:
         input_tsv = rules.hail_inputs.output.coverage_tsv,
-        script = 'workflow/scripts/annotate_coverage.py'
+        # script = 'workflow/scripts/annotate_coverage.py'
     output:
         ht = directory("{outdir}/annotate_coverage/all_chrM_annotate_coverage.ht"),
         mt = directory("{outdir}/annotate_coverage/all_chrM_annotate_coverage.mt"),
         all = "{outdir}/annotate_coverage/all_chrM_annotate_coverage.tsv",
         sample = "{outdir}/annotate_coverage/all_chrM_annotate_coverage_sample_level.txt"
     params:
-        temp_dir = "{outdir}/temp"
+        temp_dir = "{outdir}/temp",
+        chunk_size = 100,
+        overwrite = True
     conda: 'envs/hail.yaml'
-    shell: "{input.script} -i {input.input_tsv} -o {output.ht} -t {params.temp_dir} --overwrite"
+    script: 'scripts/annotate_coverage.py'
+    # shell: "{input.script} -i {input.input_tsv} -o {output.ht} -t {params.temp_dir} --overwrite"
 
 rule combine_vcfs:
     input:
-        script = 'workflow/scripts/combine_vcfs.py',
+        # script = 'workflow/scripts/combine_vcfs.py',
         vcf_paths = rules.hail_inputs.output.vcf_tsv,
         coverage = rules.annotate_coverage.output.mt,
-        ARTIFACT_PRONE_SITES = "raw/gnomad_resources/artifact_prone_sites.bed"
+        ARTIFACT_PRONE_SITES = ARTIFACT_PRONE_SITES,
     output:
         vcf = "{outdir}/combine_vcfs/all_chrM.vcf.bgz",
         mt = directory("{outdir}/combine_vcfs/all_chrM.mt"),
         temp = temp(directory("{outdir}/combine_vcfs/temp"))
     params:
-        output = "all_chrM",
         VCF_COL_NAME = "VCF",
         temp_dir = "{outdir}/combine_vcfs/temp",
-        output_bucket = "{outdir}/combine_vcfs"
+        output_bucket = "{outdir}/combine_vcfs",
+        chunk_size = 100,
+        minimum_homref_coverage = 100,
+        overwrite = True,
+        participants_to_subset = None
     conda: 'envs/hail.yaml'
-    shell:
-        r"""
-        {input.script} --overwrite -p {input.vcf_paths} -c {input.coverage} \
-        -v {params.VCF_COL_NAME} -a {input.ARTIFACT_PRONE_SITES} \
-        -t {params.temp_dir} -f {params.output} -o {params.output_bucket}
-        """
+    script: 'scripts/combine_vcfs.py'
+    # shell:
+    #     r"""
+    #     {input.script} --overwrite -p {input.vcf_paths} -c {input.coverage} \
+    #     -v {params.VCF_COL_NAME} -a {input.ARTIFACT_PRONE_SITES} \
+    #     -t {params.temp_dir} -f {params.output} -o {params.output_bucket}
+    #     """
 
 rule add_annotations:
     input:
-        script = "workflow/scripts/add_annotations.py",
+        # script = "workflow/scripts/add_annotations.py",
         vcf = rules.combine_vcfs.output.vcf,
         mt = rules.combine_vcfs.output.mt,
         meta = rules.hail_inputs.output.meta,
@@ -682,15 +692,16 @@ rule add_annotations:
         sample = "{outdir}/final/sample_annotations.txt",
         sample_vcf = "{outdir}/final/sample_vcf.vcf.bgz",
     params:
-        temp_dir = "{outdir}/temp",
         OUTPUT_DIR = "{outdir}/final",
+        overwrite = True,
         min_het_threshold = 0.10,
         min_hom_threshold = 0.95,
         vaf_filter_threshold = vaf_filter_threshold
     conda: 'envs/hail.yaml'
-    shell:
-        r"""
-        {input.script} -m {input.mt} -d {params.OUTPUT_DIR} -a {input.meta} -v {params.temp_dir}\
-        --min_het_threshold {params.min_het_threshold} --min_hom_threshold {params.min_hom_threshold} --vaf_filter_threshold {params.vaf_filter_threshold} \
-        --run_vep --overwrite
-        """
+    script: "scripts/add_annotations.py"
+    # shell:
+    #     r"""
+    #     {input.script} -m {input.mt} -d {params.OUTPUT_DIR} -a {input.meta} -v {params.temp_dir}\
+    #     --min_het_threshold {params.min_het_threshold} --min_hom_threshold {params.min_hom_threshold} --vaf_filter_threshold {params.vaf_filter_threshold} \
+    #     --run_vep --overwrite
+    #     """

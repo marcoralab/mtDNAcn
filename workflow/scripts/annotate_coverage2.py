@@ -144,13 +144,13 @@ def main(input_tsv, output_ht, temp_dir, chunk_size, overwrite):
     cov_ht = cov_ht.checkpoint(output_ht, overwrite=overwrite)
     cov_ht.export(output_tsv)
 
-input_tsv = snakemake.input['input_tsv']
-output_ht = snakemake.output['ht']
-temp_dir = snakemake.params['temp_dir']
-chunk_size = snakemake.params['chunk_size']
-overwrite = snakemake.params['overwrite']
-
-main(input_tsv, output_ht, temp_dir, chunk_size, overwrite)
+main(
+    snakemake.input['input_tsv'],
+    snakemake.output['ht'],
+    snakemake.params['temp_dir'],
+    snakemake.params['chunk_size'],
+    snakemake.params['overwrite']
+    )
 
 # if __name__ == "__main__":
 #     parser = argparse.ArgumentParser(

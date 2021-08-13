@@ -1851,16 +1851,16 @@ def format_vcf(
     return input_mt, meta_dict, vcf_header_file
 
 
-def main(args):
-    mt_path = args.mt_path
-    output_dir = args.output_dir
-    all_output = args.all_output
-    vep_results = args.vep_results
-    min_hom_threshold = args.min_hom_threshold
-    vaf_filter_threshold = args.vaf_filter_threshold
-    min_het_threshold = args.min_het_threshold
-    gnomad_subset = args.subset_to_gnomad_release
-    run_vep = args.run_vep
+def main(mt_path, output_dir, all_output, min_hom_threshold, vaf_filter_threshold, min_het_threshold):
+    # mt_path = args.mt_path
+    # output_dir = args.output_dir
+    # all_output = args.all_output
+    # vep_results = args.vep_results
+    # min_hom_threshold = args.min_hom_threshold
+    # vaf_filter_threshold = args.vaf_filter_threshold
+    # min_het_threshold = args.min_het_threshold
+    # gnomad_subset = args.subset_to_gnomad_release
+    # run_vep = args.run_vep
 
     logger.info("Cutoff for homoplasmic variants is set to %.2f...", min_hom_threshold)
 
@@ -1886,13 +1886,13 @@ def main(args):
     mt = add_variant_context(mt)
 
     # If specified, subet to only the gnomAD samples in the current release
-    if gnomad_subset:
-        logger.warn("Subsetting results to gnomAD release samples...")
-        subset_name = "_gnomad"
-
-        # Subset to release samples and filter out rows that no longer have at least one alt call
-        mt = mt.filter_cols(mt.release)  # Filter to cols where release is true
-        mt = mt.filter_rows(hl.agg.any(mt.HL > 0))
+    # if gnomad_subset:
+    #     logger.warn("Subsetting results to gnomAD release samples...")
+    #     subset_name = "_gnomad"
+    #
+    #     # Subset to release samples and filter out rows that no longer have at least one alt call
+    #     mt = mt.filter_cols(mt.release)  # Filter to cols where release is true
+    #     mt = mt.filter_rows(hl.agg.any(mt.HL > 0))
 
     logger.info("Filtering out low copy number samples...")
     mt, n_removed_below_cn, n_removed_above_cn = filter_by_copy_number(mt)
@@ -1907,7 +1907,7 @@ def main(args):
         locus=hl.locus("chrM", mt.locus.position, reference_genome="GRCh38"),
         alleles=mt.alleles,
     )
-    mt = mt.checkpoint(f"{output_dir}/prior_to_vep.mt", overwrite=args.overwrite)
+    mt = mt.checkpoint(f"{output_dir}/prior_to_vep.mt", overwrite=overwrite)
 
     # logger.info("Adding vep annotations...")
     # mt = add_vep(mt, run_vep, vep_results)
@@ -1955,7 +1955,7 @@ def main(args):
     )
 
     mt = mt.checkpoint(
-        f"{output_dir}/prior_to_filter_genotypes.mt", overwrite=args.overwrite
+        f"{output_dir}/prior_to_filter_genotypes.mt", overwrite=overwrite
     )
 
     mt = filter_genotypes(mt)
@@ -1964,7 +1964,7 @@ def main(args):
         mt, min_hom_threshold, vaf_filter_threshold, min_het_threshold
     )
     mt = mt.checkpoint(
-        annotated_mt_path, overwrite=args.overwrite
+        annotated_mt_path, overwrite=overwrite
     )  # Full matrix table for internal use
 
     logger.info("Generating summary statistics reports...")
@@ -1993,7 +1993,7 @@ def main(args):
     variant_ht = annotation_descriptions.adjust_descriptions(variant_ht)
     variant_ht.export(sites_txt_path)  # Sites-only txt file for external use
     variant_ht.write(
-        sites_ht_path, overwrite=args.overwrite
+        sites_ht_path, overwrite=overwrite
     )  # Sites-only ht for external use
 
     logger.info("Writing sample annotations...")
@@ -2028,70 +2028,78 @@ def main(args):
     logger.info("All annotation steps are completed")
 
 
-if __name__ == "__main__":
-    parser = argparse.ArgumentParser(
-        description="This script adds variant annotations to the mitochondria VCF/MT"
-    )
-    parser.add_argument("-m", "--mt_path", help="Path to combined mt", required=True)
-    parser.add_argument(
-        "-d",
-        "--output_dir",
-        help="Path to directory to which output should be written",
-        required=True,
-    )
-    parser.add_argument(
-        "-a",
-        "--all_output",
-        help="Output file that results from Terra data download",
-        required=True,
-    )
-    parser.add_argument(
-        "-v",
-        "--vep_results",
-        help="MatrixTable path to output vep results (either the existing results or where to ouput new vep results if also setting run_vep)",
-        required=True,
-    )
-    parser.add_argument(
-        "--slack_token", help="Slack token that allows integration with slack",
-    )
-    parser.add_argument(
-        "--slack_channel", help="Slack channel to post results and notifications to",
-    )
-    parser.add_argument(
-        "--min_het_threshold",
-        help="Minimum heteroplasmy level to define a variant as a PASS heteroplasmic variant, genotypes below this threshold will count towards the heteroplasmy_below_min_het_threshold filter and be set to missing",
-        type=float,
-        default=0.10,
-    )
-    parser.add_argument(
-        "--min_hom_threshold",
-        help="Minimum heteroplasmy level to define a variant as homoplasmic",
-        type=float,
-        default=0.95,
-    )
-    parser.add_argument(
-        "--vaf_filter_threshold",
-        help="Should match vaf_filter_threshold supplied to Mutect2, variants below this value will be set to homoplasmic reference after calculating the common_low_heteroplasmy filter",
-        type=float,
-        default=0.01,
-    )
-    parser.add_argument(
-        "--subset_to_gnomad_release",
-        help="Set to True to only include released gnomAD samples",
-        action="store_true",
-    )
-    parser.add_argument(
-        "--run_vep", help="Set to True to run/rerun vep", action="store_true"
-    )
-    parser.add_argument(
-        "--overwrite", help="Overwrites existing files", action="store_true"
-    )
+mt_path = snakemake.input['mt']
+output_dir = snakemake.params['OUTPUT_DIR']
+all_output = snakemake.input['meta']
+min_hom_threshold = snakemake.params['min_hom_threshold']
+vaf_filter_threshold = snakemake.params['vaf_filter_threshold']
+min_het_threshold = snakemake.params['min_het_threshold']
+# gnomad_subset = snakemake.params['gnomad_subset']
+# run_vep = snakemake.params['run_vep']
+# vep_results = snakemake.params['vep_results']
+overwrite = snakemake.params['overwrite']
 
-    args = parser.parse_args()
+main(mt_path, output_dir, all_output, min_hom_threshold, vaf_filter_threshold, min_het_threshold)
 
-    # Both a slack token and slack channel must be supplied to receive notifications on slack
-    if args.slack_channel and args.slack_token:
-        with slack_notifications(args.slack_token, args.slack_channel):
-            main(args)
-    else:
-        main(args)
+# if __name__ == "__main__":
+#     parser = argparse.ArgumentParser(
+#         description="This script adds variant annotations to the mitochondria VCF/MT"
+#     )
+#     parser.add_argument("-m", "--mt_path", help="Path to combined mt", required=True)
+#     parser.add_argument(
+#         "-d",
+#         "--output_dir",
+#         help="Path to directory to which output should be written",
+#         required=True,
+#     )
+#     parser.add_argument(
+#         "-a",
+#         "--all_output",
+#         help="Output file that results from Terra data download",
+#         required=True,
+#     )
+#     parser.add_argument(
+#         "-v",
+#         "--vep_results",
+#         help="MatrixTable path to output vep results (either the existing results or where to ouput new vep results if also setting run_vep)",
+#         required=True,
+#     )
+#     parser.add_argument(
+#         "--slack_token", help="Slack token that allows integration with slack",
+#     )
+#     parser.add_argument(
+#         "--slack_channel", help="Slack channel to post results and notifications to",
+#     )
+#     parser.add_argument(
+#         "--min_het_threshold",
+#         help="Minimum heteroplasmy level to define a variant as a PASS heteroplasmic variant, genotypes below this threshold will count towards the heteroplasmy_below_min_het_threshold filter and be set to missing",
+#         type=float,
+#         default=0.10,
+#     )
+#     parser.add_argument(
+#         "--min_hom_threshold",
+#         help="Minimum heteroplasmy level to define a variant as homoplasmic",
+#         type=float,
+#         default=0.95,
+#     )
+#     parser.add_argument(
+#         "--vaf_filter_threshold",
+#         help="Should match vaf_filter_threshold supplied to Mutect2, variants below this value will be set to homoplasmic reference after calculating the common_low_heteroplasmy filter",
+#         type=float,
+#         default=0.01,
+#     )
+#     parser.add_argument(
+#         "--subset_to_gnomad_release",
+#         help="Set to True to only include released gnomAD samples",
+#         action="store_true",
+#     )
+#     parser.add_argument(
+#         "--run_vep", help="Set to True to run/rerun vep", action="store_true"
+#     )
+#     parser.add_argument(
+#         "--overwrite", help="Overwrites existing files", action="store_true"
+#     )
+#
+#     args = parser.parse_args()
+#
+#     main(args)
