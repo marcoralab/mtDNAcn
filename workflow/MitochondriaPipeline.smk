@@ -81,7 +81,6 @@ mt_dbsnp154 = config["gnomad_resources"]["mt_dbsnp154"]
 
 # Varibles
 RWD = os.getcwd()
-BAM = ['bam', 'bai']
 
 # GATK Variant Calling pipeline
 ## Adapated from https://github.com/gatk-workflows/gatk4-mitochondria-pipeline
