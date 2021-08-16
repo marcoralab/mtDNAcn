@@ -8,11 +8,13 @@ import re
 import sys
 
 import hail as hl
+hl.init(log = snakemake.log['hail_logs'], quiet = False, append = False)
 
 from os.path import dirname
 from hail.utils.java import info
 
 logging.basicConfig(
+    filename=snakemake.log['python_logger'],
     format="%(asctime)s (%(name)s %(lineno)s): %(message)s",
     datefmt="%m/%d/%Y %I:%M:%S %p",
 )

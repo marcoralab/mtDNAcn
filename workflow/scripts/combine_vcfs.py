@@ -6,6 +6,7 @@ import math
 import os
 
 import hail as hl
+hl.init(log = snakemake.log['hail_logs'], quiet = False, append = False)
 
 from hail.utils.java import info
 from typing import Dict
@@ -35,6 +36,7 @@ META_DICT = {
 
 
 logging.basicConfig(
+    filename=snakemake.log['python_logger'],
     level=logging.INFO,
     format="%(levelname)s: %(asctime)s: %(message)s",
     datefmt="%m/%d/%Y %I:%M:%S %p",

@@ -9,6 +9,8 @@ from collections import Counter
 from os.path import dirname
 from textwrap import dedent
 
+# Github repo locations for imports:
+## gnomad: https://github.com/broadinstitute/gnomad_methods
 # from gnomad.utils.annotations import age_hists_expr
 # from gnomad.utils.reference_genome import add_reference_sequence
 # from gnomad.utils.slack import slack_notifications
@@ -16,17 +18,8 @@ from textwrap import dedent
 # from gnomad.sample_qc.ancestry import POP_NAMES
 # from gnomad.resources.grch38.reference_data import *
 
-# Github repo locations for imports:
-## gnomad: https://github.com/broadinstitute/gnomad_methods
-from gnomad_methods.ancestry import POPS, POP_NAMES
-from gnomad_methods.slack import slack_notifications
-# from gnomad.reference_data import dbsnp, _import_dbsnp
-# from workflow.scripts.gnomad.vep import vep_struct_to_csq
-# from workflow.scripts.gnomad.reference_genome import add_reference_sequence
-# from workflow.scripts.gnomad.annotations import age_hists_expr
-# from workflow.scripts.gnomad.meta import meta
-
 import annotation_descriptions
+hl.init(log = snakemake.log['hail_logs'], quiet = False, append = False)
 
 # RESOURCES = {
 #     "variant_context": "gs://gnomad-public-requester-pays/resources/mitochondria/variant_context/chrM_pos_ref_alt_context_categories.txt",
@@ -36,15 +29,16 @@ import annotation_descriptions
 # }
 
 RESOURCES = {
-    "variant_context": "raw/gnomad_resources/chrM_pos_ref_alt_context_categories.txt",
-    "phylotree": "raw/gnomad_resources/rCRS-centered_phylo_vars_final_update.txt",
-    "pon_mt_trna": "raw/gnomad_resources/pon_mt_trna_predictions_08_27_2020.txt",
-    "mitotip": "raw/gnomad_resources/mitotip_scores_08_27_2020.txt",
-    "mt_dbsnp154": "raw/gnomad_resources/GCF_000001405.38.chrM.vcf"
+    "variant_context": snakemake.input['variant_context'],
+    "phylotree": snakemake.input['phylotree'],
+    "pon_mt_trna": snakemake.input['pon_mt_trna'],
+    "mitotip": snakemake.input['mitotip'],
+    "mt_dbsnp154": snakemake.input['mt_dbsnp154']
 }
 
 
 logging.basicConfig(
+    filename=snakemake.log['python_logger'],
     format="%(asctime)s (%(name)s %(lineno)s): %(message)s",
     datefmt="%m/%d/%Y %I:%M:%S %p",
 )
@@ -153,7 +147,7 @@ def add_gnomad_metadata(input_mt: hl.MatrixTable) -> hl.MatrixTable:
     return input_mt
 
 
-def filter_by_copy_number(input_mt: hl.MatrixTable) -> hl.MatrixTable:
+def filter_by_copy_number(input_mt: hl.MatrixTable, min_mito_cn: float = 50, max_mito_cn: float = 500) -> hl.MatrixTable:
     """
     Calculate the mitochondrial copy number based on mean mitochondrial coverage and median nuclear coverage. Filter out samples with more extreme copy numbers.
 
@@ -173,16 +167,16 @@ def filter_by_copy_number(input_mt: hl.MatrixTable) -> hl.MatrixTable:
         )
     )
     n_removed_below_cn = input_mt.aggregate_cols(
-        hl.agg.count_where(input_mt.mito_cn < 50)
+        hl.agg.count_where(input_mt.mito_cn < min_mito_cn)
     )
     n_removed_above_cn = input_mt.aggregate_cols(
-        hl.agg.count_where(input_mt.mito_cn > 500)
+        hl.agg.count_where(input_mt.mito_cn > max_mito_cn)
     )
 
     # Remove sample with a mitochondrial copy number below 50 or greater than 500
-    # input_mt = input_mt.filter_cols(
-    #     (input_mt.mito_cn >= 50) & (input_mt.mito_cn <= 500)
-    # )
+    input_mt = input_mt.filter_cols(
+        (input_mt.mito_cn >= min_mito_cn) & (input_mt.mito_cn <= max_mito_cn)
+    )
     input_mt = input_mt.filter_rows(hl.agg.any(input_mt.HL > 0))
 
     return input_mt, n_removed_below_cn, n_removed_above_cn
@@ -1851,7 +1845,7 @@ def format_vcf(
     return input_mt, meta_dict, vcf_header_file
 
 
-def main(mt_path, output_dir, all_output, min_hom_threshold, vaf_filter_threshold, min_het_threshold):
+def main(mt_path, output_dir, all_output, min_hom_threshold, vaf_filter_threshold, min_het_threshold, min_mito_cn, max_mito_cn):
     # mt_path = args.mt_path
     # output_dir = args.output_dir
     # all_output = args.all_output
@@ -1895,7 +1889,7 @@ def main(mt_path, output_dir, all_output, min_hom_threshold, vaf_filter_threshol
     #     mt = mt.filter_rows(hl.agg.any(mt.HL > 0))
 
     logger.info("Filtering out low copy number samples...")
-    mt, n_removed_below_cn, n_removed_above_cn = filter_by_copy_number(mt)
+    mt, n_removed_below_cn, n_removed_above_cn = filter_by_copy_number(mt, min_mito_cn, max_mito_cn)
 
 
     logger.info("Filtering out contaminated samples...")
@@ -2034,12 +2028,14 @@ all_output = snakemake.input['meta']
 min_hom_threshold = snakemake.params['min_hom_threshold']
 vaf_filter_threshold = snakemake.params['vaf_filter_threshold']
 min_het_threshold = snakemake.params['min_het_threshold']
+min_mito_cn = snakemake.params['min_mito_cn']
+max_mito_cn = snakemake.params['max_mito_cn']
 # gnomad_subset = snakemake.params['gnomad_subset']
 # run_vep = snakemake.params['run_vep']
 # vep_results = snakemake.params['vep_results']
 overwrite = snakemake.params['overwrite']
 
-main(mt_path, output_dir, all_output, min_hom_threshold, vaf_filter_threshold, min_het_threshold)
+main(mt_path, output_dir, all_output, min_hom_threshold, vaf_filter_threshold, min_het_threshold, min_mito_cn, max_mito_cn)
 
 # if __name__ == "__main__":
 #     parser = argparse.ArgumentParser(

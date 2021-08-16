@@ -15,16 +15,25 @@ configfile: "config/gatk_config.yaml"
 OUTDIR = config["outdir"]
 
 ## GATK Options
-max_read_length = config["max_read_length"]
-coverage_cap = config["coverage_cap"]
-max_low_het_sites = config["max_low_het_sites"]
-max_reads_per_alignment_start = config["max_reads_per_alignment_start"]
-m2_extra_args = config["m2_extra_args"]
-m2_extra_filtering_args = config["m2_extra_filtering_args"]
-max_alt_allele_count = config["max_alt_allele_count"]
-vaf_filter_threshold = config["vaf_filter_threshold"]
-f_score_beta = config["f_score_beta"]
-vaf_cutoff = config["vaf_cutoff"]
+max_read_length = config['gatk']["max_read_length"]
+coverage_cap = config['gatk']["coverage_cap"]
+max_low_het_sites = config['gatk']["max_low_het_sites"]
+max_reads_per_alignment_start = config['gatk']["max_reads_per_alignment_start"]
+m2_extra_args = config['gatk']["m2_extra_args"]
+m2_extra_filtering_args = config['gatk']["m2_extra_filtering_args"]
+max_alt_allele_count = config['gatk']["max_alt_allele_count"]
+vaf_filter_threshold = config['gatk']["vaf_filter_threshold"]
+f_score_beta = config['gatk']["f_score_beta"]
+vaf_cutoff = config['gatk']["vaf_cutoff"]
+
+## Post Processing Options
+chunk_size = config['post_process']['chunk_size']
+overwrite = config['post_process']['overwrite']
+minimum_homref_coverage = config['post_process']['minimum_homref_coverage']
+min_het_threshold = config['post_process']['min_het_threshold']
+min_hom_threshold = config['post_process']['min_hom_threshold']
+min_mito_cn = config['post_process']['min_mito_cn']
+max_mito_cn = config['post_process']['max_mito_cn']
 
 ## Reference files
 ### hg38 whole genome reference
@@ -61,6 +70,11 @@ control_region_shifted_reference_interval_list = config["reference"]["mt_shifted
 
 # Gnomad Resources
 ARTIFACT_PRONE_SITES = config["gnomad_resources"]["ARTIFACT_PRONE_SITES"]
+variant_context = config["gnomad_resources"]["variant_context"]
+phylotree = config["gnomad_resources"]["phylotree"]
+pon_mt_trna = config["gnomad_resources"]["pon_mt_trna"]
+mitotip = config["gnomad_resources"]["mitotip"]
+mt_dbsnp154 = config["gnomad_resources"]["mt_dbsnp154"]
 
 # Varibles
 RWD = os.getcwd()
@@ -72,12 +86,10 @@ BAM = ['bam', 'bai']
 
 rule all:
     input:
-        expand("{outdir}/{SAMPLE_IDS}/mosdepth/{SAMPLE_IDS}_mtdnacn.txt", outdir = OUTDIR, SAMPLE_IDS = SAMPLES.index.tolist()),
-        expand("{outdir}/{SAMPLE_IDS}/gatk/{SAMPLE_IDS}_chrM_per_base_coverage.tsv", outdir = OUTDIR, SAMPLE_IDS = SAMPLES.index.tolist()),
-        expand("{outdir}/{SAMPLE_IDS}/gatk/{SAMPLE_IDS}_chrM.final.split.vcf.gz", outdir = OUTDIR, SAMPLE_IDS = SAMPLES.index.tolist()),
-        expand("{outdir}/final/sample_vcf.vcf.bgz", outdir = OUTDIR)
-
-
+        expand("{outdir}/samples/{SAMPLE_IDS}/mosdepth/{SAMPLE_IDS}_mtdnacn.txt", outdir = OUTDIR, SAMPLE_IDS = SAMPLES.index.tolist()),
+        expand("{outdir}/samples/{SAMPLE_IDS}/gatk/{SAMPLE_IDS}_chrM_per_base_coverage.tsv", outdir = OUTDIR, SAMPLE_IDS = SAMPLES.index.tolist()),
+        expand("{outdir}/samples/{SAMPLE_IDS}/gatk/{SAMPLE_IDS}_chrM.final.split.vcf.gz", outdir = OUTDIR, SAMPLE_IDS = SAMPLES.index.tolist()),
+        expand("{outdir}/joint/final/sample_vcf.vcf.bgz", outdir = OUTDIR)
 
 def ref_fasta_input(wildcards):
     if SAMPLES.loc[wildcards.SAMPLE_IDS]['hg'] == 37:
@@ -143,11 +155,12 @@ rule mosdepth_median:
         input_bam_index = lambda wildcards: SAMPLES.loc[wildcards.SAMPLE_IDS]['index'],
         ref_fasta = ref_fasta_input,
         ref_fasta_index = ref_index_input,
-    output: "{outdir}/{SAMPLE_IDS}/mosdepth/{SAMPLE_IDS}.meadian.mosdepth.summary.txt"
+    output: "{outdir}/samples/{SAMPLE_IDS}/mosdepth/{SAMPLE_IDS}.meadian.mosdepth.summary.txt"
     params:
-        wd = '{outdir}/{SAMPLE_IDS}/mosdepth/{SAMPLE_IDS}.meadian'
+        wd = '{outdir}/samples/{SAMPLE_IDS}/mosdepth/{SAMPLE_IDS}.meadian'
     conda: 'envs/mosdepth.yaml'
-    shell: "mosdepth -n --use-median -t 4 -f {input.ref_fasta} {params.wd} {input.input_bam}"
+    log: "{outdir}/samples/{SAMPLE_IDS}/logs/{SAMPLE_IDS}_mosdepth_median.log"
+    shell: "(mosdepth -n --use-median -t 4 -f {input.ref_fasta} {params.wd} {input.input_bam}) 2> {log}"
 
 rule mosdepth_mean:
     input:
@@ -155,21 +168,23 @@ rule mosdepth_mean:
         input_bam_index = lambda wildcards: SAMPLES.loc[wildcards.SAMPLE_IDS]['index'],
         ref_fasta = ref_fasta_input,
         ref_fasta_index = ref_index_input,
-    output: "{outdir}/{SAMPLE_IDS}/mosdepth/{SAMPLE_IDS}.mean.mosdepth.summary.txt"
+    output: "{outdir}/samples/{SAMPLE_IDS}/mosdepth/{SAMPLE_IDS}.mean.mosdepth.summary.txt"
     params:
-        wd = '{outdir}/{SAMPLE_IDS}/mosdepth/{SAMPLE_IDS}.mean'
+        wd = '{outdir}/samples/{SAMPLE_IDS}/mosdepth/{SAMPLE_IDS}.mean'
     conda: 'envs/mosdepth.yaml'
-    shell: "mosdepth -n -t 4 -f {input.ref_fasta} {params.wd} {input.input_bam}"
+    log: "{outdir}/samples/{SAMPLE_IDS}/logs/{SAMPLE_IDS}_mosdepth_mean.log"
+    shell: "(mosdepth -n -t 4 -f {input.ref_fasta} {params.wd} {input.input_bam}) 2> {log}"
 
 rule mtdnacn:
     input:
         median = rules.mosdepth_median.output,
         mean = rules.mosdepth_mean.output
     output:
-        mtdnacn = "{outdir}/{SAMPLE_IDS}/mosdepth/{SAMPLE_IDS}_mtdnacn.txt"
+        mtdnacn = "{outdir}/samples/{SAMPLE_IDS}/mosdepth/{SAMPLE_IDS}_mtdnacn.txt"
     params:
         id = "{SAMPLE_IDS}"
     conda: 'envs/r.yaml'
+    log: "{outdir}/samples/{SAMPLE_IDS}/logs/{SAMPLE_IDS}_mtdnacn.log"
     script: "scripts/mtdnacn.R"
 
 # "Subsets a whole genome bam to just Mitochondria reads"
@@ -183,9 +198,10 @@ rule SubsetBamToChrM:
     params:
         contig_name = mito_contig,
     output:
-        bam = '{outdir}/{SAMPLE_IDS}/gatk/{SAMPLE_IDS}_chrM.bam',
-        bai = '{outdir}/{SAMPLE_IDS}/gatk/{SAMPLE_IDS}_chrM.bai',
+        bam = '{outdir}/samples/{SAMPLE_IDS}/gatk/{SAMPLE_IDS}_chrM.bam',
+        bai = '{outdir}/samples/{SAMPLE_IDS}/gatk/{SAMPLE_IDS}_chrM.bai',
     conda: 'envs/gatk.yaml'
+    log: "{outdir}/samples/{SAMPLE_IDS}/logs/{SAMPLE_IDS}_SubsetBamToChrM.log"
     shell:
         r"""
         gatk PrintReads \
@@ -195,7 +211,7 @@ rule SubsetBamToChrM:
           --read-filter MateUnmappedAndUnmappedReadFilter \
           -I {input.input_bam} \
           --read-index {input.input_bam_index} \
-          -O {output.bam}
+          -O {output.bam} 2> {log}
         """
 
 rule RevertSam:
@@ -203,8 +219,9 @@ rule RevertSam:
         input_bam = rules.SubsetBamToChrM.output.bam,
         input_bai = rules.SubsetBamToChrM.output.bai
     output:
-        unmapped_bam = temp('{outdir}/{SAMPLE_IDS}/gatk/{SAMPLE_IDS}_chrM_unmapped.bam'),
+        unmapped_bam = temp('{outdir}/samples/{SAMPLE_IDS}/gatk/{SAMPLE_IDS}_chrM_unmapped.bam'),
     conda: 'envs/gatk.yaml'
+    log: "{outdir}/samples/{SAMPLE_IDS}/logs/{SAMPLE_IDS}_RevertSam.log"
     shell:
         r"""
         gatk RevertSam \
@@ -215,7 +232,7 @@ rule RevertSam:
             -ATTRIBUTE_TO_CLEAR FT \
             -ATTRIBUTE_TO_CLEAR CO \
             -SORT_ORDER queryname \
-            -RESTORE_ORIGINAL_QUALITIES false
+            -RESTORE_ORIGINAL_QUALITIES false 2> {log}
         """
 
 module AlignmentPipeline:
@@ -226,32 +243,34 @@ use rule AlignAndMarkDuplicates from AlignmentPipeline as AlignToMt with:
         unmapped_bam = rules.RevertSam.output.unmapped_bam,
         mt_ref_fasta = mt_fasta
     output:
-        fastq = temp('{outdir}/{SAMPLE_IDS}/gatk/{SAMPLE_IDS}_chrM_unmapped.fastq'),
-        aln_sam = temp('{outdir}/{SAMPLE_IDS}/gatk/{SAMPLE_IDS}_chrM_aln.sam'),
-        mba_bam = temp('{outdir}/{SAMPLE_IDS}/gatk/{SAMPLE_IDS}_chrM_mba.bam'),
-        md_bam = temp('{outdir}/{SAMPLE_IDS}/gatk/{SAMPLE_IDS}_chrM_md.bam'),
-        metrics_filename = '{outdir}/{SAMPLE_IDS}/gatk/{SAMPLE_IDS}_chrM.duplicate_metrics',
-        sorted_bam = '{outdir}/{SAMPLE_IDS}/gatk/{SAMPLE_IDS}_chrM_sorted.bam',
-        sorted_bai = '{outdir}/{SAMPLE_IDS}/gatk/{SAMPLE_IDS}_chrM_sorted.bai'
+        fastq = temp('{outdir}/samples/{SAMPLE_IDS}/gatk/{SAMPLE_IDS}_chrM_unmapped.fastq'),
+        aln_sam = temp('{outdir}/samples/{SAMPLE_IDS}/gatk/{SAMPLE_IDS}_chrM_aln.sam'),
+        mba_bam = temp('{outdir}/samples/{SAMPLE_IDS}/gatk/{SAMPLE_IDS}_chrM_mba.bam'),
+        md_bam = temp('{outdir}/samples/{SAMPLE_IDS}/gatk/{SAMPLE_IDS}_chrM_md.bam'),
+        metrics_filename = '{outdir}/samples/{SAMPLE_IDS}/gatk/{SAMPLE_IDS}_chrM.duplicate_metrics',
+        sorted_bam = '{outdir}/samples/{SAMPLE_IDS}/gatk/{SAMPLE_IDS}_chrM_sorted.bam',
+        sorted_bai = '{outdir}/samples/{SAMPLE_IDS}/gatk/{SAMPLE_IDS}_chrM_sorted.bai'
     params:
         bwa_version = "0.7.17",
         bwa_commandline = "bwa mem -K 100000000 -p -v 3 -t 2 -Y",
+    log: "{outdir}/samples/{SAMPLE_IDS}/logs/{SAMPLE_IDS}_AlignToMt.log"
 
 use rule AlignAndMarkDuplicates from AlignmentPipeline as AlignToShiftedMt with:
     input:
         unmapped_bam = rules.RevertSam.output.unmapped_bam,
         mt_ref_fasta = mt_shifted_fasta
     output:
-        fastq = temp('{outdir}/{SAMPLE_IDS}/gatk/{SAMPLE_IDS}_chrM_shifted_unmapped.fastq'),
-        aln_sam = temp('{outdir}/{SAMPLE_IDS}/gatk/{SAMPLE_IDS}_chrM_shifted_aln.sam'),
-        mba_bam = temp('{outdir}/{SAMPLE_IDS}/gatk/{SAMPLE_IDS}_chrM_shifted_mba.bam'),
-        md_bam = temp('{outdir}/{SAMPLE_IDS}/gatk/{SAMPLE_IDS}_chrM_shifted_md.bam'),
-        metrics_filename = '{outdir}/{SAMPLE_IDS}/gatk/{SAMPLE_IDS}_chrM_shifted.duplicate_metrics',
-        sorted_bam = '{outdir}/{SAMPLE_IDS}/gatk/{SAMPLE_IDS}_chrM_shifted_sorted.bam',
-        sorted_bai = '{outdir}/{SAMPLE_IDS}/gatk/{SAMPLE_IDS}_chrM_shifted_sorted.bai'
+        fastq = temp('{outdir}/samples/{SAMPLE_IDS}/gatk/{SAMPLE_IDS}_chrM_shifted_unmapped.fastq'),
+        aln_sam = temp('{outdir}/samples/{SAMPLE_IDS}/gatk/{SAMPLE_IDS}_chrM_shifted_aln.sam'),
+        mba_bam = temp('{outdir}/samples/{SAMPLE_IDS}/gatk/{SAMPLE_IDS}_chrM_shifted_mba.bam'),
+        md_bam = temp('{outdir}/samples/{SAMPLE_IDS}/gatk/{SAMPLE_IDS}_chrM_shifted_md.bam'),
+        metrics_filename = '{outdir}/samples/{SAMPLE_IDS}/gatk/{SAMPLE_IDS}_chrM_shifted.duplicate_metrics',
+        sorted_bam = '{outdir}/samples/{SAMPLE_IDS}/gatk/{SAMPLE_IDS}_chrM_shifted_sorted.bam',
+        sorted_bai = '{outdir}/samples/{SAMPLE_IDS}/gatk/{SAMPLE_IDS}_chrM_shifted_sorted.bai'
     params:
         bwa_version = "0.7.17",
         bwa_commandline = "bwa mem -K 100000000 -p -v 3 -t 2 -Y",
+    log: "{outdir}/samples/{SAMPLE_IDS}/logs/{SAMPLE_IDS}_AlignToShiftedMt.log"
 
 rule CollectWgsMetrics:
     input:
@@ -260,12 +279,13 @@ rule CollectWgsMetrics:
         mt_ref_fasta = mt_fasta,
         mt_ref_fasta_index = mt_fasta_index,
     output:
-        meterics = '{outdir}/{SAMPLE_IDS}/gatk/{SAMPLE_IDS}_chrM_metrics.txt',
-        sens = '{outdir}/{SAMPLE_IDS}/gatk/{SAMPLE_IDS}_chrM_theoretical_sensitivity.txt'
+        meterics = '{outdir}/samples/{SAMPLE_IDS}/gatk/{SAMPLE_IDS}_chrM_metrics.txt',
+        sens = '{outdir}/samples/{SAMPLE_IDS}/gatk/{SAMPLE_IDS}_chrM_theoretical_sensitivity.txt'
     params:
         read_length = max_read_length,
         coverage_cap = coverage_cap,
     conda: 'envs/gatk.yaml'
+    log: "{outdir}/samples/{SAMPLE_IDS}/logs/{SAMPLE_IDS}_CollectWgsMetrics.log"
     shell:
         r"""
         gatk CollectWgsMetrics \
@@ -277,7 +297,7 @@ rule CollectWgsMetrics:
           -READ_LENGTH {params.read_length} \
           -COVERAGE_CAP {params.coverage_cap} \
           -INCLUDE_BQ_HISTOGRAM true \
-          -THEORETICAL_SENSITIVITY_OUTPUT {output.sens}
+          -THEORETICAL_SENSITIVITY_OUTPUT {output.sens} 2> {log}
         """
 
 rule CallMt:
@@ -289,15 +309,17 @@ rule CallMt:
         mt_ref_fasta_index = mt_fasta_index,
         mt_dict = mt_dict,
     output:
-        vcf = temp("{outdir}/{SAMPLE_IDS}/gatk/{SAMPLE_IDS}_chrM_callMt.vcf.gz"),
-        vcf_idx = temp("{outdir}/{SAMPLE_IDS}/gatk/{SAMPLE_IDS}_chrM_callMt.vcf.gz.tbi"),
-        stats = temp("{outdir}/{SAMPLE_IDS}/gatk/{SAMPLE_IDS}_chrM_callMt.vcf.gz.stats"),
-        bamOut = temp(touch("{outdir}/{SAMPLE_IDS}/gatk/{SAMPLE_IDS}_chrM_callMt.bam"))
+        vcf = temp("{outdir}/samples/{SAMPLE_IDS}/gatk/{SAMPLE_IDS}_chrM_callMt.vcf.gz"),
+        vcf_idx = temp("{outdir}/samples/{SAMPLE_IDS}/gatk/{SAMPLE_IDS}_chrM_callMt.vcf.gz.tbi"),
+        stats = temp("{outdir}/samples/{SAMPLE_IDS}/gatk/{SAMPLE_IDS}_chrM_callMt.vcf.gz.stats"),
+        bamOut = temp(touch("{outdir}/samples/{SAMPLE_IDS}/gatk/{SAMPLE_IDS}_chrM_callMt.bam")),
+        baiOut = temp(touch("{outdir}/samples/{SAMPLE_IDS}/gatk/{SAMPLE_IDS}_chrM_callMt.bai"))
     params:
         max_reads_per_alignment_start = max_reads_per_alignment_start,
         m2_extra_args = m2_extra_args,
         region = "chrM:576-16024"
     conda: 'envs/gatk.yaml'
+    log: "{outdir}/samples/{SAMPLE_IDS}/logs/{SAMPLE_IDS}_CallMt.log"
     shell:
         r"""
         gatk Mutect2 \
@@ -311,7 +333,7 @@ rule CallMt:
             --annotation StrandBiasBySample \
             --mitochondria-mode \
             --max-reads-per-alignment-start {params.max_reads_per_alignment_start} \
-            --max-mnp-distance 0
+            --max-mnp-distance 0 2> {log}
         """
 
 use rule CallMt as CallShiftedMt with:
@@ -323,14 +345,16 @@ use rule CallMt as CallShiftedMt with:
         mt_ref_fasta_index = mt_shifted_fasta_index,
         mt_dict = mt_shifted_dict,
     output:
-        vcf = temp("{outdir}/{SAMPLE_IDS}/gatk/{SAMPLE_IDS}_chrM_callMt_shifted.vcf.gz"),
-        vcf_idx = temp("{outdir}/{SAMPLE_IDS}/gatk/{SAMPLE_IDS}_chrM_callMt_shifted.vcf.gz.tbi"),
-        stats = temp("{outdir}/{SAMPLE_IDS}/gatk/{SAMPLE_IDS}_chrM_callMt_shifted.vcf.gz.stats"),
-        bamOut = temp(touch("{outdir}/{SAMPLE_IDS}/gatk/{SAMPLE_IDS}_chrM_callMt_shifted.bam")),
+        vcf = temp("{outdir}/samples/{SAMPLE_IDS}/gatk/{SAMPLE_IDS}_chrM_callMt_shifted.vcf.gz"),
+        vcf_idx = temp("{outdir}/samples/{SAMPLE_IDS}/gatk/{SAMPLE_IDS}_chrM_callMt_shifted.vcf.gz.tbi"),
+        stats = temp("{outdir}/samples/{SAMPLE_IDS}/gatk/{SAMPLE_IDS}_chrM_callMt_shifted.vcf.gz.stats"),
+        bamOut = temp(touch("{outdir}/samples/{SAMPLE_IDS}/gatk/{SAMPLE_IDS}_chrM_callMt_shifted.bam")),
+        baiOut = temp(touch("{outdir}/samples/{SAMPLE_IDS}/gatk/{SAMPLE_IDS}_chrM_callMt_shifted.bai")),
     params:
         max_reads_per_alignment_start = max_reads_per_alignment_start,
         m2_extra_args = m2_extra_args,
         region = "chrM:8025-9144"
+    log: "{outdir}/samples/{SAMPLE_IDS}/logs/{SAMPLE_IDS}_CallShiftedMt.log"
 
 
 rule LiftoverAndCombineVcfs:
@@ -342,11 +366,12 @@ rule LiftoverAndCombineVcfs:
         mt_dict = mt_dict,
         shift_back_chain = shift_back_chain
     output:
-        shifted_back_vcf = temp("{outdir}/{SAMPLE_IDS}/gatk/{SAMPLE_IDS}.shifted_back.vcf"),
-        rejected_vcf = "{outdir}/{SAMPLE_IDS}/gatk/{SAMPLE_IDS}.rejected.vcf",
-        merged_vcf = "{outdir}/{SAMPLE_IDS}/gatk/{SAMPLE_IDS}.merged.vcf",
-        merged_vcf_index = "{outdir}/{SAMPLE_IDS}/gatk/{SAMPLE_IDS}.merged.vcf.idx"
+        shifted_back_vcf = temp(multiext("{outdir}/samples/{SAMPLE_IDS}/gatk/{SAMPLE_IDS}.shifted_back", ".vcf", ".vcf.idx")),
+        rejected_vcf = "{outdir}/samples/{SAMPLE_IDS}/gatk/{SAMPLE_IDS}.rejected.vcf",
+        merged_vcf = "{outdir}/samples/{SAMPLE_IDS}/gatk/{SAMPLE_IDS}.merged.vcf",
+        merged_vcf_index = "{outdir}/samples/{SAMPLE_IDS}/gatk/{SAMPLE_IDS}.merged.vcf.idx"
     conda: 'envs/gatk.yaml'
+    log: "{outdir}/samples/{SAMPLE_IDS}/logs/{SAMPLE_IDS}_LiftoverAndCombineVcfs.log"
     shell:
         r"""
         gatk LiftoverVcf \
@@ -359,7 +384,7 @@ rule LiftoverAndCombineVcfs:
         gatk MergeVcfs \
           -I {output.shifted_back_vcf} \
           -I {input.vcf} \
-          -O {output.merged_vcf}
+          -O {output.merged_vcf} 2> {log}
         """
 
 rule MergeStats:
@@ -367,11 +392,12 @@ rule MergeStats:
         shifted_stats = rules.CallMt.output.stats,
         non_shifted_stats = rules.CallShiftedMt.output.stats
     output:
-        "{outdir}/{SAMPLE_IDS}/gatk/{SAMPLE_IDS}_raw_combined.stats"
+        "{outdir}/samples/{SAMPLE_IDS}/gatk/{SAMPLE_IDS}_raw_combined.stats"
     conda: 'envs/gatk.yaml'
+    log: "{outdir}/samples/{SAMPLE_IDS}/logs/{SAMPLE_IDS}_MergeStats.log"
     shell:
         r"""
-        gatk MergeMutectStats --stats {input.shifted_stats} --stats {input.non_shifted_stats} -O {output}
+        gatk MergeMutectStats --stats {input.shifted_stats} --stats {input.non_shifted_stats} -O {output} 2> {log}
         """
 
 rule InitialFilter:
@@ -385,16 +411,18 @@ rule InitialFilter:
         blacklisted_sites = blacklisted_sites,
         blacklisted_sites_index = blacklisted_sites_index
     output:
-        FilterMutectCalls_vcf = temp("{outdir}/{SAMPLE_IDS}/gatk/{SAMPLE_IDS}_chrM_FilterMutectCalls.vcf"),
-        filtered_vcf = temp("{outdir}/{SAMPLE_IDS}/gatk/{SAMPLE_IDS}_chrM_InitialFilter.vcf.gz"),
-        filtered_vcf_idx = temp("{outdir}/{SAMPLE_IDS}/gatk/{SAMPLE_IDS}_chrM_InitialFilter.vcf.gz.tbi"),
-        bamout = temp(touch("{outdir}/{SAMPLE_IDS}/gatk/{SAMPLE_IDS}_chrM_InitialFilter.bam")) # We need to create these files regardless, even if they stay empty
+        FilterMutectCalls_vcf = temp("{outdir}/samples/{SAMPLE_IDS}/gatk/{SAMPLE_IDS}_chrM_FilterMutectCalls.vcf"),
+        FilterMutectCalls_vcf_index = temp("{outdir}/samples/{SAMPLE_IDS}/gatk/{SAMPLE_IDS}_chrM_FilterMutectCalls.vcf.idx"),
+        filtered_vcf = temp("{outdir}/samples/{SAMPLE_IDS}/gatk/{SAMPLE_IDS}_chrM_InitialFilter.vcf.gz"),
+        filtered_vcf_idx = temp("{outdir}/samples/{SAMPLE_IDS}/gatk/{SAMPLE_IDS}_chrM_InitialFilter.vcf.gz.tbi"),
+        bamout = temp(touch("{outdir}/samples/{SAMPLE_IDS}/gatk/{SAMPLE_IDS}_chrM_InitialFilter.bam")) # We need to create these files regardless, even if they stay empty
     params:
         m2_extra_filtering_args = m2_extra_filtering_args,
         max_alt_allele_count = max_alt_allele_count,
         vaf_filter_threshold = vaf_filter_threshold,
         f_score_beta = f_score_beta,
     conda: 'envs/gatk.yaml'
+    log: "{outdir}/samples/{SAMPLE_IDS}/logs/{SAMPLE_IDS}_InitialFilter.log"
     shell:
         r"""
         gatk  FilterMutectCalls \
@@ -413,7 +441,7 @@ rule InitialFilter:
             -O {output.filtered_vcf} \
             --apply-allele-specific-filters \
             --mask {input.blacklisted_sites} \
-            --mask-name "blacklisted_site"
+            --mask-name "blacklisted_site" 2> {log}
         """
 
 rule SplitMultiAllelicsAndRemoveNonPassSites:
@@ -424,9 +452,12 @@ rule SplitMultiAllelicsAndRemoveNonPassSites:
         mt_ref_fasta_index = mt_fasta_index,
         mt_dict = mt_dict,
     output:
-        split_vcf = temp("{outdir}/{SAMPLE_IDS}/gatk/{SAMPLE_IDS}_chrM_split.vcf"),
-        vcf_for_haplochecker = temp("{outdir}/{SAMPLE_IDS}/gatk/{SAMPLE_IDS}_chrM_splitAndPassOnly.vcf"),
+        split_vcf = temp("{outdir}/samples/{SAMPLE_IDS}/gatk/{SAMPLE_IDS}_chrM_split.vcf"),
+        split_vcf_index = temp("{outdir}/samples/{SAMPLE_IDS}/gatk/{SAMPLE_IDS}_chrM_split.vcf.idx"),
+        vcf_for_haplochecker = temp("{outdir}/samples/{SAMPLE_IDS}/gatk/{SAMPLE_IDS}_chrM_splitAndPassOnly.vcf"),
+        vcf_for_haplochecker_index = temp("{outdir}/samples/{SAMPLE_IDS}/gatk/{SAMPLE_IDS}_chrM_splitAndPassOnly.vcf.idx"),
     conda: 'envs/gatk.yaml'
+    log: "{outdir}/samples/{SAMPLE_IDS}/logs/{SAMPLE_IDS}_SplitMultiAllelicsAndRemoveNonPassSites.log"
     shell:
         r"""
         gatk LeftAlignAndTrimVariants \
@@ -440,22 +471,24 @@ rule SplitMultiAllelicsAndRemoveNonPassSites:
           gatk SelectVariants \
             -V {output.split_vcf} \
             -O {output.vcf_for_haplochecker} \
-            --exclude-filtered
+            --exclude-filtered 2> {log}
         """
 
 rule GetContamination:
     input:
         filtered_vcf = rules.SplitMultiAllelicsAndRemoveNonPassSites.output.vcf_for_haplochecker,
     output:
-        contamination_tmp = temp("{outdir}/{SAMPLE_IDS}/haplocheck/{SAMPLE_IDS}_contamination.txt"),
-        contamination_raw_tmp = temp("{outdir}/{SAMPLE_IDS}/haplocheck/{SAMPLE_IDS}_contamination.raw.txt"),
-        contamination = "{outdir}/{SAMPLE_IDS}/haplocheck/{SAMPLE_IDS}_chrM_contamination.txt",
-        contamination_raw = "{outdir}/{SAMPLE_IDS}/haplocheck/{SAMPLE_IDS}_chrM_contamination.raw.txt",
+        contamination_tmp = temp("{outdir}/samples/{SAMPLE_IDS}/haplocheck/{SAMPLE_IDS}_contamination.txt"),
+        contamination_raw_tmp = temp("{outdir}/samples/{SAMPLE_IDS}/haplocheck/{SAMPLE_IDS}_contamination.raw.txt"),
+        contamination = "{outdir}/samples/{SAMPLE_IDS}/haplocheck/{SAMPLE_IDS}_chrM_contamination.txt",
+        contamination_raw = "{outdir}/samples/{SAMPLE_IDS}/haplocheck/{SAMPLE_IDS}_chrM_contamination.raw.txt",
+    log: "{outdir}/samples/{SAMPLE_IDS}/logs/{SAMPLE_IDS}_GetContamination.log"
     shell:
         r"""
         java -jar src/haplocheck/haplocheck.jar --raw --out {output.contamination_tmp} {input}
         sed 's/\"//g' {output.contamination_raw_tmp} > {output.contamination_raw}
         sed 's/\"//g' {output.contamination_tmp} > {output.contamination}
+        2> {log}
         """
 
 rule FilterContamination:
@@ -470,16 +503,18 @@ rule FilterContamination:
         blacklisted_sites = blacklisted_sites,
         blacklisted_sites_index = blacklisted_sites_index,
     output:
-        FilterContaminationMutectCalls_vcf = temp("{outdir}/{SAMPLE_IDS}/gatk/{SAMPLE_IDS}_chrM_FilterContaminationMutectCalls.vcf"),
-        filtered_vcf = temp("{outdir}/{SAMPLE_IDS}/gatk/{SAMPLE_IDS}_chrM_FilterContamination.vcf.gz"),
-        filtered_vcf_idx = temp("{outdir}/{SAMPLE_IDS}/gatk/{SAMPLE_IDS}_chrM_FilterContamination.vcf.gz.tbi"),
-        bamout = temp(touch("{outdir}/{SAMPLE_IDS}/gatk/{SAMPLE_IDS}_chrM_FilterContamination.bam"))
+        FilterContaminationMutectCalls_vcf = temp("{outdir}/samples/{SAMPLE_IDS}/gatk/{SAMPLE_IDS}_chrM_FilterContaminationMutectCalls.vcf"),
+        FilterContaminationMutectCalls_vcf_index = temp("{outdir}/samples/{SAMPLE_IDS}/gatk/{SAMPLE_IDS}_chrM_FilterContaminationMutectCalls.vcf.idx"),
+        filtered_vcf = temp("{outdir}/samples/{SAMPLE_IDS}/gatk/{SAMPLE_IDS}_chrM_FilterContamination.vcf.gz"),
+        filtered_vcf_idx = temp("{outdir}/samples/{SAMPLE_IDS}/gatk/{SAMPLE_IDS}_chrM_FilterContamination.vcf.gz.tbi"),
+        bamout = temp(touch("{outdir}/samples/{SAMPLE_IDS}/gatk/{SAMPLE_IDS}_chrM_FilterContamination.bam"))
     params:
         f_score_beta = f_score_beta,
         m2_extra_filtering_args = m2_extra_filtering_args,
         max_alt_allele_count = max_alt_allele_count,
         vaf_filter_threshold = vaf_filter_threshold,
     conda: 'envs/gatk.yaml'
+    log: "{outdir}/samples/{SAMPLE_IDS}/logs/{SAMPLE_IDS}_FilterContamination.log"
     shell:
         r"""
         hc_contamination=$(awk -F "\t" 'FNR == 2' {input.contamination_raw} | awk '/YES/{{print $3;next}}{{print "0"}}')
@@ -500,7 +535,7 @@ rule FilterContamination:
             -O {output.filtered_vcf} \
             --apply-allele-specific-filters \
             --mask {input.blacklisted_sites} \
-            --mask-name "blacklisted_site"
+            --mask-name "blacklisted_site" 2> {log}
         """
 
 rule FilterNuMTs:
@@ -512,9 +547,10 @@ rule FilterNuMTs:
         mt_ref_fasta_index = mt_fasta_index,
         mt_dict = mt_dict,
     output:
-        numt_filtered_vcf = temp("{outdir}/{SAMPLE_IDS}/gatk/{SAMPLE_IDS}_chrM_FilterNuMTs.vcf.gz"),
-        numt_filtered_vcf_idx = temp("{outdir}/{SAMPLE_IDS}/gatk/{SAMPLE_IDS}_chrM_FilterNuMTs.vcf.gz.tbi"),
+        numt_filtered_vcf = temp("{outdir}/samples/{SAMPLE_IDS}/gatk/{SAMPLE_IDS}_chrM_FilterNuMTs.vcf.gz"),
+        numt_filtered_vcf_idx = temp("{outdir}/samples/{SAMPLE_IDS}/gatk/{SAMPLE_IDS}_chrM_FilterNuMTs.vcf.gz.tbi"),
     conda: 'envs/gatk.yaml'
+    log: "{outdir}/samples/{SAMPLE_IDS}/logs/{SAMPLE_IDS}_FilterNuMTs.log"
     shell:
         r"""
         auto_cov=$(awk '{{ if ($2 == "median") {{ print $4}} }}' {input.autosomal_coverage})
@@ -523,7 +559,7 @@ rule FilterNuMTs:
           -R {input.mt_ref_fasta} \
           -V {input.filtered_vcf} \
           -O {output.numt_filtered_vcf} \
-          --autosomal-coverage $auto_cov
+          --autosomal-coverage $auto_cov 2> {log}
         """
 
 rule FilterLowHetSites:
@@ -534,18 +570,19 @@ rule FilterLowHetSites:
         mt_ref_fasta_index = mt_fasta_index,
         mt_dict = mt_dict,
     output:
-        final_filtered_vcf = temp("{outdir}/{SAMPLE_IDS}/gatk/{SAMPLE_IDS}_chrM.final.vcf.gz"),
-        final_filtered_vcf_idx = temp("{outdir}/{SAMPLE_IDS}/gatk/{SAMPLE_IDS}_chrM.final.vcf.gz.tbi"),
+        final_filtered_vcf = temp("{outdir}/samples/{SAMPLE_IDS}/gatk/{SAMPLE_IDS}_chrM.final.vcf.gz"),
+        final_filtered_vcf_idx = temp("{outdir}/samples/{SAMPLE_IDS}/gatk/{SAMPLE_IDS}_chrM.final.vcf.gz.tbi"),
     params:
         max_sites = max_low_het_sites,
     conda: 'envs/gatk.yaml'
+    log: "{outdir}/samples/{SAMPLE_IDS}/logs/{SAMPLE_IDS}_FilterLowHetSites.log"
     shell:
         r"""
         gatk MTLowHeteroplasmyFilterTool \
           -R {input.mt_ref_fasta} \
           -V {input.filtered_vcf} \
           -O {output.final_filtered_vcf} \
-          --max-allowed-low-hets {params.max_sites}
+          --max-allowed-low-hets {params.max_sites} 2> {log}
         """
 
 rule SplitMultiAllelicSites:
@@ -556,9 +593,10 @@ rule SplitMultiAllelicSites:
         mt_ref_fasta_index = mt_fasta_index,
         mt_dict = mt_dict,
     output:
-        split_vcf = "{outdir}/{SAMPLE_IDS}/gatk/{SAMPLE_IDS}_chrM.final.split.vcf.gz",
-        split_vcf_idx = "{outdir}/{SAMPLE_IDS}/gatk/{SAMPLE_IDS}_chrM.final.split.vcf.gz.tbi",
+        split_vcf = "{outdir}/samples/{SAMPLE_IDS}/gatk/{SAMPLE_IDS}_chrM.final.split.vcf.gz",
+        split_vcf_idx = "{outdir}/samples/{SAMPLE_IDS}/gatk/{SAMPLE_IDS}_chrM.final.split.vcf.gz.tbi",
     conda: 'envs/gatk.yaml'
+    log: "{outdir}/samples/{SAMPLE_IDS}/logs/{SAMPLE_IDS}_SplitMultiAllelicSites.log"
     shell:
         r"""
         gatk LeftAlignAndTrimVariants \
@@ -567,7 +605,7 @@ rule SplitMultiAllelicSites:
           -O {output.split_vcf} \
           --split-multi-allelics \
           --dont-trim-alleles \
-          --keep-original-ac
+          --keep-original-ac 2> {log}
         """
 
 rule CoverageAtEveryBase:
@@ -586,12 +624,13 @@ rule CoverageAtEveryBase:
         shifted_mt_ref_fasta_index = mt_shifted_fasta_index,
         shifted_mt_dict = mt_shifted_dict,
     output:
-        table = "{outdir}/{SAMPLE_IDS}/gatk/{SAMPLE_IDS}_chrM_per_base_coverage.tsv",
-        pbc_non_control_region_tsv = "{outdir}/{SAMPLE_IDS}/gatk/{SAMPLE_IDS}_chrM_non_control_region.tsv",
-        pbc_non_control_region_meterics = "{outdir}/{SAMPLE_IDS}/gatk/{SAMPLE_IDS}_chrM_non_control_region.metrics",
-        pbc_control_region_shifted_tsv = "{outdir}/{SAMPLE_IDS}/gatk/{SAMPLE_IDS}_chrM_control_region_shifted.tsv",
-        pbc_control_region_shifted_meterics = "{outdir}/{SAMPLE_IDS}/gatk/{SAMPLE_IDS}_chrM_control_region_shifted.metrics"
+        table = "{outdir}/samples/{SAMPLE_IDS}/gatk/{SAMPLE_IDS}_chrM_per_base_coverage.tsv",
+        pbc_non_control_region_tsv = "{outdir}/samples/{SAMPLE_IDS}/gatk/{SAMPLE_IDS}_chrM_non_control_region.tsv",
+        pbc_non_control_region_meterics = "{outdir}/samples/{SAMPLE_IDS}/gatk/{SAMPLE_IDS}_chrM_non_control_region.metrics",
+        pbc_control_region_shifted_tsv = "{outdir}/samples/{SAMPLE_IDS}/gatk/{SAMPLE_IDS}_chrM_control_region_shifted.tsv",
+        pbc_control_region_shifted_meterics = "{outdir}/samples/{SAMPLE_IDS}/gatk/{SAMPLE_IDS}_chrM_control_region_shifted.metrics"
     conda: 'envs/gatk.yaml'
+    log: "{outdir}/samples/{SAMPLE_IDS}/logs/{SAMPLE_IDS}_CoverageAtEveryBase.log"
     shell:
         r"""
         gatk CollectHsMetrics \
@@ -616,92 +655,94 @@ rule CoverageAtEveryBase:
 
         Rscript workflow/scripts/CoverageAtEveryBase.R {output.pbc_non_control_region_tsv} {output.pbc_control_region_shifted_tsv} {output.table}
 
+        2> {log}
         """
 
 rule hail_inputs:
     input:
-        coverage = expand("{outdir}/{SAMPLE_IDS}/gatk/{SAMPLE_IDS}_chrM_per_base_coverage.tsv", outdir = OUTDIR, SAMPLE_IDS = SAMPLES.index.tolist()),
-        vcf = expand("{outdir}/{SAMPLE_IDS}/gatk/{SAMPLE_IDS}_chrM.final.split.vcf.gz", outdir = OUTDIR, SAMPLE_IDS = SAMPLES.index.tolist()),
-        mtdnacn = expand("{outdir}/{SAMPLE_IDS}/mosdepth/{SAMPLE_IDS}_mtdnacn.txt", outdir = OUTDIR, SAMPLE_IDS = SAMPLES.index.tolist()),
-        haplocheck = expand("{outdir}/{SAMPLE_IDS}/haplocheck/{SAMPLE_IDS}_chrM_contamination.raw.txt", outdir = OUTDIR, SAMPLE_IDS = SAMPLES.index.tolist())
+        coverage = expand("{outdir}/samples/{SAMPLE_IDS}/gatk/{SAMPLE_IDS}_chrM_per_base_coverage.tsv", outdir = OUTDIR, SAMPLE_IDS = SAMPLES.index.tolist()),
+        vcf = expand("{outdir}/samples/{SAMPLE_IDS}/gatk/{SAMPLE_IDS}_chrM.final.split.vcf.gz", outdir = OUTDIR, SAMPLE_IDS = SAMPLES.index.tolist()),
+        mtdnacn = expand("{outdir}/samples/{SAMPLE_IDS}/mosdepth/{SAMPLE_IDS}_mtdnacn.txt", outdir = OUTDIR, SAMPLE_IDS = SAMPLES.index.tolist()),
+        haplocheck = expand("{outdir}/samples/{SAMPLE_IDS}/haplocheck/{SAMPLE_IDS}_chrM_contamination.raw.txt", outdir = OUTDIR, SAMPLE_IDS = SAMPLES.index.tolist())
     output:
-        coverage_tsv = "{outdir}/sample_coverage_paths.txt",
-        vcf_tsv = "{outdir}/sample_vcf_paths.txt",
-        meta = "{outdir}/sample_metadata.txt",
+        coverage_tsv = "{outdir}/joint/sample_coverage_paths.txt",
+        vcf_tsv = "{outdir}/joint/sample_vcf_paths.txt",
+        meta = "{outdir}/joint/sample_metadata.txt",
     params:
         samples = expand("{SAMPLE_IDS}", SAMPLE_IDS = SAMPLES.index.tolist())
     conda: "envs/r.yaml"
+    log: "{outdir}/joint/logs/hail_inputs.log"
     script: "scripts/hail_inputs.R"
 
 
 rule annotate_coverage:
     input:
         input_tsv = rules.hail_inputs.output.coverage_tsv,
-        # script = 'workflow/scripts/annotate_coverage.py'
     output:
-        ht = directory("{outdir}/annotate_coverage/all_chrM_annotate_coverage.ht"),
-        mt = directory("{outdir}/annotate_coverage/all_chrM_annotate_coverage.mt"),
-        all = "{outdir}/annotate_coverage/all_chrM_annotate_coverage.tsv",
-        sample = "{outdir}/annotate_coverage/all_chrM_annotate_coverage_sample_level.txt"
+        ht = directory("{outdir}/joint/annotate_coverage/all_chrM_annotate_coverage.ht"),
+        mt = directory("{outdir}/joint/annotate_coverage/all_chrM_annotate_coverage.mt"),
+        all = "{outdir}/joint/annotate_coverage/all_chrM_annotate_coverage.tsv",
+        sample = "{outdir}/joint/annotate_coverage/all_chrM_annotate_coverage_sample_level.txt"
     params:
-        temp_dir = "{outdir}/temp",
-        chunk_size = 100,
-        overwrite = True
+        temp_dir = "{outdir}/joint/temp",
+        chunk_size = chunk_size,
+        overwrite = overwrite
     conda: 'envs/hail.yaml'
+    log:
+        python_logger = "{outdir}/joint/logs/python_annotate_coverage.log",
+        hail_logs = "{outdir}/joint/logs/hail_annotate_coverage.log",
     script: 'scripts/annotate_coverage.py'
-    # shell: "{input.script} -i {input.input_tsv} -o {output.ht} -t {params.temp_dir} --overwrite"
 
 rule combine_vcfs:
     input:
-        # script = 'workflow/scripts/combine_vcfs.py',
         vcf_paths = rules.hail_inputs.output.vcf_tsv,
         coverage = rules.annotate_coverage.output.mt,
         ARTIFACT_PRONE_SITES = ARTIFACT_PRONE_SITES,
     output:
-        vcf = "{outdir}/combine_vcfs/all_chrM.vcf.bgz",
-        mt = directory("{outdir}/combine_vcfs/all_chrM.mt"),
-        temp = temp(directory("{outdir}/combine_vcfs/temp"))
+        vcf = "{outdir}/joint/combine_vcfs/all_chrM.vcf.bgz",
+        mt = directory("{outdir}/joint/combine_vcfs/all_chrM.mt"),
+        temp = temp(directory("{outdir}/joint/combine_vcfs/temp"))
     params:
         VCF_COL_NAME = "VCF",
-        temp_dir = "{outdir}/combine_vcfs/temp",
-        output_bucket = "{outdir}/combine_vcfs",
-        chunk_size = 100,
-        minimum_homref_coverage = 100,
-        overwrite = True,
+        temp_dir = "{outdir}/joint/combine_vcfs/temp",
+        output_bucket = "{outdir}/joint/combine_vcfs",
+        chunk_size = chunk_size,
+        minimum_homref_coverage = minimum_homref_coverage,
+        overwrite = overwrite,
         participants_to_subset = None
     conda: 'envs/hail.yaml'
+    log:
+        python_logger = "{outdir}/joint/logs/python_combine_vcfs.log",
+        hail_logs = "{outdir}/joint/logs/hail_combine_vcfs.log",
     script: 'scripts/combine_vcfs.py'
-    # shell:
-    #     r"""
-    #     {input.script} --overwrite -p {input.vcf_paths} -c {input.coverage} \
-    #     -v {params.VCF_COL_NAME} -a {input.ARTIFACT_PRONE_SITES} \
-    #     -t {params.temp_dir} -f {params.output} -o {params.output_bucket}
-    #     """
 
 rule add_annotations:
     input:
-        # script = "workflow/scripts/add_annotations.py",
         vcf = rules.combine_vcfs.output.vcf,
         mt = rules.combine_vcfs.output.mt,
         meta = rules.hail_inputs.output.meta,
+        variant_context = variant_context,
+        phylotree = phylotree,
+        pon_mt_trna = pon_mt_trna,
+        mitotip = mitotip,
+        mt_dbsnp154 = mt_dbsnp154
     output:
-        mt = directory("{outdir}/final/annotated_combined.mt"),
-        ht = directory("{outdir}/final/combined_sites_only.ht"),
-        txt = "{outdir}/final/combined_sites_only.txt",
-        sites_vcf = "{outdir}/final/combined_sites_only.vcf.bgz",
-        sample = "{outdir}/final/sample_annotations.txt",
-        sample_vcf = "{outdir}/final/sample_vcf.vcf.bgz",
+        mt = directory("{outdir}/joint/final/annotated_combined.mt"),
+        ht = directory("{outdir}/joint/final/combined_sites_only.ht"),
+        txt = "{outdir}/joint/final/combined_sites_only.txt",
+        sites_vcf = "{outdir}/joint/final/combined_sites_only.vcf.bgz",
+        sample = "{outdir}/joint/final/sample_annotations.txt",
+        sample_vcf = "{outdir}/joint/final/sample_vcf.vcf.bgz",
     params:
-        OUTPUT_DIR = "{outdir}/final",
-        overwrite = True,
-        min_het_threshold = 0.10,
-        min_hom_threshold = 0.95,
-        vaf_filter_threshold = vaf_filter_threshold
+        OUTPUT_DIR = "{outdir}/joint/final",
+        overwrite = overwrite,
+        min_het_threshold = min_het_threshold,
+        min_hom_threshold = min_hom_threshold,
+        vaf_filter_threshold = vaf_filter_threshold,
+        min_mito_cn = min_mito_cn,
+        max_mito_cn = max_mito_cn
     conda: 'envs/hail.yaml'
+    log:
+        python_logger = "{outdir}/joint/logs/python_add_annotations.log",
+        hail_logs = "{outdir}/joint/logs/hail_add_annotations.log",
     script: "scripts/add_annotations.py"
-    # shell:
-    #     r"""
-    #     {input.script} -m {input.mt} -d {params.OUTPUT_DIR} -a {input.meta} -v {params.temp_dir}\
-    #     --min_het_threshold {params.min_het_threshold} --min_hom_threshold {params.min_hom_threshold} --vaf_filter_threshold {params.vaf_filter_threshold} \
-    #     --run_vep --overwrite
-    #     """
