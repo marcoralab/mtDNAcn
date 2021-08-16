@@ -6,12 +6,15 @@ import os
 from itertools import product
 import pandas as pd
 
-SAMPLES = pd.read_csv('data/SampleInfo_test.csv', index_col='SampleID')
+# Configfile
+configfile: "config/gatk_config.yaml"
+
+# Input Files
+SAMPLES = pd.read_csv(config["INPUT"], index_col='SampleID')
 # ID = ["SM-CJGNJ", "SM-CJEIA", "71992"]
 # ID = ["TWDF-037-0006-0106925-0010007709", "SM-CJGNJ"]
 
-# Configfile
-configfile: "config/gatk_config.yaml"
+# Output Files
 OUTDIR = config["outdir"]
 
 ## GATK Options

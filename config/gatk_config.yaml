@@ -3,21 +3,30 @@
 # snakemake -s workflow/MitochondriaPipeline.smk --forceall --rulegraph | dot -Tpdf > docs/MitochondriaPipeline.pdf
 # snakemake -s workflow/MitochondriaPipeline.smk -j 1 --use-conda --conda-create-envs-only
 
-wgs_aligned_input_bam_or_cram: [input_bam_here]
-wgs_aligned_input_bam_or_cram_index: [input_bam_index_here]
+INPUT: 'data/SampleInfo_test.csv'
 
 outdir: 'sandbox/output'
 
-max_read_length: 151
-coverage_cap: 100000
-max_low_het_sites: 3
-max_reads_per_alignment_start: 75
-m2_extra_args: ""
-m2_extra_filtering_args: ""
-max_alt_allele_count: 4
-vaf_filter_threshold: 0.01
-f_score_beta: 1
-vaf_cutoff: ""
+gatk:
+  max_read_length: 151
+  coverage_cap: 100000
+  max_low_het_sites: 3
+  max_reads_per_alignment_start: 75
+  m2_extra_args: ""
+  m2_extra_filtering_args: ""
+  max_alt_allele_count: 4
+  vaf_filter_threshold: 0.01
+  f_score_beta: 1
+  vaf_cutoff: ""
+
+post_process:
+  chunk_size: 100
+  overwrite: True
+  minimum_homref_coverage: 100
+  min_het_threshold: 0.10
+  min_hom_threshold: 0.95
+  min_mito_cn: 50
+  max_mito_cn: 500
 
 reference:
   hg38:
@@ -51,3 +60,11 @@ reference:
     mt_shifted_sa: "raw/reference/chrM/Homo_sapiens_assembly38.chrM.shifted_by_8000_bases.fasta.sa"
     shift_back_chain: "raw/reference/chrM/ShiftBack.chain"
     control_region_shifted_reference_interval_list: "raw/reference/chrM/control_region_shifted.chrM.interval_list"
+
+gnomad_resources:
+  ARTIFACT_PRONE_SITES: "raw/gnomad_resources/artifact_prone_sites.bed"
+  variant_context: "raw/gnomad_resources/chrM_pos_ref_alt_context_categories.txt"
+  phylotree: "raw/gnomad_resources/rCRS-centered_phylo_vars_final_update.txt"
+  pon_mt_trna: "raw/gnomad_resources/pon_mt_trna_predictions_08_27_2020.txt"
+  mitotip: "raw/gnomad_resources/mitotip_scores_08_27_2020.txt"
+  mt_dbsnp154: "raw/gnomad_resources/GCF_000001405.38.chrM.vcf"
