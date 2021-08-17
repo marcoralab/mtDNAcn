@@ -1,13 +1,11 @@
-# snakejob -s MitochondriaPipeline.smk -j 10 --use-conda
-# snakemake -s MitochondriaPipeline.smk --forceall --rulegraph | dot -Tpdf > MitochondriaPipeline.pdf
+# GATK Best Practives Variant Calling pipeline
+## Adapated from https://github.com/gatk-workflows/gatk4-mitochondria-pipeline
+## Laricchia, K. M. et al. (2021). BioRxiv. doi:10.1101/2021.07.23.453510
 
 # Import Python Modules
 import os
 from itertools import product
 import pandas as pd
-
-# Configfile
-configfile: "config/gatk_config.yaml"
 
 # Input Files
 SAMPLES = pd.read_csv(config["INPUT"], index_col='SampleID')
@@ -28,15 +26,6 @@ max_alt_allele_count = config['gatk']["max_alt_allele_count"]
 vaf_filter_threshold = config['gatk']["vaf_filter_threshold"]
 f_score_beta = config['gatk']["f_score_beta"]
 vaf_cutoff = config['gatk']["vaf_cutoff"]
-
-## Post Processing Options
-chunk_size = config['post_process']['chunk_size']
-overwrite = config['post_process']['overwrite']
-minimum_homref_coverage = config['post_process']['minimum_homref_coverage']
-min_het_threshold = config['post_process']['min_het_threshold']
-min_hom_threshold = config['post_process']['min_hom_threshold']
-min_mito_cn = config['post_process']['min_mito_cn']
-max_mito_cn = config['post_process']['max_mito_cn']
 
 ## Reference files
 ### hg38 whole genome reference
@@ -71,27 +60,11 @@ mt_shifted_sa = config["reference"]["mt_shifted"]["mt_shifted_sa"]
 shift_back_chain = config["reference"]["mt_shifted"]["shift_back_chain"]
 control_region_shifted_reference_interval_list = config["reference"]["mt_shifted"]["control_region_shifted_reference_interval_list"]
 
-# Gnomad Resources
-ARTIFACT_PRONE_SITES = config["gnomad_resources"]["ARTIFACT_PRONE_SITES"]
-variant_context = config["gnomad_resources"]["variant_context"]
-phylotree = config["gnomad_resources"]["phylotree"]
-pon_mt_trna = config["gnomad_resources"]["pon_mt_trna"]
-mitotip = config["gnomad_resources"]["mitotip"]
-mt_dbsnp154 = config["gnomad_resources"]["mt_dbsnp154"]
-
-# Varibles
-RWD = os.getcwd()
-
-# GATK Variant Calling pipeline
-## Adapated from https://github.com/gatk-workflows/gatk4-mitochondria-pipeline
-## Laricchia, K. M. et al. (2021). BioRxiv. doi:10.1101/2021.07.23.453510
-
 rule all:
     input:
         expand("{outdir}/samples/{SAMPLE_IDS}/mosdepth/{SAMPLE_IDS}_mtdnacn.txt", outdir = OUTDIR, SAMPLE_IDS = SAMPLES.index.tolist()),
         expand("{outdir}/samples/{SAMPLE_IDS}/gatk/{SAMPLE_IDS}_chrM_per_base_coverage.tsv", outdir = OUTDIR, SAMPLE_IDS = SAMPLES.index.tolist()),
-        expand("{outdir}/samples/{SAMPLE_IDS}/gatk/{SAMPLE_IDS}_chrM.final.split.vcf.gz", outdir = OUTDIR, SAMPLE_IDS = SAMPLES.index.tolist()),
-        expand("{outdir}/joint/final/sample_vcf.vcf.bgz", outdir = OUTDIR)
+        expand("{outdir}/samples/{SAMPLE_IDS}/gatk/{SAMPLE_IDS}_chrM.final.split.vcf.gz", outdir = OUTDIR, SAMPLE_IDS = SAMPLES.index.tolist())
 
 def ref_fasta_input(wildcards):
     if SAMPLES.loc[wildcards.SAMPLE_IDS]['hg'] == 37:
@@ -137,7 +110,7 @@ def mito_contig(wildcards):
 #     params:
 #         read_length = max_read_length,
 #         coverage_cap = 100000,
-#     conda: 'envs/gatk.yaml'
+#     conda: '../envs/gatk.yaml'
 #     shell:
 #         r"""
 #         gatk CollectWgsMetrics \
@@ -160,9 +133,11 @@ rule mosdepth_median:
     output: "{outdir}/samples/{SAMPLE_IDS}/mosdepth/{SAMPLE_IDS}.meadian.mosdepth.summary.txt"
     params:
         wd = '{outdir}/samples/{SAMPLE_IDS}/mosdepth/{SAMPLE_IDS}.meadian'
-    conda: 'envs/mosdepth.yaml'
-    log: "{outdir}/samples/{SAMPLE_IDS}/logs/{SAMPLE_IDS}_mosdepth_median.log"
-    shell: "(mosdepth -n --use-median -t 4 -f {input.ref_fasta} {params.wd} {input.input_bam}) 2> {log}"
+    conda: '../envs/mosdepth.yaml'
+    log:
+        stderr = "{outdir}/samples/{SAMPLE_IDS}/logs/{SAMPLE_IDS}_mosdepth_median.stderr",
+        stdout = "{outdir}/samples/{SAMPLE_IDS}/logs/{SAMPLE_IDS}_mosdepth_median.stdout"
+    shell: "(mosdepth -n --use-median -t 4 -f {input.ref_fasta} {params.wd} {input.input_bam})  2> {log.stderr} 1> {log.stdout}"
 
 rule mosdepth_mean:
     input:
@@ -173,9 +148,11 @@ rule mosdepth_mean:
     output: "{outdir}/samples/{SAMPLE_IDS}/mosdepth/{SAMPLE_IDS}.mean.mosdepth.summary.txt"
     params:
         wd = '{outdir}/samples/{SAMPLE_IDS}/mosdepth/{SAMPLE_IDS}.mean'
-    conda: 'envs/mosdepth.yaml'
-    log: "{outdir}/samples/{SAMPLE_IDS}/logs/{SAMPLE_IDS}_mosdepth_mean.log"
-    shell: "(mosdepth -n -t 4 -f {input.ref_fasta} {params.wd} {input.input_bam}) 2> {log}"
+    conda: '../envs/mosdepth.yaml'
+    log:
+        stderr = "{outdir}/samples/{SAMPLE_IDS}/logs/{SAMPLE_IDS}_mosdepth_mean.stderr",
+        stdout = "{outdir}/samples/{SAMPLE_IDS}/logs/{SAMPLE_IDS}_mosdepth_mean.stdout"
+    shell: "(mosdepth -n -t 4 -f {input.ref_fasta} {params.wd} {input.input_bam}) 2> {log.stderr} 1> {log.stdout}"
 
 rule mtdnacn:
     input:
@@ -185,9 +162,9 @@ rule mtdnacn:
         mtdnacn = "{outdir}/samples/{SAMPLE_IDS}/mosdepth/{SAMPLE_IDS}_mtdnacn.txt"
     params:
         id = "{SAMPLE_IDS}"
-    conda: 'envs/r.yaml'
+    conda: '../envs/r.yaml'
     log: "{outdir}/samples/{SAMPLE_IDS}/logs/{SAMPLE_IDS}_mtdnacn.log"
-    script: "scripts/mtdnacn.R"
+    script: "../scripts/mtdnacn.R"
 
 # "Subsets a whole genome bam to just Mitochondria reads"
 rule SubsetBamToChrM:
@@ -202,10 +179,10 @@ rule SubsetBamToChrM:
     output:
         bam = '{outdir}/samples/{SAMPLE_IDS}/gatk/{SAMPLE_IDS}_chrM.bam',
         bai = '{outdir}/samples/{SAMPLE_IDS}/gatk/{SAMPLE_IDS}_chrM.bai',
-    conda: 'envs/gatk.yaml'
+    conda: '../envs/gatk.yaml'
     log:
-        out = "{outdir}/samples/{SAMPLE_IDS}/logs/{SAMPLE_IDS}_SubsetBamToChrM.log",
-        err = ""
+        stderr = "{outdir}/samples/{SAMPLE_IDS}/logs/{SAMPLE_IDS}_SubsetBamToChrM.stderr",
+        stdout = "{outdir}/samples/{SAMPLE_IDS}/logs/{SAMPLE_IDS}_SubsetBamToChrM.stdout"
     shell:
         r"""
         gatk PrintReads \
@@ -215,7 +192,8 @@ rule SubsetBamToChrM:
           --read-filter MateUnmappedAndUnmappedReadFilter \
           -I {input.input_bam} \
           --read-index {input.input_bam_index} \
-          -O {output.bam} > {log.out} 2> {log.err}
+          -O {output.bam} \
+          2> {log.stderr} 1> {log.stdout}
         """
 
 rule RevertSam:
@@ -224,8 +202,10 @@ rule RevertSam:
         input_bai = rules.SubsetBamToChrM.output.bai
     output:
         unmapped_bam = temp('{outdir}/samples/{SAMPLE_IDS}/gatk/{SAMPLE_IDS}_chrM_unmapped.bam'),
-    conda: 'envs/gatk.yaml'
-    log: "{outdir}/samples/{SAMPLE_IDS}/logs/{SAMPLE_IDS}_RevertSam.log"
+    conda: '../envs/gatk.yaml'
+    log:
+        stderr = "{outdir}/samples/{SAMPLE_IDS}/logs/{SAMPLE_IDS}_RevertSam.stderr",
+        stdout = "{outdir}/samples/{SAMPLE_IDS}/logs/{SAMPLE_IDS}_RevertSam.stdout"
     shell:
         r"""
         gatk RevertSam \
@@ -236,7 +216,8 @@ rule RevertSam:
             -ATTRIBUTE_TO_CLEAR FT \
             -ATTRIBUTE_TO_CLEAR CO \
             -SORT_ORDER queryname \
-            -RESTORE_ORIGINAL_QUALITIES false 2> {log}
+            -RESTORE_ORIGINAL_QUALITIES false \
+            2> {log.stderr} 1> {log.stdout}
         """
 
 module AlignmentPipeline:
@@ -257,7 +238,9 @@ use rule AlignAndMarkDuplicates from AlignmentPipeline as AlignToMt with:
     params:
         bwa_version = "0.7.17",
         bwa_commandline = "bwa mem -K 100000000 -p -v 3 -t 2 -Y",
-    log: "{outdir}/samples/{SAMPLE_IDS}/logs/{SAMPLE_IDS}_AlignToMt.log"
+    log:
+        stderr = "{outdir}/samples/{SAMPLE_IDS}/logs/{SAMPLE_IDS}_AlignToMt.stderr",
+        stdout = "{outdir}/samples/{SAMPLE_IDS}/logs/{SAMPLE_IDS}_AlignToMt.stdout"
 
 use rule AlignAndMarkDuplicates from AlignmentPipeline as AlignToShiftedMt with:
     input:
@@ -274,7 +257,9 @@ use rule AlignAndMarkDuplicates from AlignmentPipeline as AlignToShiftedMt with:
     params:
         bwa_version = "0.7.17",
         bwa_commandline = "bwa mem -K 100000000 -p -v 3 -t 2 -Y",
-    log: "{outdir}/samples/{SAMPLE_IDS}/logs/{SAMPLE_IDS}_AlignToShiftedMt.log"
+    log:
+        stderr = "{outdir}/samples/{SAMPLE_IDS}/logs/{SAMPLE_IDS}_AlignToShiftedMt.stderr",
+        stdout = "{outdir}/samples/{SAMPLE_IDS}/logs/{SAMPLE_IDS}_AlignToShiftedMt.stdout"
 
 rule CollectWgsMetrics:
     input:
@@ -288,8 +273,10 @@ rule CollectWgsMetrics:
     params:
         read_length = max_read_length,
         coverage_cap = coverage_cap,
-    conda: 'envs/gatk.yaml'
-    log: "{outdir}/samples/{SAMPLE_IDS}/logs/{SAMPLE_IDS}_CollectWgsMetrics.log"
+    conda: '../envs/gatk.yaml'
+    log:
+        stderr = "{outdir}/samples/{SAMPLE_IDS}/logs/{SAMPLE_IDS}_CollectWgsMetrics.stderr",
+        stdout = "{outdir}/samples/{SAMPLE_IDS}/logs/{SAMPLE_IDS}_CollectWgsMetrics.stdout"
     shell:
         r"""
         gatk CollectWgsMetrics \
@@ -301,7 +288,8 @@ rule CollectWgsMetrics:
           -READ_LENGTH {params.read_length} \
           -COVERAGE_CAP {params.coverage_cap} \
           -INCLUDE_BQ_HISTOGRAM true \
-          -THEORETICAL_SENSITIVITY_OUTPUT {output.sens} 2> {log}
+          -THEORETICAL_SENSITIVITY_OUTPUT {output.sens} \
+          2> {log.stderr} 1> {log.stdout}
         """
 
 rule CallMt:
@@ -322,8 +310,10 @@ rule CallMt:
         max_reads_per_alignment_start = max_reads_per_alignment_start,
         m2_extra_args = m2_extra_args,
         region = "chrM:576-16024"
-    conda: 'envs/gatk.yaml'
-    log: "{outdir}/samples/{SAMPLE_IDS}/logs/{SAMPLE_IDS}_CallMt.log"
+    conda: '../envs/gatk.yaml'
+    log:
+        stderr = "{outdir}/samples/{SAMPLE_IDS}/logs/{SAMPLE_IDS}_CallMt.stderr",
+        stdout = "{outdir}/samples/{SAMPLE_IDS}/logs/{SAMPLE_IDS}_CallMt.stdout"
     shell:
         r"""
         gatk Mutect2 \
@@ -337,10 +327,11 @@ rule CallMt:
             --annotation StrandBiasBySample \
             --mitochondria-mode \
             --max-reads-per-alignment-start {params.max_reads_per_alignment_start} \
-            --max-mnp-distance 0 2> {log}
+            --max-mnp-distance 0 \
+            2> {log.stderr} 1> {log.stdout}
         """
 
-use rule CallMt as CallShiftedMt with:
+rule CallShiftedMt:
     input:
         sorted_bam = rules.AlignToShiftedMt.output.sorted_bam,
         sorted_bai = rules.AlignToShiftedMt.output.sorted_bai,
@@ -358,7 +349,26 @@ use rule CallMt as CallShiftedMt with:
         max_reads_per_alignment_start = max_reads_per_alignment_start,
         m2_extra_args = m2_extra_args,
         region = "chrM:8025-9144"
-    log: "{outdir}/samples/{SAMPLE_IDS}/logs/{SAMPLE_IDS}_CallShiftedMt.log"
+    conda: '../envs/gatk.yaml'
+    log:
+        stderr = "{outdir}/samples/{SAMPLE_IDS}/logs/{SAMPLE_IDS}_CallShiftedMt.stderr",
+        stdout = "{outdir}/samples/{SAMPLE_IDS}/logs/{SAMPLE_IDS}_CallShiftedMt.stdout"
+    shell:
+        r"""
+        gatk Mutect2 \
+            -R {input.mt_ref_fasta} \
+            -I {input.sorted_bam} \
+            --read-filter MateOnSameContigOrNoMappedMateReadFilter \
+            --read-filter MateUnmappedAndUnmappedReadFilter \
+            -O {output.vcf} \
+            --bam-output {output.bamOut} \
+            {params.m2_extra_args} -L {params.region} \
+            --annotation StrandBiasBySample \
+            --mitochondria-mode \
+            --max-reads-per-alignment-start {params.max_reads_per_alignment_start} \
+            --max-mnp-distance 0 \
+            2> {log.stderr} 1> {log.stdout}
+        """
 
 
 rule LiftoverAndCombineVcfs:
@@ -370,12 +380,15 @@ rule LiftoverAndCombineVcfs:
         mt_dict = mt_dict,
         shift_back_chain = shift_back_chain
     output:
-        shifted_back_vcf = temp(multiext("{outdir}/samples/{SAMPLE_IDS}/gatk/{SAMPLE_IDS}.shifted_back", ".vcf", ".vcf.idx")),
+        shifted_back_vcf = temp("{outdir}/samples/{SAMPLE_IDS}/gatk/{SAMPLE_IDS}.shifted_back.vcf"),
+        shifted_back_vcf_idx = temp("{outdir}/samples/{SAMPLE_IDS}/gatk/{SAMPLE_IDS}.shifted_back.vcf.idx"),
         rejected_vcf = "{outdir}/samples/{SAMPLE_IDS}/gatk/{SAMPLE_IDS}.rejected.vcf",
         merged_vcf = "{outdir}/samples/{SAMPLE_IDS}/gatk/{SAMPLE_IDS}.merged.vcf",
         merged_vcf_index = "{outdir}/samples/{SAMPLE_IDS}/gatk/{SAMPLE_IDS}.merged.vcf.idx"
-    conda: 'envs/gatk.yaml'
-    log: "{outdir}/samples/{SAMPLE_IDS}/logs/{SAMPLE_IDS}_LiftoverAndCombineVcfs.log"
+    conda: '../envs/gatk.yaml'
+    log:
+        stderr = "{outdir}/samples/{SAMPLE_IDS}/logs/{SAMPLE_IDS}_LiftoverAndCombineVcfs.stderr",
+        stdout = "{outdir}/samples/{SAMPLE_IDS}/logs/{SAMPLE_IDS}_LiftoverAndCombineVcfs.stdout"
     shell:
         r"""
         gatk LiftoverVcf \
@@ -388,7 +401,8 @@ rule LiftoverAndCombineVcfs:
         gatk MergeVcfs \
           -I {output.shifted_back_vcf} \
           -I {input.vcf} \
-          -O {output.merged_vcf} 2> {log}
+          -O {output.merged_vcf} \
+          2> {log.stderr} 1> {log.stdout}
         """
 
 rule MergeStats:
@@ -397,11 +411,14 @@ rule MergeStats:
         non_shifted_stats = rules.CallShiftedMt.output.stats
     output:
         "{outdir}/samples/{SAMPLE_IDS}/gatk/{SAMPLE_IDS}_raw_combined.stats"
-    conda: 'envs/gatk.yaml'
-    log: "{outdir}/samples/{SAMPLE_IDS}/logs/{SAMPLE_IDS}_MergeStats.log"
+    conda: '../envs/gatk.yaml'
+    log:
+        stderr = "{outdir}/samples/{SAMPLE_IDS}/logs/{SAMPLE_IDS}_MergeStats.stderr",
+        stdout = "{outdir}/samples/{SAMPLE_IDS}/logs/{SAMPLE_IDS}_MergeStats.stdout"
     shell:
         r"""
-        gatk MergeMutectStats --stats {input.shifted_stats} --stats {input.non_shifted_stats} -O {output} 2> {log}
+        gatk MergeMutectStats --stats {input.shifted_stats} --stats {input.non_shifted_stats} -O {output} \
+        2> {log.stderr} 1> {log.stdout}
         """
 
 rule InitialFilter:
@@ -425,8 +442,10 @@ rule InitialFilter:
         max_alt_allele_count = max_alt_allele_count,
         vaf_filter_threshold = vaf_filter_threshold,
         f_score_beta = f_score_beta,
-    conda: 'envs/gatk.yaml'
-    log: "{outdir}/samples/{SAMPLE_IDS}/logs/{SAMPLE_IDS}_InitialFilter.log"
+    conda: '../envs/gatk.yaml'
+    log:
+        stderr = "{outdir}/samples/{SAMPLE_IDS}/logs/{SAMPLE_IDS}_InitialFilter.stderr",
+        stdout = "{outdir}/samples/{SAMPLE_IDS}/logs/{SAMPLE_IDS}_InitialFilter.stdout"
     shell:
         r"""
         gatk  FilterMutectCalls \
@@ -445,7 +464,8 @@ rule InitialFilter:
             -O {output.filtered_vcf} \
             --apply-allele-specific-filters \
             --mask {input.blacklisted_sites} \
-            --mask-name "blacklisted_site" 2> {log}
+            --mask-name "blacklisted_site" \
+            2> {log.stderr} 1> {log.stdout}
         """
 
 rule SplitMultiAllelicsAndRemoveNonPassSites:
@@ -460,8 +480,10 @@ rule SplitMultiAllelicsAndRemoveNonPassSites:
         split_vcf_index = temp("{outdir}/samples/{SAMPLE_IDS}/gatk/{SAMPLE_IDS}_chrM_split.vcf.idx"),
         vcf_for_haplochecker = temp("{outdir}/samples/{SAMPLE_IDS}/gatk/{SAMPLE_IDS}_chrM_splitAndPassOnly.vcf"),
         vcf_for_haplochecker_index = temp("{outdir}/samples/{SAMPLE_IDS}/gatk/{SAMPLE_IDS}_chrM_splitAndPassOnly.vcf.idx"),
-    conda: 'envs/gatk.yaml'
-    log: "{outdir}/samples/{SAMPLE_IDS}/logs/{SAMPLE_IDS}_SplitMultiAllelicsAndRemoveNonPassSites.log"
+    conda: '../envs/gatk.yaml'
+    log:
+        stderr = "{outdir}/samples/{SAMPLE_IDS}/logs/{SAMPLE_IDS}_SplitMultiAllelicsAndRemoveNonPassSites.stderr",
+        stdout = "{outdir}/samples/{SAMPLE_IDS}/logs/{SAMPLE_IDS}_SplitMultiAllelicsAndRemoveNonPassSites.stdout"
     shell:
         r"""
         gatk LeftAlignAndTrimVariants \
@@ -475,7 +497,8 @@ rule SplitMultiAllelicsAndRemoveNonPassSites:
           gatk SelectVariants \
             -V {output.split_vcf} \
             -O {output.vcf_for_haplochecker} \
-            --exclude-filtered 2> {log}
+            --exclude-filtered \
+            2> {log.stderr} 1> {log.stdout}
         """
 
 rule GetContamination:
@@ -486,13 +509,15 @@ rule GetContamination:
         contamination_raw_tmp = temp("{outdir}/samples/{SAMPLE_IDS}/haplocheck/{SAMPLE_IDS}_contamination.raw.txt"),
         contamination = "{outdir}/samples/{SAMPLE_IDS}/haplocheck/{SAMPLE_IDS}_chrM_contamination.txt",
         contamination_raw = "{outdir}/samples/{SAMPLE_IDS}/haplocheck/{SAMPLE_IDS}_chrM_contamination.raw.txt",
-    log: "{outdir}/samples/{SAMPLE_IDS}/logs/{SAMPLE_IDS}_GetContamination.log"
+    log:
+        stderr = "{outdir}/samples/{SAMPLE_IDS}/logs/{SAMPLE_IDS}_GetContamination.stderr",
+        stdout = "{outdir}/samples/{SAMPLE_IDS}/logs/{SAMPLE_IDS}_GetContamination.stdout"
     shell:
         r"""
         java -jar src/haplocheck/haplocheck.jar --raw --out {output.contamination_tmp} {input}
         sed 's/\"//g' {output.contamination_raw_tmp} > {output.contamination_raw}
         sed 's/\"//g' {output.contamination_tmp} > {output.contamination}
-        2> {log}
+        2> {log.stderr} 1> {log.stdout}
         """
 
 rule FilterContamination:
@@ -517,8 +542,10 @@ rule FilterContamination:
         m2_extra_filtering_args = m2_extra_filtering_args,
         max_alt_allele_count = max_alt_allele_count,
         vaf_filter_threshold = vaf_filter_threshold,
-    conda: 'envs/gatk.yaml'
-    log: "{outdir}/samples/{SAMPLE_IDS}/logs/{SAMPLE_IDS}_FilterContamination.log"
+    conda: '../envs/gatk.yaml'
+    log:
+        stderr = "{outdir}/samples/{SAMPLE_IDS}/logs/{SAMPLE_IDS}_FilterContamination.stderr",
+        stdout = "{outdir}/samples/{SAMPLE_IDS}/logs/{SAMPLE_IDS}_FilterContamination.stdout"
     shell:
         r"""
         hc_contamination=$(awk -F "\t" 'FNR == 2' {input.contamination_raw} | awk '/YES/{{print $3;next}}{{print "0"}}')
@@ -539,7 +566,8 @@ rule FilterContamination:
             -O {output.filtered_vcf} \
             --apply-allele-specific-filters \
             --mask {input.blacklisted_sites} \
-            --mask-name "blacklisted_site" 2> {log}
+            --mask-name "blacklisted_site" \
+            2> {log.stderr} 1> {log.stdout}
         """
 
 rule FilterNuMTs:
@@ -553,8 +581,10 @@ rule FilterNuMTs:
     output:
         numt_filtered_vcf = temp("{outdir}/samples/{SAMPLE_IDS}/gatk/{SAMPLE_IDS}_chrM_FilterNuMTs.vcf.gz"),
         numt_filtered_vcf_idx = temp("{outdir}/samples/{SAMPLE_IDS}/gatk/{SAMPLE_IDS}_chrM_FilterNuMTs.vcf.gz.tbi"),
-    conda: 'envs/gatk.yaml'
-    log: "{outdir}/samples/{SAMPLE_IDS}/logs/{SAMPLE_IDS}_FilterNuMTs.log"
+    conda: '../envs/gatk.yaml'
+    log:
+        stderr = "{outdir}/samples/{SAMPLE_IDS}/logs/{SAMPLE_IDS}_FilterNuMTs.stderr",
+        stdout = "{outdir}/samples/{SAMPLE_IDS}/logs/{SAMPLE_IDS}_FilterNuMTs.stdout"
     shell:
         r"""
         auto_cov=$(awk '{{ if ($2 == "median") {{ print $4}} }}' {input.autosomal_coverage})
@@ -563,7 +593,8 @@ rule FilterNuMTs:
           -R {input.mt_ref_fasta} \
           -V {input.filtered_vcf} \
           -O {output.numt_filtered_vcf} \
-          --autosomal-coverage $auto_cov 2> {log}
+          --autosomal-coverage $auto_cov \
+          2> {log.stderr} 1> {log.stdout}
         """
 
 rule FilterLowHetSites:
@@ -578,15 +609,18 @@ rule FilterLowHetSites:
         final_filtered_vcf_idx = temp("{outdir}/samples/{SAMPLE_IDS}/gatk/{SAMPLE_IDS}_chrM.final.vcf.gz.tbi"),
     params:
         max_sites = max_low_het_sites,
-    conda: 'envs/gatk.yaml'
-    log: "{outdir}/samples/{SAMPLE_IDS}/logs/{SAMPLE_IDS}_FilterLowHetSites.log"
+    conda: '../envs/gatk.yaml'
+    log:
+        stderr = "{outdir}/samples/{SAMPLE_IDS}/logs/{SAMPLE_IDS}_FilterLowHetSites.stderr",
+        stdout = "{outdir}/samples/{SAMPLE_IDS}/logs/{SAMPLE_IDS}_FilterLowHetSites.stdout"
     shell:
         r"""
         gatk MTLowHeteroplasmyFilterTool \
           -R {input.mt_ref_fasta} \
           -V {input.filtered_vcf} \
           -O {output.final_filtered_vcf} \
-          --max-allowed-low-hets {params.max_sites} 2> {log}
+          --max-allowed-low-hets {params.max_sites} \
+          2> {log.stderr} 1> {log.stdout}
         """
 
 rule SplitMultiAllelicSites:
@@ -599,8 +633,10 @@ rule SplitMultiAllelicSites:
     output:
         split_vcf = "{outdir}/samples/{SAMPLE_IDS}/gatk/{SAMPLE_IDS}_chrM.final.split.vcf.gz",
         split_vcf_idx = "{outdir}/samples/{SAMPLE_IDS}/gatk/{SAMPLE_IDS}_chrM.final.split.vcf.gz.tbi",
-    conda: 'envs/gatk.yaml'
-    log: "{outdir}/samples/{SAMPLE_IDS}/logs/{SAMPLE_IDS}_SplitMultiAllelicSites.log"
+    conda: '../envs/gatk.yaml'
+    log:
+        stderr = "{outdir}/samples/{SAMPLE_IDS}/logs/{SAMPLE_IDS}_SplitMultiAllelicSites.stderr",
+        stdout = "{outdir}/samples/{SAMPLE_IDS}/logs/{SAMPLE_IDS}_SplitMultiAllelicSites.stdout"
     shell:
         r"""
         gatk LeftAlignAndTrimVariants \
@@ -609,7 +645,8 @@ rule SplitMultiAllelicSites:
           -O {output.split_vcf} \
           --split-multi-allelics \
           --dont-trim-alleles \
-          --keep-original-ac 2> {log}
+          --keep-original-ac \
+          2> {log.stderr} 1> {log.stdout}
         """
 
 rule CoverageAtEveryBase:
@@ -633,8 +670,10 @@ rule CoverageAtEveryBase:
         pbc_non_control_region_meterics = "{outdir}/samples/{SAMPLE_IDS}/gatk/{SAMPLE_IDS}_chrM_non_control_region.metrics",
         pbc_control_region_shifted_tsv = "{outdir}/samples/{SAMPLE_IDS}/gatk/{SAMPLE_IDS}_chrM_control_region_shifted.tsv",
         pbc_control_region_shifted_meterics = "{outdir}/samples/{SAMPLE_IDS}/gatk/{SAMPLE_IDS}_chrM_control_region_shifted.metrics"
-    conda: 'envs/gatk.yaml'
-    log: "{outdir}/samples/{SAMPLE_IDS}/logs/{SAMPLE_IDS}_CoverageAtEveryBase.log"
+    conda: '../envs/gatk.yaml'
+    log:
+        stderr = "{outdir}/samples/{SAMPLE_IDS}/logs/{SAMPLE_IDS}_CoverageAtEveryBase.stderr",
+        stdout = "{outdir}/samples/{SAMPLE_IDS}/logs/{SAMPLE_IDS}_CoverageAtEveryBase.stdout"
     shell:
         r"""
         gatk CollectHsMetrics \
@@ -659,5 +698,5 @@ rule CoverageAtEveryBase:
 
         Rscript workflow/scripts/CoverageAtEveryBase.R {output.pbc_non_control_region_tsv} {output.pbc_control_region_shifted_tsv} {output.table}
 
-        2> {log}
+        2> {log.stderr} 1> {log.stdout}
         """

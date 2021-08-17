@@ -25,8 +25,10 @@ rule AlignAndMarkDuplicates:
     params:
         bwa_version = "0.7.17",
         bwa_commandline = "bwa mem -K 100000000 -p -v 3 -t 2 -Y",
-    conda: 'envs/gatk.yaml'
-    log: "{IDS}_AlignAndMarkDuplicates.log"
+    conda: '../envs/gatk.yaml'
+    log: 
+        stderr = "{IDS}_AlignAndMarkDuplicates.stderr",
+        stdout = "{IDS}_AlignAndMarkDuplicates.stdout"
     shell:
         r"""
         gatk SamToFastq \
@@ -82,7 +84,7 @@ rule AlignAndMarkDuplicates:
           -CREATE_INDEX true \
           -MAX_RECORDS_IN_RAM 300000
 
-          2> {log}
+          2> {log.stderr} 1> {log.stdout}
         """
 
 # rule AlignAndMarkDuplicates_SamToFastq:
